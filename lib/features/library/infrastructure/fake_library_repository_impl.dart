@@ -12,7 +12,6 @@ class FakeLibraryRepository implements ILibraryRepository{
   void pruebaApi() async{
     final Dio dio = Dio();
     Response response = await dio.get('https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/kahoots/myCreations');
-    //print(response.data.toString());
     final Map<String,dynamic> responseBody = response.data;
     final List<dynamic> data = responseBody['data'];
     for (var quiz in data) {
@@ -100,15 +99,31 @@ class FakeLibraryRepository implements ILibraryRepository{
       print('---');
     }
   }
+
+  Map<String, dynamic> toQuery(LibraryFilterParams params){
+    Map<String, dynamic> query = {
+      'page': params.page,
+      'limit': params.limit,
+      'status': params.status,
+      'visibility': params.visibility,
+      'orderBy': params.orderBy,
+      'order': params.order,
+    };
+    if(params.search != null && params.search!.isNotEmpty){
+      query['search'] = params.search;
+    }
+    return query;
+  }
+
   //-----FIN PRUEBA
   //H7.1 Quices creados y borradores
   @override
   Future<PaginatedResult<Quiz>> findMyCreations(LibraryFilterParams params) async{
-    await Future.delayed(const Duration(seconds: 1), );
+    //await Future.delayed(const Duration(seconds: 1), );
     
     //esto de abajo es el equivalente a response.data
-    final Map<String,dynamic> responseBody = {
-    //   "data": [
+    // final Map<String,dynamic> responseBody = {
+    // "data": [
     //     {
     //       "id": "kahoot-uuid-001",
     //       "title": "Historia de Venezuela",
@@ -121,15 +136,76 @@ class FakeLibraryRepository implements ILibraryRepository{
     //       },
     //       "coverImageId": "img-001",
     //       "playCount": 150,
-    //       "createdAt": "2025-11-20T10:00:00Z", // ISO 8601 String
+    //       "createdAt": "2025-11-20T10:00:00Z",
     //       "visibility": "public",
     //       "status": "published",
-    //       "questions": [] 
+          
+    //       // --- AQUÍ ESTÁ LA ESTRUCTURA QUE PEDISTE ---
+    //       "questions": [
+    //         {
+    //           "id": "q-ven-01",
+    //           "quizId": "kahoot-uuid-001",
+    //           "text": "¿En qué año se firmó el acta de la independencia?",
+    //           "mediaId": null, 
+    //           "type": "quiz", // 'quiz' = Selección simple
+    //           "timeLimit": 30,
+    //           "points": 1000,
+    //           "answers": [
+    //             {
+    //               "id": "a-ven-01-1",
+    //               "questionId": "q-ven-01",
+    //               "text": "1810",
+    //               "mediaId": null,
+    //               "isCorrect": false
+    //             },
+    //             {
+    //               "id": "a-ven-01-2",
+    //               "questionId": "q-ven-01",
+    //               "text": "1811",
+    //               "mediaId": null,
+    //               "isCorrect": true // Correcta
+    //             },
+    //             {
+    //               "id": "a-ven-01-3",
+    //               "questionId": "q-ven-01",
+    //               "text": "1821",
+    //               "mediaId": null,
+    //               "isCorrect": false
+    //             }
+    //           ]
+    //         },
+    //         {
+    //           "id": "q-ven-02",
+    //           "quizId": "kahoot-uuid-001",
+    //           "text": "Simón Bolívar nació en Caracas",
+    //           "mediaId": "img-bolivar",
+    //           "type": "true_false", // 'true_false' = Verdadero/Falso
+    //           "timeLimit": 20,
+    //           "points": 500,
+    //           "answers": [
+    //             {
+    //               "id": "a-ven-02-1",
+    //               "questionId": "q-ven-02",
+    //               "text": "Verdadero",
+    //               "mediaId": null,
+    //               "isCorrect": true // Correcta
+    //             },
+    //             {
+    //               "id": "a-ven-02-2",
+    //               "questionId": "q-ven-02",
+    //               "text": "Falso",
+    //               "mediaId": null,
+    //               "isCorrect": false
+    //             }
+    //           ]
+    //         }
+    //       ]
+    //       // ---------------------------------------------
     //     },
     //     {
     //       "id": "kahoot-uuid-002",
     //       "title": "Matemáticas Básicas",
-    //       "description": "Sumas y restas para niños",
+    //       "description": "Sumas sencillas",
     //       "themeId": "theme-red",
     //       "category": "Matemática",
     //       "author": { 
@@ -141,7 +217,7 @@ class FakeLibraryRepository implements ILibraryRepository{
     //       "createdAt": "2025-11-21T09:30:00Z",
     //       "visibility": "private",
     //       "status": "draft",
-    //       "questions": []
+    //       "questions": [] // Ejemplo de lista vacía
     //     }
     //   ],
     //   "pagination": {
@@ -150,112 +226,15 @@ class FakeLibraryRepository implements ILibraryRepository{
     //     "totalCount": 2,
     //     "totalPages": 1
     //   }
-    "data": [
-        {
-          "id": "kahoot-uuid-001",
-          "title": "Historia de Venezuela",
-          "description": "Un repaso por los próceres",
-          "themeId": "theme-blue",
-          "category": "Historia",
-          "author": { 
-            "id": "user-uuid-999", 
-            "name": "Jorge" 
-          },
-          "coverImageId": "img-001",
-          "playCount": 150,
-          "createdAt": "2025-11-20T10:00:00Z",
-          "visibility": "public",
-          "status": "published",
-          
-          // --- AQUÍ ESTÁ LA ESTRUCTURA QUE PEDISTE ---
-          "questions": [
-            {
-              "id": "q-ven-01",
-              "quizId": "kahoot-uuid-001",
-              "text": "¿En qué año se firmó el acta de la independencia?",
-              "mediaId": null, 
-              "type": "quiz", // 'quiz' = Selección simple
-              "timeLimit": 30,
-              "points": 1000,
-              "answers": [
-                {
-                  "id": "a-ven-01-1",
-                  "questionId": "q-ven-01",
-                  "text": "1810",
-                  "mediaId": null,
-                  "isCorrect": false
-                },
-                {
-                  "id": "a-ven-01-2",
-                  "questionId": "q-ven-01",
-                  "text": "1811",
-                  "mediaId": null,
-                  "isCorrect": true // Correcta
-                },
-                {
-                  "id": "a-ven-01-3",
-                  "questionId": "q-ven-01",
-                  "text": "1821",
-                  "mediaId": null,
-                  "isCorrect": false
-                }
-              ]
-            },
-            {
-              "id": "q-ven-02",
-              "quizId": "kahoot-uuid-001",
-              "text": "Simón Bolívar nació en Caracas",
-              "mediaId": "img-bolivar",
-              "type": "true_false", // 'true_false' = Verdadero/Falso
-              "timeLimit": 20,
-              "points": 500,
-              "answers": [
-                {
-                  "id": "a-ven-02-1",
-                  "questionId": "q-ven-02",
-                  "text": "Verdadero",
-                  "mediaId": null,
-                  "isCorrect": true // Correcta
-                },
-                {
-                  "id": "a-ven-02-2",
-                  "questionId": "q-ven-02",
-                  "text": "Falso",
-                  "mediaId": null,
-                  "isCorrect": false
-                }
-              ]
-            }
-          ]
-          // ---------------------------------------------
-        },
-        {
-          "id": "kahoot-uuid-002",
-          "title": "Matemáticas Básicas",
-          "description": "Sumas sencillas",
-          "themeId": "theme-red",
-          "category": "Matemática",
-          "author": { 
-            "id": "user-uuid-999", 
-            "name": "Jorge" 
-          },
-          "coverImageId": null,
-          "playCount": 0,
-          "createdAt": "2025-11-21T09:30:00Z",
-          "visibility": "private",
-          "status": "draft",
-          "questions": [] // Ejemplo de lista vacía
-        }
-      ],
-      "pagination": {
-        "page": 1,
-        "limit": 20,
-        "totalCount": 2,
-        "totalPages": 1
-      }
-    };
-
+    // };
+    final Dio dio = Dio();
+    Response response = await dio.get('https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/kahoots/myCreations',
+      queryParameters: toQuery(params)
+    );
+    //print(response.data.toString());
+    final Map<String,dynamic> responseBody = response.data;
     final List<dynamic> data = responseBody['data'];
+    List<Quiz> quizzes = [];
     for (var quiz in data) {
       String id = quiz['id'] as String;
       print(id);
@@ -339,9 +318,17 @@ class FakeLibraryRepository implements ILibraryRepository{
         coverImageId: coverImageId);
       print(newQuiz);
       print('---');
+      quizzes.add(newQuiz);
     }
     
-    return Future.error('error');
+    final Map<String,dynamic> paginationData = responseBody['pagination'];
+    final PaginatedResult<Quiz> paginatedResult = PaginatedResult(
+      items: quizzes, 
+      totalCount: paginationData['totalCount'] as int, 
+      totalPages: paginationData['totalPages'] as int, 
+      currentPage: paginationData['page'] as int, 
+      limit: paginationData['limit'] as int);
+    return paginatedResult;
   }
 
   //H7.2 Quices favoritos
