@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/core/navigation/navbar.dart';
-import 'package:frontkahoot2526/features/presentation/screens/library_screen.dart';
+import 'package:frontkahoot2526/features/library/presentation/screens/library_screen.dart';
 import 'package:go_router/go_router.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
