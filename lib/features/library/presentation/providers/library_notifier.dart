@@ -3,7 +3,6 @@ import 'package:frontkahoot2526/core/domain/entities/paginated_result.dart';
 import 'package:frontkahoot2526/core/domain/entities/quiz.dart';
 import 'package:frontkahoot2526/features/library/application/use_cases/find_my_creatios_use_case.dart';
 import 'package:frontkahoot2526/features/library/domain/library_filter_params.dart';
-import 'package:frontkahoot2526/features/library/infrastructure/fake_library_repository_impl.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/library_notifier_state.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/quiz_model.dart';
 import 'package:frontkahoot2526/features/library/presentation/providers/library_repository_provider.dart';
@@ -15,8 +14,8 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
   @override
   Future<LibraryNotifierState> build() async {
     final useCase = FindMyCreatiosUseCase(
-      FakeLibraryRepository(),
-      LibraryFilterParams(),
+      ref.read(libraryRepositoryProvider),
+      _queryParams,
     ); //NOTA: modificar el provider de repositorio y los parametros
     final result = await useCase.execute();
     return processResult(result);
@@ -25,9 +24,8 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
   Future<void> loadMyCreations() async {
     _currentIndex = 0;
     state = const AsyncLoading();
-    await Future.delayed(const Duration(seconds: 1)); //QUITAR LUEGO
     final useCase = FindMyCreatiosUseCase(
-      ref.watch(libraryRepositoryProvider),
+      ref.read(libraryRepositoryProvider),
       _queryParams,
     ); //NOTA: modificar el provider de repositorio y los parametros
     final result = await useCase.execute();
@@ -55,7 +53,6 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
   Future<void> loadFavorites() async {
     _currentIndex = 1;
     state = const AsyncLoading();
-    await Future.delayed(const Duration(seconds: 1)); //QUITAR LUEGO
     List<QuizCardUiModel> list = [];
     state = AsyncData(
       LibraryNotifierState(
@@ -70,11 +67,12 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
 
   Future<void> changePage(int newPage) async {
     _queryParams = _queryParams.copyWith(page: newPage);
+    state = const AsyncLoading();
     final result;
     switch (_currentIndex) {
       case 0:
         final useCase = FindMyCreatiosUseCase(
-          ref.watch(libraryRepositoryProvider),
+          ref.read(libraryRepositoryProvider),
           _queryParams,
         );
         result = await useCase.execute();

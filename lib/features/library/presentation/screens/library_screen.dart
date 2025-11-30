@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/features/library/presentation/providers/library_notifier.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/pagination_control_widget.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/quiz_card_widget.dart';
+import 'package:frontkahoot2526/features/library/presentation/screens/quiz_options_widget.dart';
 
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
@@ -70,9 +71,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
       ),
       body: notifier.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        
+
         error: (error, stackTrace) => Text("error"),
-        
+
         data: (notifierState) {
           final quizList = notifierState.quizList;
           if (quizList.isEmpty) {
@@ -88,13 +89,38 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                       const SizedBox(height: 16),
                   itemBuilder: (context, index) {
                     final quizUiModel = quizList[index];
-                    return QuizCard(quiz: quizUiModel);
+                    return QuizCard(
+                      quiz: quizUiModel,
+                      onTap: () {
+                        QuizContextType contextType;
+                        switch (_tabController.index) {
+                          case 0:
+                            contextType = QuizContextType.myCreations;
+                            break;
+                          case 1:
+                            contextType = QuizContextType.favorites;
+                            break;
+                          default:
+                            contextType = QuizContextType.myCreations;
+                            break;
+                        }
+                        showModalBottomSheet(
+                          context: context,
+                          builder: (context) {
+                            return QuizOptionsSheet(
+                              quiz: quizUiModel,
+                              type: contextType,
+                            );
+                          },
+                        );
+                      },
+                    );
                   },
                 ),
               ),
               PaginationControls(
-                currentPage: notifierState.currentPage, 
-                totalPages: notifierState.totalPages, 
+                currentPage: notifierState.currentPage,
+                totalPages: notifierState.totalPages,
                 onPageChanged: (newPage) {
                   ref.read(asyncLibraryProvider.notifier).changePage(newPage);
                 },
