@@ -1,44 +1,162 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontkahoot2526/features/library/presentation/models/quiz_model.dart';
+import 'package:frontkahoot2526/features/library/presentation/screens/quiz_card_widget.dart';
 
-class LibraryScreen extends StatelessWidget {
+class AsyncLibraryNotifier extends AsyncNotifier<List<QuizCardUiModel>>{
+  
+  int _currentIndex = 0;
+
+  @override
+  Future<List<QuizCardUiModel>> build() async {
+    List<QuizCardUiModel> list = [];
+    list.add(QuizCardUiModel(
+      id: '1',
+      title: 'Historia de Venezuela',
+      imageUrl: 'https://via.placeholder.com/150',
+      questionCount: '15 Qs',
+      dateInfo: '29 Nov',
+      playCount: '150 plays',
+      visibilityText: 'Public',
+      visibilityIcon: Icons.public,
+      authorName: null,
+    )); 
+    return list;
+  }
+
+  Future<void> loadMyCreations() async {
+    _currentIndex = 0;
+    state = const AsyncLoading();
+    await Future.delayed(const Duration(seconds: 1));
+    List<QuizCardUiModel> list = [];
+    list.add(QuizCardUiModel(
+      id: '1',
+      title: 'Historia de Venezuela',
+      imageUrl: 'https://via.placeholder.com/150',
+      questionCount: '15 Qs',
+      dateInfo: '29 Nov',
+      playCount: '150 plays',
+      visibilityText: 'Public',
+      visibilityIcon: Icons.public,
+      authorName: null,
+    ));
+    list.add(QuizCardUiModel(
+      id: '1',
+      title: 'Historia de Venezuela',
+      imageUrl: 'https://via.placeholder.com/150',
+      questionCount: '15 Qs',
+      dateInfo: '29 Nov',
+      playCount: '150 plays',
+      visibilityText: 'Public',
+      visibilityIcon: Icons.public,
+      authorName: null,
+    )); 
+    list.add(QuizCardUiModel(
+      id: '1',
+      title: 'Historia de Venezuela',
+      imageUrl: 'https://via.placeholder.com/150',
+      questionCount: '15 Qs',
+      dateInfo: '29 Nov',
+      playCount: '150 plays',
+      visibilityText: 'Public',
+      visibilityIcon: Icons.public,
+      authorName: null,
+    )); 
+    state = AsyncData(list);
+  }
+
+  Future<void> loadFavorites() async {
+    _currentIndex = 1;
+    state = const AsyncLoading();
+    await Future.delayed(const Duration(seconds: 1));
+    List<QuizCardUiModel> list = [];
+    state = AsyncData(list);
+  }
+}
+
+final asyncLibraryProvider = AsyncNotifierProvider<AsyncLibraryNotifier, List<QuizCardUiModel>>(() {
+  return AsyncLibraryNotifier();
+});
+
+class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
 
   @override
+  ConsumerState<LibraryScreen> createState() => _LibraryScreenState();
+}
+
+class _LibraryScreenState extends ConsumerState<LibraryScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  static const List<Tab> _tabs = <Tab>[
+    Tab(text: 'Mis quices'),
+    Tab(text: 'Favoritos'),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(vsync: this, length: _tabs.length);
+
+    _tabController.addListener(() {
+      if (_tabController.indexIsChanging) {
+        _onTabChanged(_tabController.index);
+      }
+    });
+  }
+
+  void _onTabChanged(int index) {
+    final notifier = ref.read(asyncLibraryProvider.notifier);
+    switch (index) {
+      case 0: notifier.loadMyCreations(); break;
+      case 1: notifier.loadFavorites(); break;
+    }
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Definimos el color de fondo para saber que estamos en nuestra pantalla
-    final Color backgroundColor = Color(0xFFF5F5F5); // Tu Gris Claro
-    final Color primaryColor = Color(0xFFF44336); // Tu Rojo Principal
+    final notifier = ref.watch(asyncLibraryProvider);
+
 
     return Scaffold(
-      // Usamos AppBar para poner el título
       appBar: AppBar(
         title: const Text("Mi Biblioteca"),
-        backgroundColor: primaryColor, 
+        backgroundColor: Color.fromARGB(255, 244, 67, 54),
         foregroundColor: Colors.white,
         centerTitle: true,
-      ),
-      backgroundColor: backgroundColor,
-      
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '¡HOLA, EQUIPO! LA BIBLIOTECA FUNCIONA.',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF212121), // Gris Oscuro
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Prueba exitosa en /library.',
-              style: TextStyle(color: Color(0xFF757575)), // Gris Medio
-            ),
-          ],
+        bottom: TabBar(
+          controller: _tabController,
+          isScrollable: true, // scroll horizontal
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          tabs: _tabs,
         ),
+      ),
+      body: notifier.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stackTrace) => Text("error"),
+        data: (quizModelList) {
+          if (quizModelList.isEmpty){
+            return const Center(child: Text("No hay quices disponibles."));
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: quizModelList.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 16),
+            itemBuilder: (context, index) {
+              final quizUiModel = quizModelList[index];
+              return QuizCard(quiz: quizUiModel);
+            },
+          );
+        },
       ),
     );
   }
 }
+
