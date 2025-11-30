@@ -1,82 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontkahoot2526/features/library/presentation/models/quiz_model.dart';
+import 'package:frontkahoot2526/features/library/presentation/providers/library_notifier.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/quiz_card_widget.dart';
 
-class AsyncLibraryNotifier extends AsyncNotifier<List<QuizCardUiModel>>{
-  
-  int _currentIndex = 0;
 
-  @override
-  Future<List<QuizCardUiModel>> build() async {
-    List<QuizCardUiModel> list = [];
-    list.add(QuizCardUiModel(
-      id: '1',
-      title: 'Historia de Venezuela',
-      imageUrl: 'https://via.placeholder.com/150',
-      questionCount: '15 Qs',
-      dateInfo: '29 Nov',
-      playCount: '150 plays',
-      visibilityText: 'Public',
-      visibilityIcon: Icons.public,
-      authorName: null,
-    )); 
-    return list;
-  }
-
-  Future<void> loadMyCreations() async {
-    _currentIndex = 0;
-    state = const AsyncLoading();
-    await Future.delayed(const Duration(seconds: 1));
-    List<QuizCardUiModel> list = [];
-    list.add(QuizCardUiModel(
-      id: '1',
-      title: 'Historia de Venezuela',
-      imageUrl: 'https://via.placeholder.com/150',
-      questionCount: '15 Qs',
-      dateInfo: '29 Nov',
-      playCount: '150 plays',
-      visibilityText: 'Public',
-      visibilityIcon: Icons.public,
-      authorName: null,
-    ));
-    list.add(QuizCardUiModel(
-      id: '1',
-      title: 'Historia de Venezuela',
-      imageUrl: 'https://via.placeholder.com/150',
-      questionCount: '15 Qs',
-      dateInfo: '29 Nov',
-      playCount: '150 plays',
-      visibilityText: 'Public',
-      visibilityIcon: Icons.public,
-      authorName: null,
-    )); 
-    list.add(QuizCardUiModel(
-      id: '1',
-      title: 'Historia de Venezuela',
-      imageUrl: 'https://via.placeholder.com/150',
-      questionCount: '15 Qs',
-      dateInfo: '29 Nov',
-      playCount: '150 plays',
-      visibilityText: 'Public',
-      visibilityIcon: Icons.public,
-      authorName: null,
-    )); 
-    state = AsyncData(list);
-  }
-
-  Future<void> loadFavorites() async {
-    _currentIndex = 1;
-    state = const AsyncLoading();
-    await Future.delayed(const Duration(seconds: 1));
-    List<QuizCardUiModel> list = [];
-    state = AsyncData(list);
-  }
-}
-
-final asyncLibraryProvider = AsyncNotifierProvider<AsyncLibraryNotifier, List<QuizCardUiModel>>(() {
-  return AsyncLibraryNotifier();
-});
 
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});

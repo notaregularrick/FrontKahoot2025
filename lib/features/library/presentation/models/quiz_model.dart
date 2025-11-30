@@ -25,7 +25,7 @@ class QuizCardUiModel {
     required this.playCount,
   });
 
-  // --- CASO 1: MIS CREACIONES (Muestro visibilidad, oculto autor) ---
+  //Mis quices
   factory QuizCardUiModel.forMyCreations(Quiz quiz, String imageUrl) {
     return QuizCardUiModel(
       id: quiz.id,
@@ -41,7 +41,7 @@ class QuizCardUiModel {
     );
   }
 
-  // --- CASO 2: FAVORITOS (Muestro autor, oculto visibilidad) ---
+  //Favoritos
   // factory QuizCardUiModel.forFavorites(Quiz quiz, String imageUrl) {
   //   return QuizCardUiModel(
   //     id: quiz.id,
