@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/core/domain/entities/paginated_result.dart';
-import 'package:frontkahoot2526/core/domain/entities/quiz.dart';
 import 'package:frontkahoot2526/features/library/application/use_cases/find_my_creatios_use_case.dart';
 import 'package:frontkahoot2526/features/library/domain/library_filter_params.dart';
+import 'package:frontkahoot2526/features/library/domain/library_quiz.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/library_notifier_state.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/quiz_model.dart';
 import 'package:frontkahoot2526/features/library/presentation/providers/library_repository_provider.dart';
@@ -35,12 +35,12 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
   }
 
   Future<LibraryNotifierState> processResult(
-    PaginatedResult<Quiz> result,
+    PaginatedResult<LibraryQuiz> result,
   ) async {
-    _queryParams = _queryParams.copyWith(page: 1);
+    _queryParams = _queryParams.copyWith();
     List<QuizCardUiModel> list = result.items.map((quiz) {
       final imageUrl =
-          'https://via.placeholder.com/150'; // Modificar luego esto
+          'https://placehold.co/600x400.png?text=Quiz_Image'; // Modificar luego esto
       return QuizCardUiModel.forMyCreations(quiz, imageUrl);
     }).toList();
     return LibraryNotifierState(

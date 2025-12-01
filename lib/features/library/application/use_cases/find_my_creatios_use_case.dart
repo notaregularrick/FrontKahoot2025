@@ -1,8 +1,8 @@
 
 
 import 'package:frontkahoot2526/core/domain/entities/paginated_result.dart';
-import 'package:frontkahoot2526/core/domain/entities/quiz.dart';
 import 'package:frontkahoot2526/features/library/domain/library_filter_params.dart';
+import 'package:frontkahoot2526/features/library/domain/library_quiz.dart';
 import 'package:frontkahoot2526/features/library/domain/library_repository.dart';
 import 'package:frontkahoot2526/features/library/infrastructure/fake_library_repository_impl.dart';
 
@@ -12,7 +12,7 @@ class FindMyCreatiosUseCase {
 
   FindMyCreatiosUseCase(this.repository, this.params);
   //falta obtener la url de la imagen y mostrarla
-  Future<PaginatedResult<Quiz>> execute(){
+  Future<PaginatedResult<LibraryQuiz>> execute(){
     return repository.findMyCreations(params);
   } 
 }

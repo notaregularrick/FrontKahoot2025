@@ -1,43 +1,56 @@
 import 'package:flutter/material.dart';
-import 'package:frontkahoot2526/core/domain/entities/quiz.dart';
+import 'package:frontkahoot2526/features/library/domain/library_quiz.dart';
 
 class QuizCardUiModel {
   final String id;
   final String title;
+  final String description;
   final String imageUrl;
-  final String questionCount;
+  final String themeId;
   final String dateInfo;
   final String playCount;
-
+  final String category;
   final String? authorName; 
+  final String? authorId;
   final String? visibilityText;
   final IconData? visibilityIcon;
+  final String? gameId;
+  final String? gameType;
 
   QuizCardUiModel({
     required this.id,
     required this.title,
+    required this.description,
     required this.imageUrl,
-    required this.questionCount,
+    required this.themeId,
     required this.dateInfo,
+    required this.playCount,
+    required this.category,
     this.authorName,
+    this.authorId,
     this.visibilityText,
     this.visibilityIcon,
-    required this.playCount,
+    this.gameId,
+    this.gameType,
   });
 
   //Mis quices
-  factory QuizCardUiModel.forMyCreations(Quiz quiz, String imageUrl) {
+  factory QuizCardUiModel.forMyCreations(LibraryQuiz quiz, String imageUrl) {
     return QuizCardUiModel(
       id: quiz.id,
-      title: quiz.title,
+      title: quiz.title ?? 'Sin título',
+      description: quiz.description ?? 'Sin descripción',
       imageUrl: imageUrl,
-      questionCount: "${quiz.questions.length} P",
-      dateInfo: "creado el ${quiz.createdAt.day}/${quiz.createdAt.month}/${quiz.createdAt.year}",
-      
+      themeId: quiz.themeId,
+      dateInfo: "Creado el ${quiz.createdAt.day}/${quiz.createdAt.month}/${quiz.createdAt.year}",
+      playCount: "${quiz.playCount} jugadas",
+      category: quiz.category,
       authorName: null,
-      visibilityText: quiz.visibility == 'public' ? 'Public' : 'Private',
+      authorId: null,
+      visibilityText: quiz.visibility == 'public' ? 'Público' : 'Privado',
       visibilityIcon: quiz.visibility == 'public' ? Icons.public : Icons.lock,
-      playCount: "${quiz.playCount} jugadas"
+      gameId: null,
+      gameType: null,
     );
   }
 

@@ -33,34 +33,69 @@ class QuizCard extends StatelessWidget {
                       Positioned.fill(
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            color: Colors.grey[200],
-                          ), // Tu imagen iría aquí
+                          child: Image.network(
+                            quiz.imageUrl,
+                            fit: BoxFit.cover,
+                            loadingBuilder:
+                                (
+                                  BuildContext context,
+                                  Widget child,
+                                  ImageChunkEvent? loadingProgress,
+                                ) {
+                                  if (loadingProgress == null) return child;
+                                  return Center(
+                                    child: CircularProgressIndicator(
+                                      value:
+                                          loadingProgress.expectedTotalBytes !=
+                                              null
+                                          ? loadingProgress
+                                                    .cumulativeBytesLoaded /
+                                                loadingProgress
+                                                    .expectedTotalBytes!
+                                          : null,
+                                    ),
+                                  );
+                                },
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey[300],
+                                child: const Icon(
+                                  Icons.image_not_supported,
+                                  color: Colors.grey,
+                                ),
+                              );
+                            },
+                          ),
+
+                          // child: Container(
+                          //   color: Colors.grey[200],
+                          // ), // Tu imagen iría aquí
                         ),
                       ),
-                      Positioned(
-                        bottom: 4,
-                        right: 4,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            //color: theme.colorScheme.primary,
-                            color: Colors.yellow[700],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            quiz.questionCount,
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
+                      //  Aquí iba el total de preguntas del quiz
+                      // Positioned(
+                      //   bottom: 4,
+                      //   right: 4,
+                      //   child: Container(
+                      //     padding: const EdgeInsets.symmetric(
+                      //       horizontal: 8,
+                      //       vertical: 4,
+                      //     ),
+                      //     decoration: BoxDecoration(
+                      //       //color: theme.colorScheme.primary,
+                      //       color: Colors.yellow[700],
+                      //       borderRadius: BorderRadius.circular(8),
+                      //     ),
+                      //     child: Text(
+                      //       quiz.questionCount,
+                      //       style: const TextStyle(
+                      //         color: Colors.black,
+                      //         fontSize: 10,
+                      //         fontWeight: FontWeight.bold,
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),
