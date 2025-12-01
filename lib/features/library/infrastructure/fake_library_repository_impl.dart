@@ -3,6 +3,7 @@ import 'package:frontkahoot2526/core/domain/entities/answer.dart';
 import 'package:frontkahoot2526/core/domain/entities/paginated_result.dart';
 import 'package:frontkahoot2526/core/domain/entities/question.dart';
 import 'package:frontkahoot2526/core/domain/entities/quiz.dart';
+import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
 import 'package:frontkahoot2526/features/library/domain/library_filter_params.dart';
 import 'package:frontkahoot2526/features/library/domain/library_repository.dart';
 
@@ -119,7 +120,8 @@ class FakeLibraryRepository implements ILibraryRepository{
   //H7.1 Quices creados y borradores
   @override
   Future<PaginatedResult<Quiz>> findMyCreations(LibraryFilterParams params) async{
-    final Dio dio = Dio();
+    try{
+      final Dio dio = Dio();
     Response response = await dio.get('https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/kahoots/myCreations',
       queryParameters: toQuery(params)
     );
@@ -221,6 +223,30 @@ class FakeLibraryRepository implements ILibraryRepository{
       currentPage: paginationData['page'] as int, 
       limit: paginationData['limit'] as int);
     return paginatedResult;
+    }
+    on DioException catch (e){
+      if(e.response != null){
+        final data = e.response!.data;
+        throw AppException(
+          message: data['message'] as String,
+          statusCode: data['statusCode'] as int?,
+          error: data['error'] as String?,
+        );
+      }
+      else{
+        throw AppException(
+          message: 'Error desconocido',
+          statusCode: 500
+        );
+      }
+    }
+    catch(e){
+      throw AppException(
+        message: "Ocurrió un error inesperado",
+        statusCode: 500,
+        error: e.toString(),
+      );
+    }
   }
 
   //H7.2 Quices favoritos
@@ -263,5 +289,6 @@ void main() async {
   //   print('Error: $e');
   // }
   final repository = FakeLibraryRepository();
-  repository.pruebaApi();
+  final params = LibraryFilterParams(page: 100);
+  repository.findMyCreations(params);
 }

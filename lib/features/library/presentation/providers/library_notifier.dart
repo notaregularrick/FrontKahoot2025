@@ -24,12 +24,14 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
   Future<void> loadMyCreations() async {
     _currentIndex = 0;
     state = const AsyncLoading();
-    final useCase = FindMyCreatiosUseCase(
-      ref.read(libraryRepositoryProvider),
-      _queryParams,
-    ); //NOTA: modificar el provider de repositorio y los parametros
-    final result = await useCase.execute();
-    state = AsyncData(await processResult(result));
+    state = await AsyncValue.guard(() async {
+      final useCase = FindMyCreatiosUseCase(
+        ref.read(libraryRepositoryProvider),
+        _queryParams,
+      );
+      final result = await useCase.execute();
+      return processResult(result);
+    });
   }
 
   Future<LibraryNotifierState> processResult(
@@ -68,15 +70,16 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
   Future<void> changePage(int newPage) async {
     _queryParams = _queryParams.copyWith(page: newPage);
     state = const AsyncLoading();
-    final result;
     switch (_currentIndex) {
       case 0:
-        final useCase = FindMyCreatiosUseCase(
-          ref.read(libraryRepositoryProvider),
-          _queryParams,
-        );
-        result = await useCase.execute();
-        state = AsyncData(await processResult(result));
+        state = await AsyncValue.guard(() async {
+          final useCase = FindMyCreatiosUseCase(
+            ref.read(libraryRepositoryProvider),
+            _queryParams,
+          );
+          final result = await useCase.execute();
+          return processResult(result);
+        });
         break;
     }
   }

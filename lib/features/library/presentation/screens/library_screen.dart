@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
 import 'package:frontkahoot2526/features/library/presentation/providers/library_notifier.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/pagination_control_widget.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/quiz_card_widget.dart';
@@ -72,7 +73,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
       body: notifier.when(
         loading: () => const Center(child: CircularProgressIndicator()),
 
-        error: (error, stackTrace) => Text("error"),
+        error: (error, stackTrace) {
+          if(error is AppException){
+            return Center(child: Text("Error: ${error.message} (Code: ${error.statusCode}), Details: ${error.error}"));
+          }
+          return Center(child: Text("Unexpected error: $error"));
+        },
 
         data: (notifierState) {
           final quizList = notifierState.quizList;
