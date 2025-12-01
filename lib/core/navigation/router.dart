@@ -3,11 +3,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/core/navigation/navbar.dart';
 //import 'package:frontkahoot2526/features/presentation/screens/library_screen.dart';
+import 'package:frontkahoot2526/features/auth/presentation/pages/login_page.dart';
+import 'package:frontkahoot2526/features/auth/presentation/pages/register_page.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/presentation/providers/auth_providers.dart';
+
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authNotifierProvider);
+
   return GoRouter(
-    initialLocation: '/library', // Aquí se coloca la ruta inical (pueden ir cambiandola para probar sus pantallas)
+    initialLocation: '/login', // Ruta inicial mientras no haya redirección
+    redirect: (BuildContext context, GoRouterState state) {
+      final isLoggedIn = authState.token != null;
+      final currentLocation = state.uri.toString(); // o state.subloc si tu versión lo prefiere
+      final isLoginRoute = currentLocation == '/login';
+
+      if (!isLoggedIn && !isLoginRoute) {
+        return '/login';
+      }
+
+      if (isLoggedIn && isLoginRoute) {
+        return '/home';
+      }
+
+      return null;
+    },
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -15,36 +36,36 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
         branches: [
           // ---------------------------------------------------------
-          // NOTA: SHELL ROUTE es para las Pantallas que tienen barra de navegación (se llega desde una pantalla de la barra de navegación, como rutas anidadas)
-          //StatefulShellBranch es cada rama de la barra de navegación
+          // NOTA: SHELL ROUTE es para las Pantallas que tienen barra de navegación
           // ---------------------------------------------------------
-          // Rama 0: Home 
           StatefulShellBranch(
-          routes: [
+            routes: [
               GoRoute(
                 path: '/home',
-                // Usamos un placeholder simple si aún no desarrollaste la pantalla de Home
                 builder: (context, state) => const Scaffold(
                   body: Center(child: Text("HOME - Punto de partida")),
                 ),
               ),
-              // Aquí irán las rutas hijas de Home (ej: /home/other)
             ],
           ),
-          //Rama 1: Library (TU TRABAJO)
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/library',
-                //builder: (context, state) => const LibraryScreen(), // Tu pantalla
+                //builder: (context, state) => const LibraryScreen(),
               ),
             ],
           ),
         ],
       ),
-      // ---------------------------------------------------------
-      // B. Rutas con pantalla completa, sin barra de navegación (GoRoute)
-      // ---------------------------------------------------------
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterPage(),
+      ),
     ],
   );
 });
