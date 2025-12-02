@@ -9,7 +9,7 @@ abstract class ILibraryRepository {
   Future<PaginatedResult<LibraryQuiz>> findMyCreations(LibraryFilterParams params);
 
   //H7.2 Quices favoritos
-  Future<PaginatedResult<Quiz>> findFavorites(LibraryFilterParams params);
+  Future<PaginatedResult<LibraryQuiz>> findFavorites(LibraryFilterParams params);
 
   //H7.3 Quices en progreso
   Future<PaginatedResult<Quiz>> findKahootsInProgress(LibraryFilterParams params);

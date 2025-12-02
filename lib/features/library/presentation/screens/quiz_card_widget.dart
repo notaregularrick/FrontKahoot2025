@@ -165,7 +165,6 @@ class QuizCard extends StatelessWidget {
                                   //   backgroundColor: Colors.grey[300], // Fondo placeholder
                                   //   child: const Icon(Icons.person, size: 12, color: Colors.grey),
                                   // ),
-                                  const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
                                       "Autor: ${quiz.authorName!}",
@@ -191,7 +190,7 @@ class QuizCard extends StatelessWidget {
                                   ),
                                   SizedBox(width: 4),
                                   Text(
-                                    quiz.visibilityText!,
+                                    "${quiz.visibilityText!} • ${quiz.status}",
                                     style: TextStyle(
                                       color: AppColors.darkBlueText.withValues(alpha: 0.9),
                                       fontSize: 13,

@@ -10,6 +10,7 @@ class QuizCardUiModel {
   final String dateInfo;
   final String playCount;
   final String category;
+  final String status;
   final String? authorName; 
   final String? authorId;
   final String? visibilityText;
@@ -26,6 +27,7 @@ class QuizCardUiModel {
     required this.dateInfo,
     required this.playCount,
     required this.category,
+    required this.status,
     this.authorName,
     this.authorId,
     this.visibilityText,
@@ -45,6 +47,7 @@ class QuizCardUiModel {
       dateInfo: "${quiz.createdAt.day}/${quiz.createdAt.month}/${quiz.createdAt.year}",
       playCount: "${quiz.playCount} jugadas",
       category: quiz.category,
+      status: quiz.status == 'draft' ? 'Borrador' : 'Publicado',
       authorName: null,
       authorId: null,
       visibilityText: quiz.visibility == 'public' ? 'Público' : 'Privado',
@@ -54,18 +57,24 @@ class QuizCardUiModel {
     );
   }
 
-  //Favoritos
-  // factory QuizCardUiModel.forFavorites(Quiz quiz, String imageUrl) {
-  //   return QuizCardUiModel(
-  //     id: quiz.id,
-  //     title: quiz.title,
-  //     imageUrl: imageUrl,
-  //     questionCount: "${quiz.questions.length} Preguntas",
-  //     dateInfo: "creado el ${quiz.createdAt.day}/${quiz.createdAt.month}/${quiz.createdAt.year}",
-      
-  //     authorName: quiz.authorName,
-  //     visibilityText: null,
-  //     visibilityIcon: null,
-  //   );
-  // }
+  factory QuizCardUiModel.forFavorites(LibraryQuiz quiz, String imageUrl) {
+    return QuizCardUiModel(
+      id: quiz.id,
+      title: quiz.title ?? 'Sin título',
+      description: quiz.description ?? 'Sin descripción',
+      imageUrl: imageUrl,
+      themeId: quiz.themeId,
+      dateInfo: "${quiz.createdAt.day}/${quiz.createdAt.month}/${quiz.createdAt.year}",
+      playCount: "${quiz.playCount} jugadas",
+      category: quiz.category,
+      status: quiz.status == 'draft' ? 'Borrador' : 'Publicado',
+      authorName: quiz.authorName,
+      authorId: quiz.authorId,
+      visibilityText: null,
+      visibilityIcon: null,
+      gameId: null,
+      gameType: null,
+    );
+  }
+
 }
