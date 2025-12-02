@@ -14,11 +14,10 @@ class LibraryFilterParams {
     this.search,                
     this.status = 'all',        
     this.visibility = 'all',    
-    this.orderBy = 'createdAt', // La doc dice default 'recent', que mapearemos a createdAt
+    this.orderBy = 'createdAt',
     this.order = 'asc',         
   });
   
-  // Método copyWith para facilitar la paginación y filtros en la UI
   LibraryFilterParams copyWith({
     int? page,
     int? limit,
