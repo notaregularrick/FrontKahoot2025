@@ -10,12 +10,15 @@ abstract class ILibraryRepository {
   //H7.2 Quices favoritos
   Future<PaginatedResult<LibraryQuiz>> findFavorites(LibraryFilterParams params);
 
-  //H7.4 Quitar quiz de favoritos
-  Future<void> removeFavorite(String quizId);
+  //H7.4 Agregar quiz a favoritos
+  Future<void> addQuizToFavorite(String quizId);
 
-  //H7.3 Quices en progreso
+  //H7.4 Quitar quiz de favoritos
+  Future<void> removeQuizFromFavorite(String quizId);
+
+  //H7.5 Quices en progreso
   Future<PaginatedResult<LibraryQuiz>> findQuizzesInProgress(LibraryFilterParams params);
 
-  //H7.4 Quices completados
+  //H7.6 Quices completados
   Future<PaginatedResult<LibraryQuiz>> findCompletedQuizzes(LibraryFilterParams params);
 }

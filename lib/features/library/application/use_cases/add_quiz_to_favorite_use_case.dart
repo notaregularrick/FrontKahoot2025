@@ -1,10 +1,10 @@
 import 'package:frontkahoot2526/features/library/domain/library_repository.dart';
 
-class RemoveFavoriteQuizUseCase {
+class AddQuizToFavoriteUseCase {
   final ILibraryRepository repository;
 
-  RemoveFavoriteQuizUseCase(this.repository);
+  AddQuizToFavoriteUseCase(this.repository);
   Future<void> execute(String quizId){
-    return repository.removeQuizFromFavorite(quizId);
+    return repository.addQuizToFavorite(quizId);
   } 
 }

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/core/domain/entities/paginated_result.dart';
+import 'package:frontkahoot2526/features/library/application/use_cases/add_quiz_to_favorite_use_case.dart';
 import 'package:frontkahoot2526/features/library/application/use_cases/find_completed_quizzes.dart';
 import 'package:frontkahoot2526/features/library/application/use_cases/find_favorites_use_case.dart';
 import 'package:frontkahoot2526/features/library/application/use_cases/find_my_creatios_use_case.dart';
@@ -155,18 +156,18 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
     }
   }
 
-  Future<void> reloadPage() async{
+  Future<void> reloadPage() async {
     await changePage(_queryParams.page);
   }
 
-  Future<void> searchQuizzes(String query) async{
+  Future<void> searchQuizzes(String query) async {
     _queryParams = _queryParams.copyWith(search: query);
     state = const AsyncLoading();
     await changePage(1);
   }
 
   Future<void> removeFavorite(String quizId) async {
-    final oldState = state.value; 
+    final oldState = state.value;
     if (oldState == null) return;
     state = await AsyncValue.guard(() async {
       final useCase = RemoveFavoriteQuizUseCase(
@@ -188,6 +189,17 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
     //    // NOTA:Esto mantiene el error pero recupera la data vieja (para snackbar puede servir)
     //    state = AsyncValue<LibraryNotifierState>.error(state.error!, state.stackTrace!).copyWithPrevious(AsyncData(oldState));
     // }
+  }
+
+  Future<void> addFavorite(String quizId) async {
+    final oldState = state.value;
+    if (oldState == null) return;
+    await AsyncValue.guard(() async {
+      final useCase = AddQuizToFavoriteUseCase(
+        ref.read(libraryRepositoryProvider),
+      );
+      await useCase.execute(quizId);
+    });
   }
 }
 

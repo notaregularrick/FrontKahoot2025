@@ -330,11 +330,39 @@ class FakeLibraryRepository implements ILibraryRepository {
   }
 
   @override
-  Future<void> removeFavorite(String quizId) async {
+  Future<void> addQuizToFavorite(String quizId) async {
+    try {
+      final Dio dio = Dio();
+      await dio.post(
+        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/favorites/:$quizId',
+      );
+    } on DioException catch (e) {
+      print(e);
+      if (e.response != null) {
+        final data = e.response!.data;
+        throw AppException(
+          message: data['message'] as String,
+          statusCode: data['statusCode'] as int?,
+          error: data['error'] as String?,
+        );
+      } else {
+        throw AppException(message: 'Error desconocido', statusCode: 500);
+      }
+    } catch (e) {
+      throw AppException(
+        message: "Ocurrió un error inesperado",
+        statusCode: 500,
+        error: e.toString(),
+      );
+    }
+  }
+
+  @override
+  Future<void> removeQuizFromFavorite(String quizId) async {
     try {
       final Dio dio = Dio();
       await dio.delete(
-        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io//library/favorites/:$quizId',
+        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/favorites/:$quizId',
       );
     } on DioException catch (e) {
       if (e.response != null) {
@@ -355,10 +383,4 @@ class FakeLibraryRepository implements ILibraryRepository {
       );
     }
   }
-}
-
-void main() async {
-  final repository = FakeLibraryRepository();
-  //final params = LibraryFilterParams();
-  repository.removeFavorite('quiz-math-001');
 }
