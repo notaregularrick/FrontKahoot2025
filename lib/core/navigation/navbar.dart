@@ -21,6 +21,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
         destinations: const [
           //Los íconos que aparecerán en la barra de navegación.
           NavigationDestination(icon: Icon(Icons.home), label: 'Inicio'),
+          NavigationDestination(icon: Icon(Icons.add_circle), label: 'Crear Kahoot'),
           NavigationDestination(icon: Icon(Icons.library_books), label: 'Biblioteca'),
         ],
       ),

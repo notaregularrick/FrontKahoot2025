@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class LibraryScreen extends StatelessWidget {
   const LibraryScreen({super.key});
@@ -36,6 +37,14 @@ class LibraryScreen extends StatelessWidget {
               'Prueba exitosa en /library.',
               style: TextStyle(color: Color(0xFF757575)), // Gris Medio
             ),
+            TextButton(
+              onPressed: () {
+                //redirigir a creacion del quiz
+                context.go('/create-kahoot');
+              },
+              child: Text('Crear Kahoot', style: TextStyle(color: Colors.black)),
+              style: ButtonStyle(backgroundColor: WidgetStateProperty.all(Color.fromARGB(255, 118, 8, 2))),
+            )
           ],
         ),
       ),

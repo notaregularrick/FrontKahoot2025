@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/core/navigation/navbar.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/library_screen.dart';
+import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/create_kahoot_screen.dart';
+import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/from_scratch_screen.dart';
 import 'package:go_router/go_router.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -20,15 +22,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           // ---------------------------------------------------------
           // Rama 0: Home 
           StatefulShellBranch(
-          routes: [
-              GoRoute(
-                path: '/home',
-                // Usamos un placeholder simple si aún no desarrollaste la pantalla de Home
-                builder: (context, state) => const Scaffold(
-                  body: Center(child: Text("HOME - Punto de partida")),
+              routes: [
+                GoRoute(
+                  path: '/home',
+                  // Usamos un placeholder simple si aún no desarrollaste la pantalla de Home
+                  builder: (context, state) => const Scaffold(
+                    body: Center(child: Text("HOME - Punto de partida")),
+                  ),
                 ),
+                // Aquí irán las rutas hijas de Home (ej: /home/other)
+              ],
+          ),
+          //Rama 2: Crear Kahoot
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/create-kahoot',
+                builder: (context, state) => const CreateKahootScreen(), // Pantalla de selección
+                routes: [
+                  GoRoute(
+                    path: 'from-scratch',
+                    builder: (context, state) => const FromScratchScreen(), // Pantalla de edición
+                  ),
+                ],
               ),
-              // Aquí irán las rutas hijas de Home (ej: /home/other)
             ],
           ),
           //Rama 1: Library (TU TRABAJO)
