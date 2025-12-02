@@ -23,6 +23,7 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
 
   Future<void> loadMyCreations() async {
     _currentIndex = 0;
+    _queryParams = _queryParams.copyWith(page:1);
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final useCase = FindMyCreatiosUseCase(
@@ -54,6 +55,7 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
 
   Future<void> loadFavorites() async {
     _currentIndex = 1;
+    _queryParams = _queryParams.copyWith(page:1);
     state = const AsyncLoading();
     List<QuizCardUiModel> list = [];
     state = AsyncData(

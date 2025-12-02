@@ -42,7 +42,7 @@ class QuizCardUiModel {
       description: quiz.description ?? 'Sin descripción',
       imageUrl: imageUrl,
       themeId: quiz.themeId,
-      dateInfo: "Creado el ${quiz.createdAt.day}/${quiz.createdAt.month}/${quiz.createdAt.year}",
+      dateInfo: "${quiz.createdAt.day}/${quiz.createdAt.month}/${quiz.createdAt.year}",
       playCount: "${quiz.playCount} jugadas",
       category: quiz.category,
       authorName: null,
