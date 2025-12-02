@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/core/navigation/router.dart';
-import 'features/auth/application/state/auth_init_provider.dart'; // El nuevo import
+import 'features/auth/presentation/providers/auth_init_provider.dart'; // El nuevo import
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Necesario antes de cualquier código asincrónico.

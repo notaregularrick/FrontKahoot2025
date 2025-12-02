@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/secure_storage_service.dart';
 import '../../domain/repositories/auth_repository.dart';
 //import '../../domain/entities/user_entity.dart';
-import 'auth_state.dart';
+import '../../application/state/auth_state.dart';
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository repository;

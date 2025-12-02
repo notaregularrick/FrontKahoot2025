@@ -1,4 +1,6 @@
 import '../../infraestructure/models/auth_response_model.dart';
+import '../../infraestructure/models/profile_model.dart';
+//import '../entities/profile_entity.dart';
 import '../entities/user_entity.dart';
 
 abstract class AuthRepository {
@@ -16,5 +18,11 @@ abstract class AuthRepository {
   });
 
   Future<void> logout();
+
+  Future<void> requestPasswordReset(String email);
+
+  Future<void> confirmPasswordReset(String resetToken, String newPassword);
+
+  Future<ProfileModel> getUserProfile();
 
 }

@@ -7,7 +7,7 @@ import '../../domain/repositories/auth_repository.dart';
 import '../../infraestructure/datasource/auth_datasource_impl.dart';
 import '../../infraestructure/repositories/auth_repository_impl.dart';
 import '../controllers/auth_notifier.dart';
-import '../controllers/auth_state.dart';
+import '../../application/state/auth_state.dart';
 
 // Dio Provider
 final dioProvider = Provider<Dio>((ref) {

@@ -1,22 +1,26 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+//import 'package:frontkahoot2526/features/auth/presentation/providers/auth_providers.dart';
+//import 'package:frontkahoot2526/core/services/secure_storage_service.dart';
 
-import 'package:frontkahoot2526/features/auth/presentation/providers/auth_providers.dart';
+import '../providers/secure_storage_provider.dart';
 
 class ApiService {
   final Dio _dio;
 
   ApiService(this._dio);
 
+  Dio get dio => _dio;
+
   // Configuración global para Dio
   void setUpInterceptors(Ref ref) {
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        // Aquí conseguimos el token desde el estado de auth
-        final token = ref.read(authNotifierProvider).token;
+        // Conseguimos el token desde SecureStorage
+        final storage = ref.read(secureStorageProvider); // Lee el servicio de storage
+        final token = await storage.getToken(); // Lee el token guardado
 
-        // Si el token existe, lo agregamos a la cabecera
-        if (token != null) {
+        if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
         }
 
@@ -54,8 +58,9 @@ class ApiService {
 
 final apiServiceProvider = Provider<ApiService>((ref) {
   final dio = Dio(); // Crear instancia de Dio
-
+  //final storage = ref.read(secureStorageProvider); // Acceder a SecureStorage
   final apiService = ApiService(dio);
+
   apiService.setUpInterceptors(ref); // Configura el interceptor
 
   return apiService;

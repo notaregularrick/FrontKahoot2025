@@ -49,9 +49,13 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
               );
 
               // si todo salió bien => user no es null
-              final user = ref.read(authNotifierProvider).user;
-              if (user != null) {
-                context.go('/home');
+              if (mounted) {
+                // si todo salió bien => user no es null
+                final user = ref.read(authNotifierProvider).user;
+                if (user != null) {
+                  // ignore: use_build_context_synchronously
+                  context.go('/home');
+                }
               }
             },
             child: const Text("Crear Cuenta"),
