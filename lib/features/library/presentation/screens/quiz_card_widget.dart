@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontkahoot2526/features/library/presentation/models/library_colors.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/quiz_model.dart';
 
 class QuizCard extends StatelessWidget {
@@ -16,17 +17,20 @@ class QuizCard extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           return Container(
-            height: 100,
+            height: 130,
             decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 114, 224, 223),
-              //color: theme.colorScheme.surface,
+              color: AppColors.orangeAccent.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color.fromARGB(255, 86, 81, 81).withValues(alpha: 0.3),
+                width: 1,
+              ),
             ),
             child: Row(
               children: [
                 // --- 1. IMAGEN (Izquierda) ---
                 Container(
-                  width: 100,
+                  width: 120,
                   margin: const EdgeInsets.all(8),
                   child: Stack(
                     children: [
@@ -66,10 +70,6 @@ class QuizCard extends StatelessWidget {
                               );
                             },
                           ),
-
-                          // child: Container(
-                          //   color: Colors.grey[200],
-                          // ), // Tu imagen iría aquí
                         ),
                       ),
                       //  Aquí iba el total de preguntas del quiz
@@ -116,6 +116,22 @@ class QuizCard extends StatelessWidget {
                           quiz.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: AppColors.darkBlueText,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          //style: theme.textTheme.titleMedium,
+                        ),
+                        Text(
+                          "Categoría: ${quiz.category}",
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: AppColors.darkBlueText.withValues(alpha: 0.9),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
                           //style: theme.textTheme.titleMedium,
                         ),
 
@@ -127,16 +143,17 @@ class QuizCard extends StatelessWidget {
                               // Usamos un caracter "bullet" (•) para separar
                               "${quiz.dateInfo} • ${quiz.playCount}",
                               style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
+                                color: AppColors.darkBlueText.withValues(alpha: 0.9),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
 
-                            const SizedBox(
-                              height: 6,
-                            ), // Pequeña separación vertical
+                            // const SizedBox(
+                            //   height: 6,
+                            // ), // Pequeña separación vertical
                             // Fila 2: Autor O Visibilidad (Dependiendo del caso)
                             if (quiz.authorName != null)
                               // Caso Favoritos: Muestra Avatar + Nombre
@@ -148,15 +165,14 @@ class QuizCard extends StatelessWidget {
                                   //   backgroundColor: Colors.grey[300], // Fondo placeholder
                                   //   child: const Icon(Icons.person, size: 12, color: Colors.grey),
                                   // ),
-                                  const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
                                       "Autor: ${quiz.authorName!}",
                                       style: TextStyle(
-                                        color: Colors.grey[800],
-                                        fontSize: 12,
+                                        color: AppColors.darkBlueText.withValues(alpha: 0.9),
+                                        fontSize: 13,
                                         fontWeight:
-                                            FontWeight.w600, // Semi-bold
+                                            FontWeight.w600,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -169,15 +185,16 @@ class QuizCard extends StatelessWidget {
                                 children: [
                                   Icon(
                                     quiz.visibilityIcon,
-                                    size: 16,
-                                    color: Colors.grey[600],
+                                    size: 13,
+                                    color: AppColors.darkBlueText.withValues(alpha: 0.9),
                                   ),
                                   SizedBox(width: 4),
                                   Text(
-                                    quiz.visibilityText!,
+                                    "${quiz.visibilityText!} • ${quiz.status}",
                                     style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
+                                      color: AppColors.darkBlueText.withValues(alpha: 0.9),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],

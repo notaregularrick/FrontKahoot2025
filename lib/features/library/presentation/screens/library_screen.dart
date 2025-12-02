@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
+import 'package:frontkahoot2526/features/library/presentation/models/library_colors.dart';
+import 'package:frontkahoot2526/features/library/presentation/models/quiz_model.dart';
 import 'package:frontkahoot2526/features/library/presentation/providers/library_notifier.dart';
+import 'package:frontkahoot2526/features/library/presentation/screens/library_search_bar.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/pagination_control_widget.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/quiz_card_widget.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/quiz_options_widget.dart';
@@ -16,9 +19,12 @@ class LibraryScreen extends ConsumerStatefulWidget {
 class _LibraryScreenState extends ConsumerState<LibraryScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
   static const List<Tab> _tabs = <Tab>[
     Tab(text: 'Mis quices'),
     Tab(text: 'Favoritos'),
+    Tab(text: 'En progreso'),
+    Tab(text: 'Completados'),
   ];
 
   @override
@@ -28,6 +34,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
 
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) {
+        FocusManager.instance.primaryFocus?.unfocus();
+        _searchController.clear();
         _onTabChanged(_tabController.index);
       }
     });
@@ -42,7 +50,44 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
       case 1:
         notifier.loadFavorites();
         break;
+      case 2:
+        notifier.loadQuizzesInProgress();
+        break;
+      case 3:
+        notifier.loadCompletedQuizzes();
+        break;
     }
+  }
+
+  void _showQuizOptions(QuizCardUiModel quizUiModel) {
+    QuizContextType contextType;
+    switch (_tabController.index) {
+      case 0:
+        contextType = QuizContextType.myCreations;
+        break;
+      case 1:
+        contextType = QuizContextType.favorites;
+        break;
+      case 2:
+        contextType = QuizContextType.inProgress;
+        break;
+      case 3:
+        contextType = QuizContextType.completed;
+        break;
+      default:
+        contextType = QuizContextType.myCreations;
+        break;
+    }
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return FractionallySizedBox(
+          heightFactor: 0.85,
+          child: QuizOptionsSheet(quiz: quizUiModel, type: contextType),
+        );
+      },
+    );
   }
 
   @override
@@ -56,26 +101,46 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
     final notifier = ref.watch(asyncLibraryProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.creamBackground.withValues(alpha: 0.3),
       appBar: AppBar(
-        title: const Text("Mi Biblioteca"),
-        backgroundColor: Color.fromARGB(255, 244, 67, 54),
+        title: const Text("Mi Biblioteca", style: TextStyle(fontSize: 25)),
+        backgroundColor: AppColors.primaryRed,
         foregroundColor: Colors.white,
         centerTitle: true,
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true, // scroll horizontal
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          tabs: _tabs,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(100),
+          child: Column(
+            children: [
+              LibrarySearchBar(
+                controller: _searchController,
+                onSearch: (query) {
+                  ref.read(asyncLibraryProvider.notifier).searchQuizzes(query);
+                },
+              ),
+              TabBar(
+                controller: _tabController,
+                isScrollable: true, // scroll horizontal
+                tabAlignment: TabAlignment.start,
+                indicatorColor: AppColors.mustardYellow,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white70,
+                tabs: _tabs,
+                labelStyle: const TextStyle(fontSize: 18),
+              ),
+            ],
+          ),
         ),
       ),
       body: notifier.when(
         loading: () => const Center(child: CircularProgressIndicator()),
 
         error: (error, stackTrace) {
-          if(error is AppException){
-            return Center(child: Text("Error: ${error.message} (Code: ${error.statusCode}), Details: ${error.error}"));
+          if (error is AppException) {
+            return Center(
+              child: Text(
+                "Error: ${error.message} (Code: ${error.statusCode}), Details: ${error.error}",
+              ),
+            );
           }
           return Center(child: Text("Unexpected error: $error"));
         },
@@ -97,29 +162,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                     final quizUiModel = quizList[index];
                     return QuizCard(
                       quiz: quizUiModel,
-                      onTap: () {
-                        QuizContextType contextType;
-                        switch (_tabController.index) {
-                          case 0:
-                            contextType = QuizContextType.myCreations;
-                            break;
-                          case 1:
-                            contextType = QuizContextType.favorites;
-                            break;
-                          default:
-                            contextType = QuizContextType.myCreations;
-                            break;
-                        }
-                        showModalBottomSheet(
-                          context: context,
-                          builder: (context) {
-                            return QuizOptionsSheet(
-                              quiz: quizUiModel,
-                              type: contextType,
-                            );
-                          },
-                        );
-                      },
+                      onTap: () => _showQuizOptions(quizUiModel),
                     );
                   },
                 ),
