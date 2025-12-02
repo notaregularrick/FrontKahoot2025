@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/library_colors.dart';
+import 'package:frontkahoot2526/features/library/presentation/models/quiz_model.dart';
 import 'package:frontkahoot2526/features/library/presentation/providers/library_notifier.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/pagination_control_widget.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/quiz_card_widget.dart';
@@ -52,6 +53,37 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
         notifier.loadCompletedQuizzes();
         break;
     }
+  }
+
+  void _showQuizOptions(QuizCardUiModel quizUiModel) {
+    QuizContextType contextType;
+    switch (_tabController.index) {
+      case 0:
+        contextType = QuizContextType.myCreations;
+        break;
+      case 1:
+        contextType = QuizContextType.favorites;
+        break;
+      case 2:
+        contextType = QuizContextType.inProgress;
+        break;
+      case 3:
+        contextType = QuizContextType.completed;
+        break;
+      default:
+        contextType = QuizContextType.myCreations;
+        break;
+    }
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return FractionallySizedBox(
+          heightFactor: 0.85,
+          child: QuizOptionsSheet(quiz: quizUiModel, type: contextType),
+        );
+      },
+    );
   }
 
   @override
@@ -114,39 +146,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                     final quizUiModel = quizList[index];
                     return QuizCard(
                       quiz: quizUiModel,
-                      onTap: () {
-                        QuizContextType contextType;
-                        switch (_tabController.index) {
-                          case 0:
-                            contextType = QuizContextType.myCreations;
-                            break;
-                          case 1:
-                            contextType = QuizContextType.favorites;
-                            break;
-                          case 2:
-                            contextType = QuizContextType.inProgress;
-                            break;
-                          case 3:
-                            contextType = QuizContextType.completed;
-                            break;
-                          default:
-                            contextType = QuizContextType.myCreations;
-                            break;
-                        }
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (context) {
-                            return FractionallySizedBox(
-                              heightFactor: 0.85,
-                              child: QuizOptionsSheet(
-                                quiz: quizUiModel,
-                                type: contextType,
-                              ),
-                            );
-                          },
-                        );
-                      },
+                      onTap: () => _showQuizOptions(quizUiModel),
                     );
                   },
                 ),

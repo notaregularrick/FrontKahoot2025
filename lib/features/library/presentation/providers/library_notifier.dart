@@ -4,6 +4,7 @@ import 'package:frontkahoot2526/features/library/application/use_cases/find_comp
 import 'package:frontkahoot2526/features/library/application/use_cases/find_favorites_use_case.dart';
 import 'package:frontkahoot2526/features/library/application/use_cases/find_my_creatios_use_case.dart';
 import 'package:frontkahoot2526/features/library/application/use_cases/find_quizzes_in_progress.dart';
+import 'package:frontkahoot2526/features/library/application/use_cases/remove_favorite_quiz_use_case.dart';
 import 'package:frontkahoot2526/features/library/domain/library_filter_params.dart';
 import 'package:frontkahoot2526/features/library/domain/library_quiz.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/library_notifier_state.dart';
@@ -158,6 +159,35 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
         });
         break;
     }
+  }
+
+  Future<void> reloadPage() async{
+    await changePage(_queryParams.page);
+  }
+
+  Future<void> removeFavorite(String quizId) async {
+    final oldState = state.value; 
+    if (oldState == null) return;
+    state = await AsyncValue.guard(() async {
+      final useCase = RemoveFavoriteQuizUseCase(
+        ref.read(libraryRepositoryProvider),
+      );
+      await useCase.execute(quizId);
+      List<QuizCardUiModel> newList = oldState.quizList
+          .where((quiz) => quiz.id != quizId)
+          .toList();
+      return LibraryNotifierState(
+        quizList: newList,
+        totalCount: oldState.totalCount - 1,
+        totalPages: oldState.totalPages,
+        currentPage: oldState.currentPage,
+        limit: oldState.limit,
+      );
+    });
+    // if (state.hasError) {
+    //    // NOTA:Esto mantiene el error pero recupera la data vieja (para snackbar puede servir)
+    //    state = AsyncValue<LibraryNotifierState>.error(state.error!, state.stackTrace!).copyWithPrevious(AsyncData(oldState));
+    // }
   }
 }
 
