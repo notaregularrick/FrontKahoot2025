@@ -11,8 +11,8 @@ abstract class ILibraryRepository {
   Future<PaginatedResult<LibraryQuiz>> findFavorites(LibraryFilterParams params);
 
   //H7.3 Quices en progreso
-  Future<PaginatedResult<LibraryQuiz>> findKahootsInProgress(LibraryFilterParams params);
+  Future<PaginatedResult<LibraryQuiz>> findQuizzesInProgress(LibraryFilterParams params);
 
   //H7.4 Quices completados
-  Future<PaginatedResult<LibraryQuiz>> findCompletedKahoots(LibraryFilterParams params);
+  Future<PaginatedResult<LibraryQuiz>> findCompletedQuizzes(LibraryFilterParams params);
 }

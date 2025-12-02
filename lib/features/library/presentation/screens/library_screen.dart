@@ -21,7 +21,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
     Tab(text: 'Mis quices'),
     Tab(text: 'Favoritos'),
     Tab(text: 'En progreso'),
-    Tab(text: 'Otro')
+    Tab(text: 'Completados'),
   ];
 
   @override
@@ -46,7 +46,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
         notifier.loadFavorites();
         break;
       case 2:
-        notifier.loadKahootsInProgress();
+        notifier.loadQuizzesInProgress();
+        break;
+      case 3:
+        notifier.loadCompletedQuizzes();
         break;
     }
   }
@@ -123,6 +126,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                           case 2:
                             contextType = QuizContextType.inProgress;
                             break;
+                          case 3:
+                            contextType = QuizContextType.completed;
+                            break;
                           default:
                             contextType = QuizContextType.myCreations;
                             break;
@@ -132,8 +138,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                           isScrollControlled: true,
                           builder: (context) {
                             return FractionallySizedBox(
-                              heightFactor:
-                                  0.85,
+                              heightFactor: 0.85,
                               child: QuizOptionsSheet(
                                 quiz: quizUiModel,
                                 type: contextType,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/quiz_model.dart';
 
-enum QuizContextType { myCreations, favorites, inProgress }
+enum QuizContextType { myCreations, favorites, inProgress, completed }
 
 class QuizOptionsSheet extends StatelessWidget {
   final QuizCardUiModel quiz;
@@ -97,6 +97,15 @@ class QuizOptionsSheet extends StatelessWidget {
             if (type == QuizContextType.inProgress) ...[
               //3 puntos para descomponer el array
               createContinueButton(),
+              createPlayMultiplayerButton(),
+              createPlaySoloButton(),
+            ],
+
+            if (type == QuizContextType.completed) ...[
+              //3 puntos para descomponer el array
+              createWatchResultsButton(),
+              createPlayMultiplayerButton(),
+              createPlaySoloButton(),
             ],
           ],
         ),
@@ -177,6 +186,23 @@ class QuizOptionsSheet extends StatelessWidget {
       leading: quiz.gameType == 'multiplayer' ? Icon(Icons.group) : Icon(Icons.gamepad),
       title: Text(
         quiz.gameType == 'multiplayer' ? "Continuar juego multijugador" : "Continuar juego en solitario",
+        style: TextStyle(
+          //color: Colors.blue,
+          fontWeight: FontWeight.w600,
+          fontSize: 20,
+        ),
+      ),
+      onTap: () {
+        //Llama para continuar un juego en progreso
+      },
+    );
+  }
+
+  Widget createWatchResultsButton() {
+    return ListTile(
+      leading: Icon(Icons.visibility),
+      title: Text(
+        quiz.gameType == 'multiplayer' ? "Ver resultados de juego multijugador" : "Ver resultados de juego en solitario",
         style: TextStyle(
           //color: Colors.blue,
           fontWeight: FontWeight.w600,

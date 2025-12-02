@@ -97,4 +97,24 @@ class QuizCardUiModel {
     );
   }
 
+  factory QuizCardUiModel.forCompleted(LibraryQuiz quiz, String imageUrl) {
+    return QuizCardUiModel(
+      id: quiz.id,
+      title: quiz.title ?? 'Sin título',
+      description: quiz.description ?? 'Sin descripción',
+      imageUrl: imageUrl,
+      themeId: quiz.themeId,
+      dateInfo: "${quiz.createdAt.day}/${quiz.createdAt.month}/${quiz.createdAt.year}",
+      playCount: "${quiz.playCount} jugadas",
+      category: quiz.category,
+      status: quiz.status == 'draft' ? 'Borrador' : 'Publicado',
+      authorName: quiz.authorName,
+      authorId: quiz.authorId,
+      visibilityText: null,
+      visibilityIcon: null,
+      gameId: quiz.gameId,
+      gameType: quiz.gameType,
+    );
+  }
+
 }
