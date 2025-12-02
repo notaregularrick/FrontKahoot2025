@@ -4,6 +4,7 @@ import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/library_colors.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/quiz_model.dart';
 import 'package:frontkahoot2526/features/library/presentation/providers/library_notifier.dart';
+import 'package:frontkahoot2526/features/library/presentation/screens/library_search_bar.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/pagination_control_widget.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/quiz_card_widget.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/quiz_options_widget.dart';
@@ -18,6 +19,7 @@ class LibraryScreen extends ConsumerStatefulWidget {
 class _LibraryScreenState extends ConsumerState<LibraryScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
   static const List<Tab> _tabs = <Tab>[
     Tab(text: 'Mis quices'),
     Tab(text: 'Favoritos'),
@@ -32,6 +34,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
 
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) {
+        FocusManager.instance.primaryFocus?.unfocus();
+        _searchController.clear();
         _onTabChanged(_tabController.index);
       }
     });
@@ -98,21 +102,33 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
 
     return Scaffold(
       backgroundColor: AppColors.creamBackground.withValues(alpha: 0.3),
-      //backgroundColor: Colors.blue.shade100.withValues(alpha: 0.7),
       appBar: AppBar(
         title: const Text("Mi Biblioteca", style: TextStyle(fontSize: 25)),
         backgroundColor: AppColors.primaryRed,
         foregroundColor: Colors.white,
         centerTitle: true,
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true, // scroll horizontal
-          tabAlignment: TabAlignment.start,
-          indicatorColor: AppColors.mustardYellow,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          tabs: _tabs,
-          labelStyle: const TextStyle(fontSize: 18),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(100),
+          child: Column(
+            children: [
+              LibrarySearchBar(
+                controller: _searchController,
+                onSearch: (query) {
+                  ref.read(asyncLibraryProvider.notifier).searchQuizzes(query);
+                },
+              ),
+              TabBar(
+                controller: _tabController,
+                isScrollable: true, // scroll horizontal
+                tabAlignment: TabAlignment.start,
+                indicatorColor: AppColors.mustardYellow,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white70,
+                tabs: _tabs,
+                labelStyle: const TextStyle(fontSize: 18),
+              ),
+            ],
+          ),
         ),
       ),
       body: notifier.when(

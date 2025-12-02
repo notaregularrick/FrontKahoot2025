@@ -27,7 +27,7 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
 
   Future<void> loadMyCreations() async {
     _currentIndex = 0;
-    _queryParams = _queryParams.copyWith(page: 1);
+    _queryParams = LibraryFilterParams();
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final useCase = FindMyCreatiosUseCase(
@@ -41,9 +41,7 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
 
   Future<void> loadFavorites() async {
     _currentIndex = 1;
-    _queryParams = _queryParams.copyWith(
-      page: 1,
-    ); //OJO si hay que inicialziarlo luego de 0
+    _queryParams = LibraryFilterParams();
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final useCase = FindFavoritesUseCase(
@@ -57,9 +55,7 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
 
   Future<void> loadQuizzesInProgress() async {
     _currentIndex = 2;
-    _queryParams = _queryParams.copyWith(
-      page: 1,
-    ); //OJO si hay que inicialziarlo luego de 0
+    _queryParams = LibraryFilterParams();
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final useCase = FindQuizzesInProgressUseCase(
@@ -73,9 +69,7 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
 
   Future<void> loadCompletedQuizzes() async {
     _currentIndex = 3;
-    _queryParams = _queryParams.copyWith(
-      page: 1,
-    ); //OJO si hay que inicialziarlo luego de 0
+    _queryParams = LibraryFilterParams();
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final useCase = FindCompletedQuizzesUseCase(
@@ -163,6 +157,12 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
 
   Future<void> reloadPage() async{
     await changePage(_queryParams.page);
+  }
+
+  Future<void> searchQuizzes(String query) async{
+    _queryParams = _queryParams.copyWith(search: query);
+    state = const AsyncLoading();
+    await changePage(1);
   }
 
   Future<void> removeFavorite(String quizId) async {
