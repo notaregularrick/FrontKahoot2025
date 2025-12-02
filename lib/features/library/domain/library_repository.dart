@@ -1,5 +1,4 @@
 import 'package:frontkahoot2526/core/domain/entities/paginated_result.dart';
-import 'package:frontkahoot2526/core/domain/entities/quiz.dart';
 import 'package:frontkahoot2526/features/library/domain/library_filter_params.dart';
 import 'package:frontkahoot2526/features/library/domain/library_quiz.dart';
 
@@ -12,8 +11,8 @@ abstract class ILibraryRepository {
   Future<PaginatedResult<LibraryQuiz>> findFavorites(LibraryFilterParams params);
 
   //H7.3 Quices en progreso
-  Future<PaginatedResult<Quiz>> findKahootsInProgress(LibraryFilterParams params);
+  Future<PaginatedResult<LibraryQuiz>> findKahootsInProgress(LibraryFilterParams params);
 
   //H7.4 Quices completados
-  Future<PaginatedResult<Quiz>> findCompletedKahoots(LibraryFilterParams params);
+  Future<PaginatedResult<LibraryQuiz>> findCompletedKahoots(LibraryFilterParams params);
 }

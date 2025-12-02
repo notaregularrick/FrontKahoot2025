@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/quiz_model.dart';
 
-enum QuizContextType { myCreations, favorites }
+enum QuizContextType { myCreations, favorites, inProgress }
 
 class QuizOptionsSheet extends StatelessWidget {
   final QuizCardUiModel quiz;
@@ -93,6 +93,11 @@ class QuizOptionsSheet extends StatelessWidget {
               createPlaySoloButton(),
               createDeleteFavoriteButton(),
             ],
+
+            if (type == QuizContextType.inProgress) ...[
+              //3 puntos para descomponer el array
+              createContinueButton(),
+            ],
           ],
         ),
       ),
@@ -163,6 +168,23 @@ class QuizOptionsSheet extends StatelessWidget {
       ),
       onTap: () {
         //Elimina el quiz de favoritos
+      },
+    );
+  }
+
+  Widget createContinueButton() {
+    return ListTile(
+      leading: quiz.gameType == 'multiplayer' ? Icon(Icons.group) : Icon(Icons.gamepad),
+      title: Text(
+        quiz.gameType == 'multiplayer' ? "Continuar juego multijugador" : "Continuar juego en solitario",
+        style: TextStyle(
+          //color: Colors.blue,
+          fontWeight: FontWeight.w600,
+          fontSize: 20,
+        ),
+      ),
+      onTap: () {
+        //Llama para continuar un juego en progreso
       },
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/core/domain/entities/paginated_result.dart';
 import 'package:frontkahoot2526/features/library/application/use_cases/find_favorites_use_case.dart';
 import 'package:frontkahoot2526/features/library/application/use_cases/find_my_creatios_use_case.dart';
+import 'package:frontkahoot2526/features/library/application/use_cases/find_quizzes_in_progress.dart';
 import 'package:frontkahoot2526/features/library/domain/library_filter_params.dart';
 import 'package:frontkahoot2526/features/library/domain/library_quiz.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/library_notifier_state.dart';
@@ -50,6 +51,20 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
     });
   }
 
+  Future<void> loadKahootsInProgress() async {
+    _currentIndex = 2;
+    _queryParams = _queryParams.copyWith(page: 1);//OJO si hay que inicialziarlo luego de 0
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final useCase = FindQuizzesInProgressUseCase(
+        ref.read(libraryRepositoryProvider),
+        _queryParams,
+      );
+      final result = await useCase.execute();
+      return processResult(result);
+    });
+  }
+
   Future<LibraryNotifierState> processResult(
     PaginatedResult<LibraryQuiz> result,
   ) async {
@@ -62,6 +77,8 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
           return QuizCardUiModel.forMyCreations(quiz, imageUrl);
         case 1:
           return QuizCardUiModel.forFavorites(quiz, imageUrl);
+        case 2:
+          return QuizCardUiModel.forInProgress(quiz, imageUrl);
       }
       return QuizCardUiModel.forMyCreations(quiz, imageUrl);
     }).toList();
@@ -91,6 +108,16 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
       case 1:
         state = await AsyncValue.guard(() async {
           final useCase = FindFavoritesUseCase(
+            ref.read(libraryRepositoryProvider),
+            _queryParams,
+          );
+          final result = await useCase.execute();
+          return processResult(result);
+        });
+        break;
+      case 2:
+        state = await AsyncValue.guard(() async {
+          final useCase = FindQuizzesInProgressUseCase(
             ref.read(libraryRepositoryProvider),
             _queryParams,
           );

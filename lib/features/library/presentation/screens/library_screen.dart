@@ -20,6 +20,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
   static const List<Tab> _tabs = <Tab>[
     Tab(text: 'Mis quices'),
     Tab(text: 'Favoritos'),
+    Tab(text: 'En progreso'),
+    Tab(text: 'Otro')
   ];
 
   @override
@@ -42,6 +44,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
         break;
       case 1:
         notifier.loadFavorites();
+        break;
+      case 2:
+        notifier.loadKahootsInProgress();
         break;
     }
   }
@@ -67,6 +72,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true, // scroll horizontal
+          tabAlignment: TabAlignment.start,
           indicatorColor: AppColors.mustardYellow,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
@@ -113,6 +119,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                             break;
                           case 1:
                             contextType = QuizContextType.favorites;
+                            break;
+                          case 2:
+                            contextType = QuizContextType.inProgress;
                             break;
                           default:
                             contextType = QuizContextType.myCreations;
