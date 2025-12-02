@@ -26,7 +26,6 @@ class CreateKahootScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Título "Crear"
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
               child: Text(
@@ -38,13 +37,11 @@ class CreateKahootScreen extends StatelessWidget {
                 ),
               ),
             ),
-            // Contenido scrollable
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Sección "Crea tú mismo"
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -59,10 +56,9 @@ class CreateKahootScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          // Card "Lienzos en blanco"
                           GestureDetector(
                             onTap: () {
-                              context.go('/create-kahoot/from-scratch');
+                              context.go('/create-kahoot/quiz-metadata');
                             },
                             child: Container(
                               padding: const EdgeInsets.all(16),
@@ -72,7 +68,6 @@ class CreateKahootScreen extends StatelessWidget {
                               ),
                               child: Row(
                                 children: [
-                                  // Icono morado con cuadrados
                                   Container(
                                     width: 48,
                                     height: 48,
@@ -107,7 +102,6 @@ class CreateKahootScreen extends StatelessWidget {
                                     ),
                                   ),
                                   const SizedBox(width: 16),
-                                  // Texto
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,7 +125,6 @@ class CreateKahootScreen extends StatelessWidget {
                                       ],
                                     ),
                                   ),
-                                  // Flecha
                                   Icon(
                                     Icons.arrow_forward_ios,
                                     color: Colors.grey[600],
@@ -225,7 +218,7 @@ class CreateKahootScreen extends StatelessWidget {
                               mainAxisSpacing: 12,
                               childAspectRatio: 0.75,
                             ),
-                            itemCount: 4, // Mostrar 4 plantillas de ejemplo
+                            itemCount: 4,
                             itemBuilder: (context, index) {
                               return Container(
                                 decoration: BoxDecoration(

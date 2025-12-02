@@ -5,6 +5,7 @@ import 'package:frontkahoot2526/core/navigation/navbar.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/library_screen.dart';
 import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/create_kahoot_screen.dart';
 import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/from_scratch_screen.dart';
+import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/quiz_metadata_screen.dart';
 import 'package:go_router/go_router.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -40,6 +41,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: '/create-kahoot',
                 builder: (context, state) => const CreateKahootScreen(), // Pantalla de selección
                 routes: [
+                  GoRoute(
+                    path: 'quiz-metadata',
+                    builder: (context, state) => const QuizMetadataScreen(), // Pantalla de metadata
+                  ),
                   GoRoute(
                     path: 'from-scratch',
                     builder: (context, state) => const FromScratchScreen(), // Pantalla de edición
