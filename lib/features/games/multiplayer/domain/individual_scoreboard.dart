@@ -1,4 +1,5 @@
 class IndividualScoreboard {
+  final String playerId;
   final String nickname;
   final int score;
   final int rank;
@@ -7,6 +8,7 @@ class IndividualScoreboard {
   final int? incorrectCount; // Opcional (podio final)
 
   const IndividualScoreboard({
+    required this.playerId,
     required this.nickname,
     required this.score,
     required this.rank,

@@ -1,5 +1,5 @@
 import 'package:frontkahoot2526/features/games/multiplayer/domain/current_question.dart';
-import 'package:frontkahoot2526/features/games/multiplayer/domain/enums.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_enums.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/individual_scoreboard.dart';
 import 'player.dart';
 
@@ -16,12 +16,12 @@ class GameSession {
   final int playerCount;
 
   // --- Datos de la Ronda Actual (QUESTION) ---
-  final CurrentQuestion? currentSlide; 
+  final CurrentQuestion? currentQuestion; 
   
   // --- Datos de Resultados (RESULTS) ---
   final String? correctAnswerText;
   final String? correctAnswerIndex; 
-  final int? pointsEarned;       
+  final int? pointsEarned;
   final List<IndividualScoreboard> playerScoreboard; //sirve tanto aquí como en END
 
 
@@ -35,7 +35,7 @@ class GameSession {
     this.quizMediaUrl,
     this.players = const [],
     this.playerCount = 0,
-    this.currentSlide,
+    this.currentQuestion,
     this.correctAnswerText,
     this.correctAnswerIndex,
     this.pointsEarned,
@@ -58,7 +58,7 @@ class GameSession {
     String? quizMediaUrl,
     List<Player>? players,
     int? playerCount,
-    CurrentQuestion? currentSlide,
+    CurrentQuestion? currentQuestion,
     String? correctAnswerIndex,
     String? correctAnswerText,
     int? pointsEarned,
@@ -72,7 +72,7 @@ class GameSession {
       quizMediaUrl: quizMediaUrl ?? this.quizMediaUrl,
       players: players ?? this.players,
       playerCount: playerCount ?? this.playerCount,
-      currentSlide: currentSlide ?? this.currentSlide,
+      currentQuestion: currentQuestion ?? this.currentQuestion,
       correctAnswerIndex: correctAnswerIndex ?? this.correctAnswerIndex,
       correctAnswerText: correctAnswerText ?? this.correctAnswerText,
       pointsEarned: pointsEarned ?? this.pointsEarned,
