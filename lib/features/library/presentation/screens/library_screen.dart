@@ -101,7 +101,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
     final notifier = ref.watch(asyncLibraryProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.creamBackground.withValues(alpha: 0.3),
+      backgroundColor: AppColors.creamBackground.withOpacity(0.3),
       appBar: AppBar(
         title: const Text("Mi Biblioteca", style: TextStyle(fontSize: 25)),
         backgroundColor: AppColors.primaryRed,

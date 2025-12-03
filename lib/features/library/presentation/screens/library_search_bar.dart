@@ -35,15 +35,15 @@ class _LibrarySearchBarState extends State<LibrarySearchBar> {
           hintText: "Buscar...",
           hintStyle: TextStyle(color: Colors.grey.shade500),
           filled: true,
-          fillColor: Colors.white.withValues(alpha: 0.9),
+          fillColor: Colors.white.withOpacity(0.9),
           contentPadding: const EdgeInsets.symmetric(
             vertical: 10,
             horizontal: 16,
           ),
-          prefixIcon:  Icon(Icons.search, color: AppColors.darkBlueText.withValues(alpha: 0.8), weight: 2.0,),
+          prefixIcon:  Icon(Icons.search, color: AppColors.darkBlueText.withOpacity(0.8), weight: 2.0,),
 
           suffixIcon: IconButton(
-            icon:  Icon(Icons.clear, color: AppColors.darkBlueText.withValues(alpha: 0.8), weight: 2.0,),
+            icon:  Icon(Icons.clear, color: AppColors.darkBlueText.withOpacity(0.8), weight: 2.0,),
             onPressed: () {
               widget.controller.clear();
               FocusManager.instance.primaryFocus?.unfocus();

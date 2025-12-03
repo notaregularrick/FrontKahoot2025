@@ -18,5 +18,6 @@ class AppColors {
   // Azul oscuro para texto
   static const Color darkBlueText = Color(0xFF1D3557);
 
-  static final Color textColor = Colors.grey[900]!.withValues(alpha: 0.9);
+  static final Color textColor = Colors.grey[900]!.withOpacity(0.9);
+  
 }

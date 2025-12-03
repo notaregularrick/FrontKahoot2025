@@ -29,7 +29,7 @@ class PaginationControls extends StatelessWidget {
                 ? null 
                 : () => onPageChanged(currentPage - 1),
             color: AppColors.darkBlueText,
-            disabledColor: AppColors.darkBlueText.withValues(alpha: 0.3),
+            disabledColor: AppColors.darkBlueText.withOpacity(0.3),
             iconSize: 30,
           ),
 
@@ -51,7 +51,7 @@ class PaginationControls extends StatelessWidget {
                 ? null 
                 : () => onPageChanged(currentPage + 1),
             color: AppColors.darkBlueText,
-            disabledColor: AppColors.darkBlueText.withValues(alpha: 0.3),
+            disabledColor: AppColors.darkBlueText.withOpacity(0.3),
             iconSize: 30,
           ),
         ],

@@ -19,10 +19,10 @@ class QuizCard extends StatelessWidget {
           return Container(
             height: 130,
             decoration: BoxDecoration(
-              color: AppColors.orangeAccent.withValues(alpha: 0.3),
+              color: AppColors.orangeAccent.withOpacity(0.3),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: const Color.fromARGB(255, 86, 81, 81).withValues(alpha: 0.3),
+                color: const Color.fromARGB(255, 86, 81, 81).withOpacity(0.3),
                 width: 1,
               ),
             ),
@@ -128,7 +128,7 @@ class QuizCard extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: AppColors.darkBlueText.withValues(alpha: 0.9),
+                            color: AppColors.darkBlueText.withOpacity(0.9),
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
@@ -143,7 +143,7 @@ class QuizCard extends StatelessWidget {
                               // Usamos un caracter "bullet" (•) para separar
                               "${quiz.dateInfo} • ${quiz.playCount}",
                               style: TextStyle(
-                                color: AppColors.darkBlueText.withValues(alpha: 0.9),
+                                color: AppColors.darkBlueText.withOpacity(0.9),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -169,7 +169,7 @@ class QuizCard extends StatelessWidget {
                                     child: Text(
                                       "Autor: ${quiz.authorName!}",
                                       style: TextStyle(
-                                        color: AppColors.darkBlueText.withValues(alpha: 0.9),
+                                        color: AppColors.darkBlueText.withOpacity(0.9),
                                         fontSize: 13,
                                         fontWeight:
                                             FontWeight.w600,
@@ -186,13 +186,13 @@ class QuizCard extends StatelessWidget {
                                   Icon(
                                     quiz.visibilityIcon,
                                     size: 13,
-                                    color: AppColors.darkBlueText.withValues(alpha: 0.9),
+                                    color: AppColors.darkBlueText.withOpacity(0.9),
                                   ),
                                   SizedBox(width: 4),
                                   Text(
                                     "${quiz.visibilityText!} • ${quiz.status}",
                                     style: TextStyle(
-                                      color: AppColors.darkBlueText.withValues(alpha: 0.9),
+                                      color: AppColors.darkBlueText.withOpacity(0.9),
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
                                     ),

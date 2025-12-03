@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/core/navigation/navbar.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/library_screen.dart';
+import 'package:frontkahoot2526/features/library/presentation/screens/library_home_screen.dart';
+import 'package:frontkahoot2526/features/groups/presentation/screens/groups_screen.dart';
+import 'package:frontkahoot2526/features/groups/presentation/screens/group_detail_screen.dart';
+import 'package:frontkahoot2526/features/groups/presentation/screens/join_group_screen.dart';
 import 'package:go_router/go_router.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -36,15 +40,40 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/library',
-                builder: (context, state) => const LibraryScreen(), // Tu pantalla
+                builder: (context, state) => const LibraryHomeScreen(), // Home that shows two buttons
+              ),
+              GoRoute(
+                path: '/library/quices',
+                builder: (context, state) => const LibraryScreen(), // The detailed library screen
+              ),
+              GoRoute(
+                path: '/groups',
+                builder: (context, state) => const GroupsScreen(),
+              ),
+              GoRoute(
+                path: '/groups/:groupId',
+                builder: (context, state) {
+                  final id = state.pathParameters['groupId']!;
+                  return GroupDetailScreen(groupId: id);
+                },
               ),
             ],
           ),
         ],
       ),
       // ---------------------------------------------------------
+      // ---------------------------------------------------------
       // B. Rutas con pantalla completa, sin barra de navegación (GoRoute)
       // ---------------------------------------------------------
+      // Invite deep link route (public) - opens join screen
+      GoRoute(
+        path: '/groups/join/:token',
+        builder: (context, state) {
+          final token = state.pathParameters['token']!;
+          return JoinGroupScreen(token: token);
+        },
+      ),
+      // Note: `/groups` moved into the shell branch so navbar is visible on that screen.
     ],
   );
 });
