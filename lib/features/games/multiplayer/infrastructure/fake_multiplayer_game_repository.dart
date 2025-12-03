@@ -17,6 +17,17 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
   @override
   Stream<GameSession> get gameStream => _controller.stream;
 
+  @override
+  Future<void> connectToGame(
+    String pin,
+    String nickname,
+    String jwt,
+    GameRole role,
+  ) async {
+    //delay de red
+    await Future.delayed(const Duration(seconds: 1));
+  }
+
   // --- Menajdor de los eventos ---
   void _handleIncomingEvent(String eventName, Map<String, dynamic> payload) {
     GameSession newSession = _currentSession;
@@ -329,12 +340,14 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
   }
 
   @override
-  Future<void> submitAnswer(String qId, String aId) async {
-    print("FakeRepo: Enviando respuesta $aId");
+  Future<void> submitAnswer(String questionId, int answerIndex, int timeElapsedMs, String jwt) async {
+    print("FakeRepo: Enviando respuesta $answerIndex");
   }
 
   @override
-  Future<void> createGame(String kahootId) async {}
+  Future<String> createGame(String kahootId) async {
+    return '';
+  }
 
   @override
   Future<void> startGame() async {}
@@ -458,10 +471,7 @@ void main() {
         "playerId": "p-001",
         "nickname": "Jorge", // El usuario actual
       },
-      {
-        "playerId": "p-002",
-        "nickname": "Maria",
-      },
+      {"playerId": "p-002", "nickname": "Maria"},
     ],
 
     // En el Lobby aún no hay pregunta activa
