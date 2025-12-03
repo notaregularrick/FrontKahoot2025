@@ -44,9 +44,13 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             child: const Text("Login"),
           ),
           TextButton(
-            onPressed: () => context.go('/register'),
+            onPressed: () => context.push('/register'),
             child: const Text("Crear Cuenta"),
           ),
+          TextButton(
+            onPressed: () => context.push('/passreset'),
+            child: const Text("Olvide mi Contraseña"),
+          )
 
         ],
       ),

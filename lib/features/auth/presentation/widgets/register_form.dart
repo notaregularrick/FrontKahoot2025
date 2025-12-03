@@ -54,7 +54,7 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
                 final user = ref.read(authNotifierProvider).user;
                 if (user != null) {
                   // ignore: use_build_context_synchronously
-                  context.go('/home');
+                  context.go('/profile');
                 }
               }
             },

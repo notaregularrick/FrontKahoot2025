@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../providers/auth_providers.dart';
 
@@ -46,6 +47,7 @@ class _PasswordResetPageState extends ConsumerState<PasswordResetPage> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Correo enviado con éxito')),
                     );
+                    context.push('/passconfirm');
                   }
                 } catch (e) {
                   setState(() {

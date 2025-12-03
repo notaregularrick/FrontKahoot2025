@@ -10,6 +10,13 @@ import '../datasource/auth_datasource.dart';
 import '../models/auth_response_model.dart';
 //import '../../domain/entities/profile_entity.dart';
 import '../models/profile_model.dart';
+import '../models/user_model.dart';
+
+// --- SIMULACIÓN SIN API -------------------
+UserModel? _mockUser;         // guarda el usuario
+String? _mockToken;           // guarda un token falso
+ProfileModel? _mockProfile;   // guarda el perfil
+// ------------------------------------------
 
 class AuthRepositoryImpl implements AuthRepository{
 
@@ -21,12 +28,48 @@ class AuthRepositoryImpl implements AuthRepository{
 
  
   @override
-  Future<UserEntity> register({
+  Future<UserEntity?> register({
     required String name,
     required String email,
     required String password,
   }) async {
-    
+    const simulate = true;
+
+  if (simulate) {
+    // Creamos un usuario simulado
+    _mockUser = UserModel(
+      id: "temp-id",
+      name: name,
+      email: email,
+      userType: 'default',
+      createdAt: DateTime.now()
+    );
+
+    // Guardar token temporalmente
+    _mockToken = "fake-token-123";
+
+    // Simulamos un perfil (puede ser más completo)
+    _mockProfile = ProfileModel(
+      id: "tempo-id",
+      name: name,
+      email: email,
+      avatarUrl: "https://i.pravatar.cc/150",
+      description: "Nuevo usuario de prueba",
+      userType: "Básico",
+      gameStreak: 0,
+      theme: "Día",
+      language: "Español",
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now()
+
+    );
+
+    // Opcional: guardarlo en secure storage para simular sesión verdadera
+    await storage.saveToken(_mockToken);
+
+    return _mockUser?.toEntity();
+  }
+
     final userModel = await datasource.register(
       name: name,
       email: email,
@@ -62,6 +105,13 @@ class AuthRepositoryImpl implements AuthRepository{
   // Método para restablecimiento de contraseña
   @override
 Future<void> requestPasswordReset(String email) async {
+  const simulate = true;
+
+  if(simulate){
+    await Future.delayed(const Duration(seconds: 1)); // simula espera
+    return;
+  }
+
   try {
     // Enviar la solicitud al backend
     await apiService.post('/auth/password-reset/request', data: {

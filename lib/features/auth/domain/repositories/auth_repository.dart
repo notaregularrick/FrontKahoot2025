@@ -5,7 +5,7 @@ import '../entities/user_entity.dart';
 
 abstract class AuthRepository {
   //esto registra un usuario y devuelve la entidad que se creo
-  Future<UserEntity> register({
+  Future<UserEntity?> register({
                                 required String name,
                                 required String email,
                                 required String password,

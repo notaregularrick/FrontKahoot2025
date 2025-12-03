@@ -4,6 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/core/navigation/navbar.dart';
 //import 'package:frontkahoot2526/features/presentation/screens/library_screen.dart';
 import 'package:frontkahoot2526/features/auth/presentation/pages/login_page.dart';
+import 'package:frontkahoot2526/features/auth/presentation/pages/password_change_page.dart';
+import 'package:frontkahoot2526/features/auth/presentation/pages/password_reset_confirm_page.dart';
+import 'package:frontkahoot2526/features/auth/presentation/pages/password_reset_page.dart';
+import 'package:frontkahoot2526/features/auth/presentation/pages/profile_page.dart';
 import 'package:frontkahoot2526/features/auth/presentation/pages/register_page.dart';
 import 'package:go_router/go_router.dart';
 
@@ -16,17 +20,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/login', // Ruta inicial mientras no haya redirección
     redirect: (BuildContext context, GoRouterState state) {
       final isLoggedIn = authState.token != null;
-      final currentLocation = state.uri.toString(); // o state.subloc si tu versión lo prefiere
+      final currentLocation = state.uri.toString();
       final isLoginRoute = currentLocation == '/login';
+      final isRegisterRoute = currentLocation == '/register'; // Añadido
+      final isPassResetRoute = currentLocation == '/passreset';
+      final isPassConfirmRoute = currentLocation == '/passconfirm';
 
-      if (!isLoggedIn && !isLoginRoute) {
+      // Si no está logueado y está intentando acceder a rutas protegidas, redirige a login
+      if (!isLoggedIn && !isLoginRoute && !isRegisterRoute && !isPassResetRoute && !isPassConfirmRoute) {
         return '/login';
       }
 
+      // Si está logueado y entra en /login, redirige a home
       if (isLoggedIn && isLoginRoute) {
-        return '/home';
+        return '/profile';
       }
 
+      if (isLoggedIn && isRegisterRoute) return '/profile';
+
+      if (isLoggedIn && isPassResetRoute) return '/profile';
+
+      if(isLoggedIn && isPassConfirmRoute) return '/profile';
+
+      // Si nada de lo anterior, deja el flujo continuar normalmente
       return null;
     },
     routes: [
@@ -50,10 +66,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(
+             GoRoute(
                 path: '/library',
-                //builder: (context, state) => const LibraryScreen(),
+                builder: (context, state) => const Scaffold(
+                  body: Center(child: Text("TEMP PROFILE")),
               ),
+             ),
             ],
           ),
         ],
@@ -65,6 +83,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfilePage(),
+      ),
+      GoRoute(
+        path: '/passreset',
+        builder: (context, state) => const PasswordResetPage(),
+      ),
+      GoRoute(
+        path: '/passchange',
+        builder: (context, state) => const ChangePasswordPage(),
+      ),
+      GoRoute(
+        path: '/passconfirm',
+        builder: (context, state) => const PasswordResetConfirmPage(),
       ),
     ],
   );
