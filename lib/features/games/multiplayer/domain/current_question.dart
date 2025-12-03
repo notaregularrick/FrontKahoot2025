@@ -5,7 +5,6 @@ class CurrentQuestion {
   final String questionText;
   final String? questionImageUrl;
   final String type;
-  final int totalQuestions; 
   final List<QuestionAnswers> options;
 
   const CurrentQuestion({
@@ -15,9 +14,18 @@ class CurrentQuestion {
     this.questionImageUrl,
     required this.timeLimitSeconds,
     required this.type,
-    required this.totalQuestions,
     required this.options,
   });
+
+  String getAnswerTextByIndex(int index) {
+    if (index < 0 || index >= options.length) {
+      return '';
+    } else {
+      return options
+          .firstWhere((option) => option.answerIndex == index)
+          .answerText;
+    }
+  }
 }
 
 class QuestionAnswers {

@@ -20,7 +20,7 @@ class GameSession {
   
   // --- Datos de Resultados (RESULTS) ---
   final String? correctAnswerText;
-  final String? correctAnswerIndex; 
+  final int? correctAnswerIndex; 
   final int? pointsEarned;
   final List<IndividualScoreboard> playerScoreboard; //sirve tanto aquí como en END
 
@@ -46,9 +46,14 @@ class GameSession {
   // Estado inicial vacío (antes de conectar)
   factory GameSession.initial() {
     return const GameSession(
-      pin: '...',
+      pin: '123456',
       status: GameStatus.lobby,
     );
+  }
+
+  String answerTextByIndex(int index) {
+    if (currentQuestion == null) return '';
+    return currentQuestion!.getAnswerTextByIndex(index);
   }
 
   GameSession copyWith({
@@ -59,7 +64,7 @@ class GameSession {
     List<Player>? players,
     int? playerCount,
     CurrentQuestion? currentQuestion,
-    String? correctAnswerIndex,
+    int? correctAnswerIndex,
     String? correctAnswerText,
     int? pointsEarned,
     List<IndividualScoreboard>? playerScoreboard,
