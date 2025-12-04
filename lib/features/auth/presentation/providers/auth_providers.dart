@@ -22,7 +22,7 @@ final authDatasourceProvider = Provider((ref) {
 
 // Repository Provider
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final datasource = ref.watch(authDatasourceProvider);
+  final datasource = ref.read(authDatasourceProvider);
   final apiService = ref.read(apiServiceProvider);
   final storage = ref.read(secureStorageProvider);
 

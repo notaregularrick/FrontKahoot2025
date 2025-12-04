@@ -1,6 +1,7 @@
 //import 'package:dio/dio.dart';
 
 import 'package:dio/dio.dart';
+import 'package:frontkahoot2526/features/auth/application/state/auth_state.dart';
 
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/secure_storage_service.dart';
@@ -66,6 +67,7 @@ class AuthRepositoryImpl implements AuthRepository{
 
     // Opcional: guardarlo en secure storage para simular sesión verdadera
     await storage.saveToken(_mockToken);
+    
 
     return _mockUser?.toEntity();
   }
@@ -85,6 +87,41 @@ class AuthRepositoryImpl implements AuthRepository{
     required String email,
     required String password,
   }) async {
+    const simulate = true;
+
+    if (simulate) {
+      if (_mockUser == null) {
+        throw Exception("No hay usuario registrado aún.");
+      }
+
+      if (_mockUser!.email != email) {
+        throw Exception("Email incorrecto.");
+      }
+
+      // simular token
+      _mockToken = "fake-token-123";
+      await storage.saveToken(_mockToken);
+
+      _mockProfile ??= ProfileModel(
+        id: _mockUser!.id,
+        name: _mockUser!.name,
+        email: _mockUser!.email,
+        avatarUrl: "https://i.pravatar.cc/150",
+        description: "Perfil simulado",
+        userType: _mockUser!.userType ?? "Básico",
+        gameStreak: 0,
+        theme: "Día",
+        language: "Español",
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      // ahora devolvemos lo que la UI espera
+      return AuthResponseModel(
+        user: _mockUser!,
+        accessToken: _mockToken!,
+      );
+    }
     
     final response = await datasource.login(
       email:email,
@@ -98,6 +135,14 @@ class AuthRepositoryImpl implements AuthRepository{
 
   @override
   Future<void> logout() async {
+    const simulate = true;
+
+  if (simulate) {
+    _mockToken = null;
+    await storage.deleteToken();
+    return;
+  }
+
     await apiService.post('/auth/logout');
     // El backend da 204, no hay body
   }
@@ -143,6 +188,18 @@ Future<void> requestPasswordReset(String email) async {
 
   @override
   Future<ProfileModel> getUserProfile() async {
+    const simulate = true;
+
+  if (simulate) {
+    await Future.delayed(const Duration(milliseconds: 500)); // hecho por estilo
+
+    if (_mockProfile == null) {
+      throw Exception("No hay perfil disponible");
+    }
+
+    return _mockProfile!;
+  }
+    
     try {
       final response = await apiService.get('/profile');
       return ProfileModel.fromJson(response.data); // Asumimos que la respuesta es un JSON

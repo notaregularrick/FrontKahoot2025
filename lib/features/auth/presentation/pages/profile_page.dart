@@ -66,6 +66,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   },
                   child: const Text('Editar Perfil'),
                 ),
+                ElevatedButton(
+                  onPressed: () {
+                    context.go('/passchange'); // O redirigir a otra página si es necesario
+                  },
+                  child: const Text('Cambiar Contraseña'),
+                ),
               ],
             ),
           );
