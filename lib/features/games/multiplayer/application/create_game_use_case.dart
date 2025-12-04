@@ -7,7 +7,7 @@ class CreateGameUseCase {
 
   CreateGameUseCase(this.gameRepository);
 
-  Future<void> execute(String quizId) async{
+  Future<String> execute(String quizId) async{
     final String jwt = 'jwt-prueba'; //Aquí va lógica para obtener jwt
     //valida jwt
 
@@ -15,6 +15,8 @@ class CreateGameUseCase {
 
     final pin = await gameRepository.createGame(quizId);
     
-    return await gameRepository.connectToGame(pin, nickname, jwt, GameRole.host);
+    await gameRepository.connectToGame(pin, nickname, jwt, GameRole.host);
+
+    return pin;
   }
 }

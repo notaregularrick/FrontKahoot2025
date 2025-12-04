@@ -8,12 +8,11 @@ class GameNotifierState {
 
   //CONTEXTO LOCAL
   final GameRole role;             
-  final String? myPlayerId;    //TENTATIVO    
+  final String? myPlayerId;  
 
   //ESTADO DE UI
   final bool hasAnsweredCurrentQuestion; //Bloquear botones
   //final bool isLoadingAction;         // Para mostrar spinner en botones al enviar
-  //final String? errorMessage;         // Para mostrar SnackBars de error temporalmente
 
   const GameNotifierState({
     required this.session,
@@ -22,14 +21,12 @@ class GameNotifierState {
     this.hasAnsweredCurrentQuestion = false,
   });
 
-  //GETTERS DE PRESENTACIÓN
-
   bool get isHost => role == GameRole.host;
 
-  bool get isLobby => session.status == GameStatus.lobby;
-  bool get isQuestionActive => session.status == GameStatus.question;
-  bool get isResults => session.status == GameStatus.results;
-  bool get isGameEnd => session.status == GameStatus.end;
+  bool get isLobby => session.isLobby;
+  bool get isQuestionActive => session.isQuestionActive;
+  bool get isResults => session.isResults;
+  bool get isGameEnd => session.isGameEnd;
 
   //COPY WITH
   GameNotifierState copyWith({
@@ -37,8 +34,6 @@ class GameNotifierState {
     GameRole? role,
     String? myPlayerId,
     bool? hasAnsweredCurrentQuestion,
-    bool? isLoadingAction,
-    String? errorMessage,
   }) {
     return GameNotifierState(
       session: session ?? this.session,

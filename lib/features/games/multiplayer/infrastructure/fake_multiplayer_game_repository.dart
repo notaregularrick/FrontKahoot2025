@@ -8,11 +8,113 @@ import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_ga
 import 'package:frontkahoot2526/features/games/multiplayer/domain/player.dart';
 
 class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
-  // 1. El "Tubo" del Stream
   final _controller = StreamController<GameSession>.broadcast();
 
-  // 2. Memoria local para fusionar estados
+  //Para fusionar las sesiones (estado)
   GameSession _currentSession = GameSession.initial();
+
+  String myNickname = "Diego";//YA
+  int myAnswerIndex = 1;
+  int pointsEarned = 0;
+  int myTotalScore = 0;
+  int otherScore =0;
+  int myRank=1;
+  int otherRank=2;
+  String winner = "Maria";
+  int myCorrectCount = 0;
+  int myIncorrectCount = 0;
+  int otherCorrectCount = 0;
+  int otherIncorrectCount = 0;
+
+
+  //MOCK DATA
+
+  Map<String, dynamic> get mockLobbyData => {
+    "hostId": "host-uuid-123",
+    "state": "LOBBY",
+    // Información del Quiz que se va a jugar
+    "quizTitle": "Capitales de Europa",
+    "quizMediaUrl": "https://placehold.co/600x400/blue/white.png?text=Europa",
+
+    // Lista inicial de jugadores conectados
+    "players": [
+      {
+        "playerId": "p-001",
+        "nickname": myNickname, // El usuario actual
+      },
+      {"playerId": "p-002", "nickname": "Maria"},
+    ],
+
+    // En el Lobby aún no hay pregunta activa
+    "currentSlideData": null,
+  };
+
+  Map<String, dynamic> get mockQuestionStartedData => {
+    // 1. Datos Lógicos (Raíz)
+    "questionIndex": 1,
+    "timeLimitSeconds": 10,
+
+    "currentSlideData": {
+      "slideId": "slide-uuid-999",
+      "questionText": "¿Cuál es la capital de Francia?",
+      "mediaUrl": "https://placehold.co/600x400/blue/white.png?text=Francia",
+      "type": "MULTIPLE_CHOICE",
+      "options": [
+        {"text": "Madrid", "image": null},
+        {"text": "París", "image": null},
+        {"text": "Londres", "image": null},
+        {"text": "Berlín", "image": null},
+      ],
+    },
+  };
+
+  Map<String, dynamic> get mockResultsData => {
+    "correctAnswerIndex": 1,
+
+    // Puntos que ganó el usuario (Tú)
+    "pointsEarned": pointsEarned,
+
+    // Lista de jugadores actualizada
+    "playerScoreboard": [
+      {
+        "playerId": "p-001",
+        "nickname": myNickname,
+        "score": myTotalScore, 
+        "rank": myRank, 
+        "previousRank": 0,
+      },
+      {
+        "playerId": "p-002",
+        "nickname": "Maria",
+        "score": otherScore,
+        "rank": otherRank,
+        "previousRank": 0,
+      },
+    ],
+  };
+
+  Map<String, dynamic> get mockGameEndData => {
+    "winnerNickname": winner,
+
+    "finalScoreboard": [
+      {
+        "playerId": "p-001",
+        "nickname": myNickname,
+        "score": myTotalScore,
+        "rank": myRank,
+        "correctCount": myCorrectCount,
+        "incorrectCount": myIncorrectCount,
+      },
+      {
+        "playerId": "p-002",
+        "nickname": "Maria",
+        "score": otherScore,
+        "rank": otherRank,
+        "correctCount": otherCorrectCount,
+        "incorrectCount": otherIncorrectCount,
+      },
+    ],
+  };
 
   @override
   Stream<GameSession> get gameStream => _controller.stream;
@@ -72,7 +174,7 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
         //   leaderboard: finalScores,
         //   winnerNickname: payload['winnerNickname'],
         // );
-        newSession = _currentSession.copyWith(status: GameStatus.end);
+        newSession = _processGameEndData(payload);
         break;
     }
 
@@ -182,48 +284,6 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
 
     if (outerSlideData != null && outerSlideData is Map<String, dynamic>) {
       currentQuestion = _parseCurrentQuestion(outerSlideData);
-
-      // Paso B: Extraemos metadatos del Envoltorio
-      // int qIndex = (outerSlideData['questionIndex'] as num?)?.toInt() ?? 0;
-      // int tLimit = (outerSlideData['timeLimitSeconds'] as num?)?.toInt() ?? 20;
-
-      // // Paso C: Obtenemos el objeto "Contenido" (Inner)
-      // final innerSlideContent = outerSlideData['currentSlideData'];
-
-      // if (innerSlideContent != null &&
-      //     innerSlideContent is Map<String, dynamic>) {
-      //   final List<dynamic> rawAnswers =
-      //       innerSlideContent['options'] as List<dynamic>? ?? [];
-
-      //   List<QuestionAnswers> optionsList = rawAnswers.asMap().entries.map((
-      //     entry,
-      //   ) {
-      //     final int idx = entry.key;
-      //     final answerData = entry.value as Map<String, dynamic>;
-
-      //     return QuestionAnswers(
-      //       answerIndex: idx,
-      //       answerText: answerData['text'] ?? '',
-      //       answerImageUrl: answerData['image'],
-      //     );
-      //   }).toList();
-
-      //   // Paso D: Construimos la entidad final mezclando ambos niveles
-      //   currentQuestion = CurrentQuestion(
-      //     // Datos del Inner (Contenido)
-      //     questionId: innerSlideContent['slideId'] ?? '',
-      //     questionText: innerSlideContent['questionText'] ?? '',
-      //     questionImageUrl: innerSlideContent['mediaUrl'],
-      //     type: innerSlideContent['type'] ?? 'MULTIPLE_CHOICE',
-
-      //     // Datos del Outer (Lógica de la partida)
-      //     questionIndex: qIndex,
-      //     timeLimitSeconds: tLimit,
-
-      //     // Opciones (Dentro del Inner)
-      //     options: optionsList,
-      //   );
-      // }
     }
 
     // 4. Retorno de la Sesión
@@ -253,7 +313,6 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
       correctAnswerIndex: null,
       correctAnswerText: null,
       pointsEarned: null,
-      playerScoreboard: [],
     );
   }
 
@@ -278,70 +337,89 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
     );
   }
 
+  GameSession _processGameEndData(Map<String, dynamic> data) {
+    List<dynamic> scoreboardData =
+        data['finalScoreboard'] as List<dynamic>? ?? [];
+    List<IndividualScoreboard> scoreboard = scoreboardData.map((entry) {
+      return _parseScoreboard(entry as Map<String, dynamic>);
+    }).toList();
+
+    return _currentSession.copyWith(
+      status: GameStatus.end,
+      playerScoreboard: scoreboard,
+      winnerNickname: data['winnerNickname'] as String?,
+    );
+  }
+
   @override
   Future<void> joinGame(String pin, String nickname) async {
-    // Simulamos delay de red
-    await Future.delayed(const Duration(seconds: 1));
     _currentSession = _currentSession.copyWith(pin: pin);
-    // 1. Emitimos estado inicial (LOBBY)
-    _handleIncomingEvent('game_state_update', {
-      "state": "LOBBY",
-      "quizTitle": "Flutter Básico",
-      "players": [
-        {"nickname": "Profe", "score": 0},
-        {"nickname": nickname, "score": 0}, // Tú
-      ],
-    });
-
-    // 2. INICIAR GUION AUTOMÁTICO (Solo para probar)
-    // En 3 segundos, el "profe" iniciará el juego
-    //Future.delayed(const Duration(seconds: 3), _runScript);
+    myNickname = nickname;
+    runPlayerScript();
   }
 
-  //GameSession processQuestionStartedData(Map<String, dynamic> data) {}
-
-  void _runScript() async {
-    // --- PREGUNTA 1 ---
-    _handleIncomingEvent('question_started', {
-      "questionIndex": 1,
-      "timeLimit": 10,
-      "currentSlideData": {
-        "id": "q1",
-        "questionText": "¿Qué widget se usa para layouts verticales?",
-        "options": [
-          {"id": "0", "text": "Row"},
-          {"id": "1", "text": "Column"},
-          {"id": "2", "text": "Stack"},
-          {"id": "3", "text": "ListView"},
-        ],
-      },
-    });
-
-    await Future.delayed(const Duration(seconds: 6));
-
-    // --- RESULTADOS 1 ---
-    _handleIncomingEvent('question_results', {
-      "correctAnswerIndex": 1,
-      "pointsEarned": 950,
-      "playerScoreboard": [
-        {"nickname": "Yo", "score": 950, "rank": 1},
-      ],
-    });
-
-    await Future.delayed(const Duration(seconds: 4));
-
-    // --- FIN DEL JUEGO ---
-    _handleIncomingEvent('game_end', {
-      "winnerNickname": "Yo",
-      "finalScoreboard": [
-        {"nickname": "Yo", "score": 950, "rank": 1},
-      ],
-    });
-  }
+  // void _runScript() async {
+  //   // --- PREGUNTA 1 ---
+  //   _handleIncomingEvent('question_started', {
+  //     "questionIndex": 1,
+  //     "timeLimit": 10,
+  //     "currentSlideData": {
+  //       "id": "q1",
+  //       "questionText": "¿Qué widget se usa para layouts verticales?",
+  //       "options": [
+  //         {"id": "0", "text": "Row"},
+  //         {"id": "1", "text": "Column"},
+  //         {"id": "2", "text": "Stack"},
+  //         {"id": "3", "text": "ListView"},
+  //       ],
+  //     },
+  //   });
+  //   await Future.delayed(const Duration(seconds: 6));
+  //   // --- RESULTADOS 1 ---
+  //   _handleIncomingEvent('question_results', {
+  //     "correctAnswerIndex": 1,
+  //     "pointsEarned": 950,
+  //     "playerScoreboard": [
+  //       {"nickname": "Yo", "score": 950, "rank": 1},
+  //     ],
+  //   });
+  //   await Future.delayed(const Duration(seconds: 4));
+  //   // --- FIN DEL JUEGO ---
+  //   _handleIncomingEvent('game_end', {
+  //     "winnerNickname": "Yo",
+  //     "finalScoreboard": [
+  //       {"nickname": "Yo", "score": 950, "rank": 1},
+  //     ],
+  //   });
+  // }
 
   @override
-  Future<void> submitAnswer(String questionId, int answerIndex, int timeElapsedMs, String jwt) async {
-    print("FakeRepo: Enviando respuesta $answerIndex");
+  Future<void> submitAnswer(
+    String questionId,
+    int answerIndex,
+    int timeElapsedMs,
+    String jwt,
+  ) async {
+    myAnswerIndex = answerIndex;
+    if(answerIndex==1){
+      pointsEarned = 1000;
+      myTotalScore += pointsEarned;
+      myCorrectCount +=1;
+      myRank = 1;
+
+      otherIncorrectCount +=1;
+      otherScore +=0;
+      otherRank =2;
+    }else{
+      pointsEarned = 0;
+      myTotalScore +=pointsEarned;
+      myIncorrectCount +=1;
+      myRank =2;
+
+      otherCorrectCount +=1;
+      otherScore +=1000;
+      otherRank =1;
+    }
   }
 
   @override
@@ -436,154 +514,22 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
     }
     print('════════════════════════════════════════════════════════════════\n');
   }
+
+  void runPlayerScript() async {
+    _handleIncomingEvent('game_state_update', mockLobbyData);
+    printDetailedGameSession(_currentSession);
+    _handleIncomingEvent('question_started', mockQuestionStartedData);
+    printDetailedGameSession(_currentSession);
+    await Future.delayed(const Duration(seconds: 5));
+    _handleIncomingEvent('question_results', mockResultsData);
+    printDetailedGameSession(_currentSession);
+    _handleIncomingEvent('game_end', mockGameEndData);
+    printDetailedGameSession(_currentSession);
+  }
 }
 
 void main() {
   final fakeRepo = FakeGameRepositoryImpl();
-
-  // final Map<String, dynamic> mockLobbyData = {
-  //   "hostId": "host-uuid-123",
-  //   "state": "LOBBY",
-  //   "quizTitle": "Cultura General 2025",
-  //   "quizMediaUrl": "https://placehold.co/600x400/png?text=Intro",
-  //   "players": [
-  //     {
-  //       "playerId": "p-001",
-  //       "nickname": "Jorge",
-  //       "avatarUrl": "https://i.pravatar.cc/150?u=Jorge",
-  //     },
-  //     {"playerId": "p-002", "nickname": "Maria", "avatarUrl": null},
-  //   ],
-  //   // En lobby, currentSlideData suele ser null o vacío
-  //   "currentSlideData": null,
-  // };
-
-  final Map<String, dynamic> mockLobbyData = {
-    "hostId": "host-uuid-123",
-    "state": "LOBBY",
-    // Información del Quiz que se va a jugar
-    "quizTitle": "Capitales de Europa",
-    "quizMediaUrl": "https://placehold.co/600x400/blue/white.png?text=Europa",
-
-    // Lista inicial de jugadores conectados
-    "players": [
-      {
-        "playerId": "p-001",
-        "nickname": "Jorge", // El usuario actual
-      },
-      {"playerId": "p-002", "nickname": "Maria"},
-    ],
-
-    // En el Lobby aún no hay pregunta activa
-    "currentSlideData": null,
-  };
-
-  final Map<String, dynamic> mockQuestionStartedData = {
-    // 1. Datos Lógicos (Raíz)
-    "questionIndex": 3,
-    "timeLimitSeconds": 15,
-
-    // 2. Datos de Contenido (Anidados)
-    "currentSlideData": {
-      "slideId": "slide-uuid-999",
-      "questionText": "¿Cuál es la capital de Francia?",
-      "mediaUrl": "https://placehold.co/600x400/blue/white.png?text=Francia",
-      "type": "MULTIPLE_CHOICE",
-      "options": [
-        {"text": "Madrid", "image": null},
-        {"text": "París", "image": null},
-        {"text": "Londres", "image": null},
-        {"text": "Berlín", "image": null},
-      ],
-    },
-  };
-
-  final Map<String, dynamic> mockResultsData = {
-    // El ID 1 coincide con "París" en tu lista de opciones anterior
-    "correctAnswerIndex": 1,
-
-    // Puntos que ganó el usuario (Tú)
-    "pointsEarned": 850,
-
-    // Lista de jugadores actualizada
-    "playerScoreboard": [
-      {
-        "playerId": "p-001",
-        "nickname": "Jorge",
-        "score": 850, // Puntaje total
-        "rank": 1, // Vas ganando
-        "previousRank": 1,
-      },
-      {
-        "playerId": "p-002",
-        "nickname": "Maria",
-        "score": 0,
-        "rank": 2,
-        "previousRank": 2,
-      },
-    ],
-  };
-
-  // final Map<String, dynamic> mockQuestionData = {
-  //   "hostId": "host-uuid-123",
-  //   "state": "QUESTION",
-  //   "quizTitle": "Geografía Europea",
-  //   "quizMediaUrl": null,
-  //   "players": [
-  //     {"nickname": "Jorge", "score": 100},
-  //     {"nickname": "Maria", "score": 200},
-  //   ],
-  //   // ESTRUCTURA DE DOBLE ANIDACIÓN
-  //   "currentSlideData": {
-  //     // Outer: Metadatos Lógicos
-  //     "questionIndex": 3,
-  //     "timeLimitSeconds": 30,
-  //     // Inner: Contenido Visual
-  //     "currentSlideData": {
-  //       "slideId": "slide-uuid-777",
-  //       "questionText": "¿Cuál es la capital de Italia?",
-  //       "mediaUrl": "https://placehold.co/600x400/green/white.png?text=Italia",
-  //       "type": "MULTIPLE_CHOICE",
-  //       "options": [
-  //         {"text": "Venecia", "image": null},
-  //         {"text": "Roma", "image": null}, // Debería ser índice 1
-  //         {"text": "Milán", "image": null},
-  //         {"text": "Nápoles", "image": null},
-  //       ],
-  //     },
-  //   },
-  // };
-
-  final Map<String, dynamic> mockGameEndData = {
-    "winnerNickname": "Jorge",
-
-    "finalScoreboard": [
-      {
-        "playerId": "p-001",
-        "nickname": "Jorge",
-        "score": 850,
-        "rank": 1,
-        "correctCount": 1, // 1 acierto (La de Francia)
-        "incorrectCount": 0,
-      },
-      {
-        "playerId": "p-002",
-        "nickname": "Maria",
-        "score": 0,
-        "rank": 2,
-        "correctCount": 0,
-        "incorrectCount": 1, // Falló la pregunta
-      },
-    ],
-  };
-
-  print('🚀 PROCESANDO DATOS SIMULADOS...');
-  fakeRepo._handleIncomingEvent('game_state_update', mockLobbyData);
-  fakeRepo.printDetailedGameSession(fakeRepo._currentSession);
-  fakeRepo._handleIncomingEvent('question_started', mockQuestionStartedData);
-  fakeRepo.printDetailedGameSession(fakeRepo._currentSession);
-  fakeRepo._handleIncomingEvent('question_results', mockResultsData);
-  fakeRepo.printDetailedGameSession(fakeRepo._currentSession);
-  fakeRepo._handleIncomingEvent('game_end', mockGameEndData);
-  fakeRepo.printDetailedGameSession(fakeRepo._currentSession);
+  fakeRepo.joinGame("111111", "PEPE");
+  fakeRepo.submitAnswer("questionId", 0, 1, "");
 }

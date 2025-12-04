@@ -43,10 +43,15 @@ class GameSession {
     this.winnerNickname,
   });
 
+  bool get isLobby => status == GameStatus.lobby;
+  bool get isQuestionActive => status == GameStatus.question;
+  bool get isResults => status == GameStatus.results;
+  bool get isGameEnd => status == GameStatus.end;
+
   // Estado inicial vacío (antes de conectar)
   factory GameSession.initial() {
     return const GameSession(
-      pin: '123456',
+      pin: '',
       status: GameStatus.lobby,
     );
   }

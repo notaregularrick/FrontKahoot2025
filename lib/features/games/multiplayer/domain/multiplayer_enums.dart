@@ -7,5 +7,6 @@ enum GameStatus {
 
 enum GameRole {
   host,
-  player
+  player,
+  none
 }
