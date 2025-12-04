@@ -32,18 +32,24 @@ class MultiplayerGameNotifier
         if (currentState == null) return;
 
         bool resetAnswered = true;
-        //Cuando se está en el estado de pregunta empieza a correr el cronómetro
-        if (newSessionData.isQuestionActive) {
-          //no sé si deba haber una validación previa para estar seguro de que cambión de pregunta
-          _questionStartTime = DateTime.now();
-          resetAnswered = false;
-        }
 
+        if (newSessionData.status == GameStatus.question) {
+          final String? oldQId =
+              currentState.session.currentQuestion?.questionId;
+          final String? newQId = newSessionData.currentQuestion?.questionId;
+
+          if (newQId != null && newQId != oldQId) {
+            _questionStartTime = DateTime.now(); // Iniciamos cronómetro
+            resetAnswered = false; // Desbloqueamos botones
+          }
+        }
+        newSessionData.orderScoreboardByRank();
         //Actualizar estado
         state = AsyncValue.data(
           currentState.copyWith(
             session: newSessionData,
             hasAnsweredCurrentQuestion: resetAnswered,
+            isLoading: false,
           ),
         );
       },
@@ -55,25 +61,20 @@ class MultiplayerGameNotifier
 
   Future<void> joinGame(String pin, String nickname) async {
     state = const AsyncValue.loading();
-
     try {
-      final useCase = ref.read(joinGameUseCaseProvider);
-      //Aquí me conecto al juego pero aún no estoy suscrito a los eventos
-      await useCase.execute(pin, nickname, GameRole.player);
-
-      //Actualizo el estado del juego al básico del player
-      state = AsyncValue.data(
-        GameNotifierState(
-          session: GameSession.initial().copyWith(pin: pin),
-          role: GameRole.player,
-          myPlayerId:
-              nickname, //Cambiar luego en producción según lo que haga el back con los eventos
-        ),
+      final initialState = GameNotifierState(
+        session: GameSession.initial().copyWith(pin: pin),
+        role: GameRole.player,
+        myPlayerId: nickname,
       );
+      state = AsyncValue.data(initialState);
 
-      //Ahora sí me suscribo a los eventos del juego
       _subscribeToGameStream();
+
+      final useCase = ref.read(joinGameUseCaseProvider);
+      await useCase.execute(pin, nickname, GameRole.player);
     } catch (e, st) {
+      _gameSubscription?.cancel();
       state = AsyncValue.error(e, st);
     }
   }
@@ -118,7 +119,7 @@ class MultiplayerGameNotifier
         .inMilliseconds;
 
     state = AsyncValue.data(
-      currentState.copyWith(hasAnsweredCurrentQuestion: true),
+      currentState.copyWith(hasAnsweredCurrentQuestion: true, isLoading: true),
     );
 
     try {
@@ -133,6 +134,7 @@ class MultiplayerGameNotifier
       state = AsyncValue.data(
         currentState.copyWith(
           hasAnsweredCurrentQuestion: false, //si algo falla que vuelva a enviar
+          isLoading: false,
         ),
       );
     }

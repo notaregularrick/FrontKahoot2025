@@ -13,19 +13,17 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
   //Para fusionar las sesiones (estado)
   GameSession _currentSession = GameSession.initial();
 
-  String myNickname = "Diego";//YA
+  String myNickname = "Diego"; //YA
   int myAnswerIndex = 1;
   int pointsEarned = 0;
   int myTotalScore = 0;
-  int otherScore =0;
-  int myRank=1;
-  int otherRank=2;
+  int myRank = 1;
+  int otherRank1 = 1;
+  int otherRank2 = 2;
+  int otherRank3 = 3;
   String winner = "Maria";
   int myCorrectCount = 0;
   int myIncorrectCount = 0;
-  int otherCorrectCount = 0;
-  int otherIncorrectCount = 0;
-
 
   //MOCK DATA
 
@@ -43,6 +41,8 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
         "nickname": myNickname, // El usuario actual
       },
       {"playerId": "p-002", "nickname": "Maria"},
+      {"playerId": "p-003", "nickname": "Carlos"},
+      {"playerId": "p-004", "nickname": "Andrea"},
     ],
 
     // En el Lobby aún no hay pregunta activa
@@ -79,15 +79,29 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
       {
         "playerId": "p-001",
         "nickname": myNickname,
-        "score": myTotalScore, 
-        "rank": myRank, 
+        "score": myTotalScore,
+        "rank": myRank,
         "previousRank": 0,
       },
       {
         "playerId": "p-002",
         "nickname": "Maria",
-        "score": otherScore,
-        "rank": otherRank,
+        "score": 500,
+        "rank": otherRank1,
+        "previousRank": 0,
+      },
+      {
+        "playerId": "p-003",
+        "nickname": "Carlos",
+        "score": 100,
+        "rank": otherRank2,
+        "previousRank": 0,
+      },
+      {
+        "playerId": "p-004",
+        "nickname": "Andrea",
+        "score": 50,
+        "rank": otherRank3,
         "previousRank": 0,
       },
     ],
@@ -108,10 +122,26 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
       {
         "playerId": "p-002",
         "nickname": "Maria",
-        "score": otherScore,
-        "rank": otherRank,
-        "correctCount": otherCorrectCount,
-        "incorrectCount": otherIncorrectCount,
+        "score": 500,
+        "rank": otherRank1,
+        "correctCount": 1,
+        "incorrectCount": 0,
+      },
+      {
+        "playerId": "p-003",
+        "nickname": "Carlos",
+        "score": 100,
+        "rank": otherRank2,
+        "correctCount": 1,
+        "incorrectCount": 0,
+      },
+      {
+        "playerId": "p-004",
+        "nickname": "Andrea",
+        "score": 50,
+        "rank": otherRank3,
+        "correctCount": 1,
+        "incorrectCount": 0,
       },
     ],
   };
@@ -128,6 +158,7 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
   ) async {
     //delay de red
     await Future.delayed(const Duration(seconds: 1));
+    joinGame(pin, nickname);
   }
 
   // --- Menajdor de los eventos ---
@@ -401,24 +432,24 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
     String jwt,
   ) async {
     myAnswerIndex = answerIndex;
-    if(answerIndex==1){
+    if (answerIndex == 1) {
       pointsEarned = 1000;
       myTotalScore += pointsEarned;
-      myCorrectCount +=1;
+      myCorrectCount += 1;
       myRank = 1;
 
-      otherIncorrectCount +=1;
-      otherScore +=0;
-      otherRank =2;
-    }else{
+      otherRank1 = 2;
+      otherRank2 = 3;
+      otherRank3 = 4;
+    } else {
       pointsEarned = 0;
-      myTotalScore +=pointsEarned;
-      myIncorrectCount +=1;
-      myRank =2;
+      myTotalScore += pointsEarned;
+      myIncorrectCount += 1;
+      myRank = 4;
 
-      otherCorrectCount +=1;
-      otherScore +=1000;
-      otherRank =1;
+      otherRank1 = 1;
+      otherRank2 = 2;
+      otherRank3 = 3;
     }
   }
 
@@ -517,12 +548,14 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
 
   void runPlayerScript() async {
     _handleIncomingEvent('game_state_update', mockLobbyData);
+    await Future.delayed(const Duration(seconds: 5));
     printDetailedGameSession(_currentSession);
     _handleIncomingEvent('question_started', mockQuestionStartedData);
     printDetailedGameSession(_currentSession);
-    await Future.delayed(const Duration(seconds: 5));
+    await Future.delayed(const Duration(seconds: 10));
     _handleIncomingEvent('question_results', mockResultsData);
     printDetailedGameSession(_currentSession);
+    await Future.delayed(const Duration(seconds: 5));
     _handleIncomingEvent('game_end', mockGameEndData);
     printDetailedGameSession(_currentSession);
   }
