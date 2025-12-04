@@ -23,7 +23,6 @@ class MyApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Quiz App',
       debugShowCheckedModeBanner: false,
-      
       routerConfig: appRouter,
       
       //Tema global que luego se puede personalizar (por ejemplo con archivo en core)

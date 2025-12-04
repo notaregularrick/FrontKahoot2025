@@ -8,28 +8,37 @@ class GameNotifierState {
 
   //CONTEXTO LOCAL
   final GameRole role;             
-  final String? myPlayerId;    //TENTATIVO    
+  final String? myPlayerId;  
 
   //ESTADO DE UI
   final bool hasAnsweredCurrentQuestion; //Bloquear botones
-  //final bool isLoadingAction;         // Para mostrar spinner en botones al enviar
-  //final String? errorMessage;         // Para mostrar SnackBars de error temporalmente
+  final bool isLoading;
+  final String? errorMessage;
 
   const GameNotifierState({
     required this.session,
     this.role = GameRole.player,
     this.myPlayerId,
     this.hasAnsweredCurrentQuestion = false,
+    this.isLoading = false,
+    this.errorMessage,
   });
-
-  //GETTERS DE PRESENTACIÓN
 
   bool get isHost => role == GameRole.host;
 
-  bool get isLobby => session.status == GameStatus.lobby;
-  bool get isQuestionActive => session.status == GameStatus.question;
-  bool get isResults => session.status == GameStatus.results;
-  bool get isGameEnd => session.status == GameStatus.end;
+  int get myScore{
+    if (myPlayerId == null) return 0;
+    return session.getPlayerScoreById(  myPlayerId!);
+  }
+  int get myRank{
+    if (myPlayerId == null) return 0;
+    return session.getPlayerRankById(  myPlayerId!);
+  }
+
+  bool get isLobby => session.isLobby;
+  bool get isQuestionActive => session.isQuestionActive;
+  bool get isResults => session.isResults;
+  bool get isGameEnd => session.isGameEnd;
 
   //COPY WITH
   GameNotifierState copyWith({
@@ -37,7 +46,7 @@ class GameNotifierState {
     GameRole? role,
     String? myPlayerId,
     bool? hasAnsweredCurrentQuestion,
-    bool? isLoadingAction,
+    bool? isLoading,
     String? errorMessage,
   }) {
     return GameNotifierState(
@@ -45,6 +54,8 @@ class GameNotifierState {
       role: role ?? this.role,
       myPlayerId: myPlayerId ?? this.myPlayerId,
       hasAnsweredCurrentQuestion: hasAnsweredCurrentQuestion ?? this.hasAnsweredCurrentQuestion,
+      isLoading: isLoading ?? this.isLoading,
+      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 }

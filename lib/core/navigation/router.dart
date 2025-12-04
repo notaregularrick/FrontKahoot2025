@@ -1,7 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/core/navigation/navbar.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/game_orchestrator.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/join_game.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/library_screen.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/library_home_screen.dart';
 import 'package:frontkahoot2526/features/groups/presentation/screens/groups_screen.dart';
@@ -11,7 +12,7 @@ import 'package:go_router/go_router.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/library', // Aquí se coloca la ruta inical (pueden ir cambiandola para probar sus pantallas)
+    initialLocation: '/library', // Ruta inicial por defecto
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -22,22 +23,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           // NOTA: SHELL ROUTE es para las Pantallas que tienen barra de navegación (se llega desde una pantalla de la barra de navegación, como rutas anidadas)
           //StatefulShellBranch es cada rama de la barra de navegación
           // ---------------------------------------------------------
-          // Rama 0: Home 
+          // Rama 0: Home
           StatefulShellBranch(
-          routes: [
-              GoRoute(
-                path: '/home',
-                // Usamos un placeholder simple si aún no desarrollaste la pantalla de Home
-                builder: (context, state) => const Scaffold(
-                  body: Center(child: Text("HOME - Punto de partida")),
-                ),
-              ),
-              // Aquí irán las rutas hijas de Home (ej: /home/other)
-            ],
-          ),
-          //Rama 1: Library (TU TRABAJO)
-          StatefulShellBranch(
-            routes: [
               GoRoute(
                 path: '/library',
                 builder: (context, state) => const LibraryHomeScreen(), // Home that shows two buttons
@@ -57,6 +44,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   return GroupDetailScreen(groupId: id);
                 },
               ),
+              GoRoute(
+                path: '/library/quices',
+                builder: (context, state) => const LibraryScreen(), // The detailed library screen
+              ),
+              GoRoute(
+                path: '/groups',
+                builder: (context, state) => const GroupsScreen(),
+              ),
+              GoRoute(
+                path: '/groups/:groupId',
+                builder: (context, state) {
+                  final id = state.pathParameters['groupId']!;
+                  return GroupDetailScreen(groupId: id);
+                },
+=======
+                builder: (context, state) =>
+                    const LibraryScreen(), // Tu pantalla
+>>>>>>> origin/synchronous-game-branch
+              ),
             ],
           ),
         ],
@@ -65,7 +71,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // ---------------------------------------------------------
       // B. Rutas con pantalla completa, sin barra de navegación (GoRoute)
       // ---------------------------------------------------------
-      // Invite deep link route (public) - opens join screen
+<<<<<<< HEAD
+      // Invite deep link route (public) - opens join screen for groups
       GoRoute(
         path: '/groups/join/:token',
         builder: (context, state) {
@@ -73,7 +80,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return JoinGroupScreen(token: token);
         },
       ),
-      // Note: `/groups` moved into the shell branch so navbar is visible on that screen.
+      // Multiplayer / synchronous-game routes (from synchronous-game-branch)
+      GoRoute(
+        path: '/join',
+        builder: (context, state) => const JoinGameScreen(),
+      ),
+      GoRoute(
+        path: '/game',
+        builder: (context, state) => const GameOrchestratorScreen(),
+      ),
+=======
+      GoRoute(
+        path: '/join',
+        builder: (context, state) => const JoinGameScreen(),
+      ),
+      GoRoute(
+        path: '/game',
+        builder: (context, state) => const GameOrchestratorScreen(),
+      ),
+>>>>>>> origin/synchronous-game-branch
     ],
   );
 });

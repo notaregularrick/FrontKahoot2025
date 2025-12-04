@@ -1,4 +1,5 @@
 enum GameStatus {
+  connecting, // Conectando al juego
   lobby,    // Esperando jugadores
   question, // Pregunta activa 
   results,  // Resultados de la pregunta
@@ -7,5 +8,6 @@ enum GameStatus {
 
 enum GameRole {
   host,
-  player
+  player,
+  none
 }
