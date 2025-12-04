@@ -227,10 +227,10 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
 
     final currentQ = currentQuestion;
     final answerColors = [
-      Colors.red[400]!,
-      Colors.blue[400]!,
-      Colors.orange[400]!,
-      Colors.green[400]!,
+      const Color.fromARGB(255, 189, 4, 16),
+      const Color.fromARGB(255, 9, 64, 203),
+      const Color.fromARGB(255, 217, 132, 4),
+      const Color.fromARGB(255, 1, 128, 12),
     ];
 
     return Scaffold(
@@ -239,14 +239,14 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: PopupMenuButton<String>(
-          icon: Container(
+          child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.grey[200],
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.max,
               children: [
                 Text(
                   selectedQuizType,
@@ -256,7 +256,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                   ),
                 ),
                 const SizedBox(width: 4),
-                const Icon(Icons.arrow_drop_down, color: Colors.black87),
+                const Icon(Icons.arrow_drop_down, color: Colors.black87, size: 20),
               ],
             ),
           ),
@@ -271,15 +271,6 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
             const PopupMenuItem(value: 'Verdadero/Falso', child: Text('Verdadero/Falso')),
             const PopupMenuItem(value: 'Encuesta', child: Text('Encuesta')),
           ],
-        ),
-        centerTitle: true,
-        title: Text(
-          'Pregunta ${currentQuestionIndex + 1} de ${questions.length}',
-          style: const TextStyle(
-            color: Colors.black87,
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
         ),
         actions: [
           if (questions.length > 1)
@@ -315,53 +306,10 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Navegación de preguntas si hay múltiples preguntas
-            if (questions.length > 1)
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios, size: 16),
-                      onPressed: currentQuestionIndex > 0
-                          ? () {
-                              setState(() {
-                                currentQuestionIndex--;
-                              });
-                            }
-                          : null,
-                    ),
-                    Expanded(
-                      child: Center(
-                        child: Text(
-                          'Pregunta ${currentQuestionIndex + 1} de ${questions.length}',
-                          style: const TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onPressed: currentQuestionIndex < questions.length - 1
-                          ? () {
-                              setState(() {
-                                currentQuestionIndex++;
-                              });
-                            }
-                          : null,
-                    ),
-                  ],
-                ),
-              ),
-            const SizedBox(height: 16),
             // Botón Añadir multimedia y tiempo
             Row(
               children: [
@@ -438,7 +386,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            // Grid de respuestas 2x2
+            // Grid de respuestas 
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
@@ -462,10 +410,67 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addNewQuestion,
-        backgroundColor: Colors.blue[600],
-        child: const Icon(Icons.add, color: Colors.white, size: 32),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Flechas de navegación solo si hay múltiples preguntas
+              if (questions.length > 1) ...[
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios, size: 20),
+                  onPressed: currentQuestionIndex > 0
+                      ? () {
+                          setState(() {
+                            currentQuestionIndex--;
+                          });
+                        }
+                      : null,
+                  color: currentQuestionIndex > 0 ? Colors.black87 : Colors.grey,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward_ios, size: 20),
+                  onPressed: currentQuestionIndex < questions.length - 1
+                      ? () {
+                          setState(() {
+                            currentQuestionIndex++;
+                          });
+                        }
+                      : null,
+                  color: currentQuestionIndex < questions.length - 1 ? Colors.black87 : Colors.grey,
+                ),
+                const SizedBox(width: 8),
+              ],
+              Text(
+                'Pregunta ${currentQuestionIndex + 1} de ${questions.length}',
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 16),
+              FloatingActionButton(
+                onPressed: _addNewQuestion,
+                backgroundColor: Colors.blue[600],
+                mini: false,
+                child: const Icon(Icons.add, color: Colors.white, size: 32),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
