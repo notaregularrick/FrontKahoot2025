@@ -9,6 +9,9 @@ import 'package:frontkahoot2526/features/groups/presentation/screens/groups_scre
 import 'package:frontkahoot2526/features/groups/presentation/screens/group_detail_screen.dart';
 import 'package:frontkahoot2526/features/groups/presentation/screens/join_group_screen.dart';
 import 'package:frontkahoot2526/features/games/singleplayer/presentation/screens/singleplayer_orchestrator_screen.dart';
+import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/create_kahoot_screen.dart';
+import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/from_scratch_screen.dart';
+import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/quiz_metadata_screen.dart';
 import 'package:go_router/go_router.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -22,14 +25,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         branches: [
           // Branch 0: Home placeholder (inline, no separate file)
           StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/home',
-                builder: (context, state) => const Scaffold(
-                  body: Center(child: Text('Home (placeholder)')),
+                routes: [
+                GoRoute(
+                  path: '/home',
+                    builder: (context, state) => const Scaffold(
+                    body: Center(child: Text('Home (placeholder)')),
+                  ),
                 ),
-              ),
-            ],
+              ],
           ),
           // Branch 1: Join game (so navbar remains visible while joining)
           StatefulShellBranch(
@@ -37,6 +40,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/join',
                 builder: (context, state) => const JoinGameScreen(),
+              ),
+              ],
+          ),
+          //Rama 2: Crear Kahoot
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/create-kahoot',
+                builder: (context, state) => const CreateKahootScreen(), // Pantalla de selección
+                routes: [
+                  GoRoute(
+                    path: 'quiz-metadata',
+                    builder: (context, state) => const QuizMetadataScreen(), // Pantalla de metadata
+                  ),
+                  GoRoute(
+                    path: 'from-scratch',
+                    builder: (context, state) => const FromScratchScreen(), // Pantalla de edición
+                  ),
+                ],
               ),
             ],
           ),

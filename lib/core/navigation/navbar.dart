@@ -21,6 +21,7 @@ class ScaffoldWithNavBar extends StatelessWidget {
         },
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home), label: 'Inicio'),
+          NavigationDestination(icon: Icon(Icons.add_circle), label: 'Crear Kahoot'),
           NavigationDestination(icon: Icon(Icons.videogame_asset), label: 'Unirse'),
           NavigationDestination(icon: Icon(Icons.library_books), label: 'Biblioteca'),
         ],
