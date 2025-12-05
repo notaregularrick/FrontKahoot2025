@@ -10,35 +10,45 @@ class TitlePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Quiz App'),  // Título de la aplicación
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(30.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Título de la página
-            const Text(
-              'Bienvenido a la aplicación',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 30),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(30.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Título de la página
+              const Text(
+                'Bienvenido a la aplicación',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 30),
 
-            // Botón para Iniciar Sesión
-            ElevatedButton(
-              onPressed: () {
-                context.push('/login');  // Navega a la pantalla de login
-              },
-              child: const Text('Iniciar Sesión'),
-            ),
-            const SizedBox(height: 20),
+              // Botón para Iniciar Sesión (centrado, ancho fijo para consistencia)
+              SizedBox(
+                width: 220,
+                child: ElevatedButton(
+                  onPressed: () {
+                    context.push('/login'); // Navega a la pantalla de login
+                  },
+                  child: const Text('Iniciar Sesión'),
+                ),
+              ),
+              const SizedBox(height: 16),
 
-            // Botón para Registrarse
-            ElevatedButton(
-              onPressed: () {
-                context.push('/register');  // Navega a la pantalla de registro
-              },
-              child: const Text('Registrarse'),
-            ),
-          ],
+              // Botón para Registrarse
+              SizedBox(
+                width: 220,
+                child: OutlinedButton(
+                  onPressed: () {
+                    context.push('/register'); // Navega a la pantalla de registro
+                  },
+                  child: const Text('Registrarse'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

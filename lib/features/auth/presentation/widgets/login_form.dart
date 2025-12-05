@@ -40,7 +40,8 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                 emailCtrl.text.trim(),
                 passCtrl.text.trim(),
               );
-              context.go('/profile');
+              // Después de hacer login, navegar al Home en lugar de Profile
+              context.go('/home');
             },
             child: const Text("Login"),
           ),

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontkahoot2526/core/navigation/home_page.dart';
 import 'package:frontkahoot2526/core/navigation/navbar.dart';
-import 'package:frontkahoot2526/features/auth/games/multiplayer/presentation/screens/game_orchestrator.dart';
+// import 'package:frontkahoot2526/features/auth/games/multiplayer/presentation/screens/game_orchestrator.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/join_game.dart';
-import 'package:frontkahoot2526/features/library/presentation/pages/edit_profile_page.dart';
+// import 'package:frontkahoot2526/features/library/presentation/pages/edit_profile_page.dart';
 //import 'package:frontkahoot2526/features/presentation/screens/library_screen.dart';
 import 'package:frontkahoot2526/features/auth/presentation/pages/login_page.dart';
+import 'package:frontkahoot2526/features/auth/presentation/pages/edit_profile_page.dart';
 import 'package:frontkahoot2526/features/auth/presentation/pages/password_change_page.dart';
 import 'package:frontkahoot2526/features/auth/presentation/pages/password_reset_confirm_page.dart';
 import 'package:frontkahoot2526/features/auth/presentation/pages/password_reset_page.dart';
@@ -115,10 +115,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: '/library',
                 builder: (context, state) => const LibraryHomeScreen(),
               ),
-              GoRoute(
-                path: '/library/quices',
-                builder: (context, state) => const LibraryScreen(),
-              ),
             ],
           ),
         ],
@@ -155,10 +151,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       // Multiplayer routes (keep orchestrator full-screen)
-      GoRoute(
-        path: '/game',
-        builder: (context, state) => const GameOrchestratorScreen(),
-      ),
+      // GoRoute(
+      //   path: '/game',
+      //   builder: (context, state) => const GameOrchestratorScreen(),
+      // ),
       GoRoute(
         path: '/inicio',
         builder: (context, state) => const TitlePage(),
@@ -166,6 +162,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfilePage(),
       ),
       GoRoute(
         path: '/register',
