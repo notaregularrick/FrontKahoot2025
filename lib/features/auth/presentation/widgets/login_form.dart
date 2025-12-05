@@ -40,6 +40,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                 emailCtrl.text.trim(),
                 passCtrl.text.trim(),
               );
+              context.go('/profile');
             },
             child: const Text("Login"),
           ),

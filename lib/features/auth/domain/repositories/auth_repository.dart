@@ -23,6 +23,6 @@ abstract class AuthRepository {
 
   Future<void> confirmPasswordReset(String resetToken, String newPassword);
 
-  Future<ProfileModel> getUserProfile();
+  //Future<ProfileModel> getUserProfile();
 
 }

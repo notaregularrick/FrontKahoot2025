@@ -6,9 +6,17 @@ import '../../infraestructure/repositories/profile_repository_impl.dart';
 import '../controllers/profile_notifier.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepositoryImpl>((ref) {
-  final dio = ref.read(apiServiceProvider).dio;  // usa el dio con interceptor
+  // 1. Obtenemos el servicio completo (ApiService)
+  final apiService = ref.read(apiServiceProvider);
+  
+  // 2. Obtenemos Dio del servicio para el Datasource
+  final dio = apiService.dio; 
+  
+  // 3. Creamos el Datasource
   final datasource = ProfileDatasource(dio);
-  return ProfileRepositoryImpl(datasource);
+
+  // 4. CORRECCIÓN: Pasamos AMBOS al repositorio
+  return ProfileRepositoryImpl(datasource, apiService);
 });
 
 final profileNotifierProvider = StateNotifierProvider<ProfileNotifier, ProfileState>((ref) {

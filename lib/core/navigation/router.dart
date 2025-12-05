@@ -13,15 +13,16 @@ import 'package:frontkahoot2526/features/auth/presentation/pages/profile_page.da
 import 'package:frontkahoot2526/features/auth/presentation/pages/register_page.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/auth/presentation/providers/auth_providers.dart';
+//import '../../features/auth/presentation/providers/auth_providers.dart';
 import 'inicio.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authNotifierProvider);
+  //final authState = ref.watch(authNotifierProvider);
 
   return GoRouter(
     initialLocation: '/inicio', // Ruta inicial mientras no haya redirección
-    redirect: (BuildContext context, GoRouterState state) {
+    //logica de redireccion deprecada por interferir en la simulacion
+    /*redirect: (BuildContext context, GoRouterState state) {
       print("/nTOKEN ACTUAL: ${ref.read(authNotifierProvider).token}/n");
       final isLoggedIn = authState.token != null;
       final currentLocation = state.uri.toString();
@@ -51,7 +52,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // Si nada de lo anterior, deja el flujo continuar normalmente
       return null;
-    },
+    },*/
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -65,13 +66,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/home',
-                builder: (context, state) => const Scaffold(
-                  body: Center(child: Text("HOME - Punto de partida")),
-                ),
-              ),
-              GoRoute(
-                path: '/profile',
-                builder: (context, state) => const ProfilePage(),
+                builder: (context, state) => const HomePage(),
               ),
             ],
           ),
@@ -83,6 +78,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   body: Center(child: Text("TEMP PROFILE")),
               ),
              ),
+            ],
+          ),StatefulShellBranch(
+            routes: [
+             GoRoute(
+                path: '/profile',
+                builder: (context, state) => const ProfilePage(),
+              ),
             ],
           ),
         ],

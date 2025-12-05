@@ -1,33 +1,22 @@
-//import 'package:dio/dio.dart';
-
-import 'package:dio/dio.dart';
-import 'package:frontkahoot2526/features/auth/application/state/auth_state.dart';
-
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/secure_storage_service.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/entities/user_entity.dart';
 import '../datasource/auth_datasource.dart';
 import '../models/auth_response_model.dart';
-//import '../../domain/entities/profile_entity.dart';
 import '../models/profile_model.dart';
 import '../models/user_model.dart';
 
-// --- SIMULACIÓN SIN API -------------------
-UserModel? _mockUser;         // guarda el usuario
-String? _mockToken;           // guarda un token falso
-ProfileModel? _mockProfile;   // guarda el perfil
-// ------------------------------------------
+// IMPORTA TU BASE DE DATOS SIMULADA
+import '../../../../core/simulated_data.dart'; 
 
-class AuthRepositoryImpl implements AuthRepository{
-
+class AuthRepositoryImpl implements AuthRepository {
   final AuthDatasource datasource;
   final ApiService apiService;
- final SecureStorageService storage;
+  final SecureStorageService storage;
 
   AuthRepositoryImpl(this.datasource, this.apiService, this.storage);
 
- 
   @override
   Future<UserEntity?> register({
     required String name,
@@ -36,79 +25,25 @@ class AuthRepositoryImpl implements AuthRepository{
   }) async {
     const simulate = true;
 
-  if (simulate) {
-    // Creamos un usuario simulado
-    _mockUser = UserModel(
-      id: "temp-id",
-      name: name,
-      email: email,
-      userType: 'default',
-      createdAt: DateTime.now()
-    );
-
-    // Guardar token temporalmente
-    _mockToken = "fake-token-123";
-
-    // Simulamos un perfil (puede ser más completo)
-    _mockProfile = ProfileModel(
-      id: "tempo-id",
-      name: name,
-      email: email,
-      avatarUrl: "https://i.pravatar.cc/150",
-      description: "Nuevo usuario de prueba",
-      userType: "Básico",
-      gameStreak: 0,
-      theme: "Día",
-      language: "Español",
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now()
-
-    );
-
-    // Opcional: guardarlo en secure storage para simular sesión verdadera
-    await storage.saveToken(_mockToken);
-    
-
-    return _mockUser?.toEntity();
-  }
-
-    final userModel = await datasource.register(
-      name: name,
-      email: email,
-      password: password,
-    );
-
-    
-    return userModel.toEntity();
-  }
-
-  @override
-  Future<AuthResponseModel> login({
-    required String email,
-    required String password,
-  }) async {
-    const simulate = true;
-
     if (simulate) {
-      if (_mockUser == null) {
-        throw Exception("No hay usuario registrado aún.");
-      }
+      await Future.delayed(const Duration(milliseconds: 800));
 
-      if (_mockUser!.email != email) {
-        throw Exception("Email incorrecto.");
-      }
+      // 1. GUARDAMOS EN LA DB COMPARTIDA
+      dbUser = UserModel(
+        id: "user-id-123",
+        name: name,     // <--- Usamos el nombre del form
+        email: email,   // <--- Usamos el email del form
+        userType: 'default',
+        createdAt: DateTime.now(),
+      );
 
-      // simular token
-      _mockToken = "fake-token-123";
-      await storage.saveToken(_mockToken);
-
-      _mockProfile ??= ProfileModel(
-        id: _mockUser!.id,
-        name: _mockUser!.name,
-        email: _mockUser!.email,
-        avatarUrl: "https://i.pravatar.cc/150",
-        description: "Perfil simulado",
-        userType: _mockUser!.userType ?? "Básico",
+      dbProfile = ProfileModel(
+        id: "user-id-123",
+        name: name,     // <--- ¡IMPORTANTE! Guardamos lo mismo aquí
+        email: email,
+        avatarUrl: "",
+        description: "Hola, soy nuevo aquí",
+        userType: "Básico",
         gameStreak: 0,
         theme: "Día",
         language: "Español",
@@ -116,96 +51,143 @@ class AuthRepositoryImpl implements AuthRepository{
         updatedAt: DateTime.now(),
       );
 
-      // ahora devolvemos lo que la UI espera
+      dbToken = "fake-token-xyz";
+      await storage.saveToken(dbToken);
+
+      return dbUser?.toEntity();
+    }
+
+    // Lógica real...
+    final userModel = await datasource.register(name: name, email: email, password: password);
+    return userModel.toEntity();
+  }
+
+  @override
+  Future<AuthResponseModel> login({required String email, required String password}) async {
+    const simulate = true;
+
+    if (simulate) {
+      await Future.delayed(const Duration(milliseconds: 800));
+
+      // 2. VALIDAMOS CONTRA LA DB COMPARTIDA
+      if (dbUser == null) {
+        throw Exception("Usuario no encontrado. Debes registrarte primero.");
+      }
+      if (dbUser!.email != email) {
+        throw Exception("Credenciales incorrectas.");
+      }
+
+      dbToken = "fake-token-xyz";
+      await storage.saveToken(dbToken);
+
       return AuthResponseModel(
-        user: _mockUser!,
-        accessToken: _mockToken!,
+        user: dbUser!,
+        accessToken: dbToken!,
       );
     }
     
-    final response = await datasource.login(
-      email:email,
-      password:password,
-    );
-
-    //await storage.saveToken(response.accessToken);
-
+    // Lógica real...
+    final response = await datasource.login(email: email, password: password);
+    await storage.saveToken(response.accessToken);
     return response;
   }
-
   @override
   Future<void> logout() async {
     const simulate = true;
-
-  if (simulate) {
-    _mockToken = null;
-    await storage.deleteToken();
-    return;
-  }
-
-    await apiService.post('/auth/logout');
-    // El backend da 204, no hay body
-  }
-
-  // Método para restablecimiento de contraseña
-  @override
-Future<void> requestPasswordReset(String email) async {
-  const simulate = true;
-
-  if(simulate){
-    await Future.delayed(const Duration(seconds: 1)); // simula espera
-    return;
-  }
-
-  try {
-    // Enviar la solicitud al backend
-    await apiService.post('/auth/password-reset/request', data: {
-      'email': email,
-    });
-  } on DioException catch (e) {
-    if (e.response?.statusCode == 400) {
-      throw Exception('Formato de email inválido.');
-    } else {
-      throw Exception('Error al intentar restablecer la contraseña: ${e.message}');
+    if (simulate) {
+      dbToken = null;
+      await storage.deleteToken();
+      return;
     }
-  } catch (e) {
-    throw Exception('Error al intentar restablecer la contraseña: ${e.toString()}');
+    await apiService.post('/auth/logout');
+    await storage.deleteToken(); // Asegurar borrado local
   }
-}
 
-@override
-  Future<void> confirmPasswordReset(String resetToken, String newPassword) async {
+  @override
+  Future<void> requestPasswordReset(String email) async {
+    const simulate = true;
+    if (simulate) {
+      await Future.delayed(const Duration(seconds: 1));
+      if (!email.contains('@')) throw Exception("Email inválido");
+      return;
+    }
+    // ... tu lógica real (estaba bien) ...
     try {
-      // Enviar solicitud de actualización de contraseña
+      await apiService.post('/auth/password-reset/request', data: {'email': email});
+    } catch (e) {
+      throw Exception('Error al solicitar reset: $e');
+    }
+  }
+
+  @override
+  Future<void> confirmPasswordReset(String resetToken, String newPassword) async {
+    const simulate = true;
+
+    if (simulate) {
+      // 1. Simular retraso de red (1.5 segundos)
+      await Future.delayed(const Duration(milliseconds: 1500));
+
+      // 2. Simular Validaciones (Opcional, para probar errores en tu UI)
+      
+      // Simular error si el token está vacío o es un token específico de prueba "bad"
+      if (resetToken.isEmpty || resetToken == "invalid-token") {
+        throw Exception("El token es inválido o ha expirado.");
+      }
+
+      // Simular validación de contraseña corta
+      if (newPassword.length < 6) {
+        throw Exception("La contraseña debe tener al menos 6 caracteres.");
+      }
+
+      // 3. Éxito
+      // En una DB real aquí se actualizaría el hash del password.
+      // En simulación, simplemente retornamos (void) indicando que todo salió bien.
+      print("SIMULACIÓN: Contraseña restablecida exitosamente. Nueva pass: $newPassword");
+      return;
+    }
+
+    // --- LÓGICA REAL ---
+    try {
       await apiService.post('/auth/password-reset/confirm', data: {
         'resetToken': resetToken,
         'newPassword': newPassword,
       });
     } catch (e) {
-      throw Exception('Error al intentar establecer la nueva contraseña: ${e.toString()}');
+      // Es buena práctica atrapar el error de red y lanzar una Exception limpia
+      throw Exception('Error al confirmar cambio de contraseña: $e');
     }
   }
 
-  @override
+ /* @override
   Future<ProfileModel> getUserProfile() async {
     const simulate = true;
 
-  if (simulate) {
-    await Future.delayed(const Duration(milliseconds: 500)); // hecho por estilo
-
-    if (_mockProfile == null) {
-      throw Exception("No hay perfil disponible");
+    if (simulate) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (dbProfile == null) {
+        // Fallback por si acaso
+        return ProfileModel(
+            id: "temp", 
+            name: "Usuario Simulado", 
+            email: "test@test.com", 
+            avatarUrl: "", 
+            description: "Sin descripción", 
+            userType: "Guest", 
+            gameStreak: 0, 
+            theme: "Día", 
+            language: "ES", 
+            createdAt: DateTime.now(), 
+            updatedAt: DateTime.now()
+        );
+      }
+      return dbProfile!;
     }
 
-    return _mockProfile!;
-  }
-    
     try {
       final response = await apiService.get('/profile');
-      return ProfileModel.fromJson(response.data); // Asumimos que la respuesta es un JSON
+      return ProfileModel.fromJson(response.data);
     } catch (e) {
-      throw Exception('Error al obtener el perfil del usuario: ${e.toString()}');
+      throw Exception('Error al obtener perfil: $e');
     }
-  }
-
+  }*/
 }

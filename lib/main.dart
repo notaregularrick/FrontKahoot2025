@@ -19,7 +19,7 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Leer la inicialización del token desde SecureStorage
-    final authInit = ref.watch(authInitProvider);
+    final authInit = ref.read(authInitProvider);
 
     return authInit.when(
       loading: () => const MaterialApp(

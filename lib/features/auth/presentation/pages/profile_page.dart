@@ -1,81 +1,132 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../providers/profile_providers.dart'; // Verifica que esta ruta sea correcta
 
-//import '../../domain/entities/profile_entity.dart';
-import '../../infraestructure/models/profile_model.dart';
-import '../providers/auth_providers.dart';
-
-class ProfilePage extends ConsumerStatefulWidget {
+class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
   @override
-  ConsumerState<ProfilePage> createState() => _ProfilePageState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 1. Escuchamos cambios en el estado
+    final state = ref.watch(profileNotifierProvider);
+
+    // 2. LÓGICA AUTOMÁTICA DE CARGA (El "Trigger")
+    // Si no hay perfil, no está cargando y no hay error, forzamos la petición de datos.
+    if (state.profile == null && !state.isLoading && state.errorMessage == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Usamos read porque estamos dentro de un callback, no queremos re-renderizar aquí
+        ref.read(profileNotifierProvider.notifier).getUserProfile();
+      });
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: const Text("Perfil")),
+      // 3. Renderizado condicional directo (sin Builder extra)
+      body: state.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : state.errorMessage != null
+              ? Center(child: Text('Error: ${state.errorMessage}'))
+              : state.profile == null
+                  ? const Center(child: Text('Cargando datos del perfil...'))
+                  : Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(), // Permite scroll suave
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // --- AVATAR ---
+                            Center(
+                              child: CircleAvatar(
+                                radius: 50,
+                                // Validación segura de la URL
+                                backgroundImage: (state.profile!.avatarUrl.isNotEmpty)
+                                    ? NetworkImage(state.profile!.avatarUrl)
+                                    : null,
+                                child: (state.profile!.avatarUrl.isEmpty)
+                                    ? const Icon(Icons.person, size: 50)
+                                    : null,
+                              ),
+                            ),
+                            
+                            const SizedBox(height: 20),
+
+                            // --- ITEMS DE INFORMACIÓN ---
+                            // Usamos state.profile! con seguridad porque ya validamos que no es null arriba
+                            _InfoItem(label: 'Nombre', value: state.profile!.name),
+                            _InfoItem(label: 'Email', value: state.profile!.email),
+                            _InfoItem(label: 'Descripción', value: state.profile!.description),
+                            _InfoItem(label: 'Tipo de Usuario', value: state.profile!.userType),
+                            _InfoItem(label: 'Racha', value: state.profile!.gameStreak.toString()),
+
+                            const SizedBox(height: 30),
+
+                            // --- BOTÓN EDITAR ---
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  // Usamos push para apilar la vista y poder regresar
+                                  context.push('/edit-profile');
+                                },
+                                child: const Text('Editar Perfil'),
+                              ),
+                            ),
+                            
+                            const SizedBox(height: 10),
+
+                            // --- BOTÓN CAMBIAR CONTRASEÑA ---
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red.shade100,
+                                  foregroundColor: Colors.red.shade900,
+                                ),
+                                onPressed: () {
+                                  context.push('/passchange');
+                                },
+                                child: const Text('Cambiar Contraseña'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+    );
+  }
 }
 
-class _ProfilePageState extends ConsumerState<ProfilePage> {
-  late Future<ProfileModel> userProfile;
-  String? errorMessage;
+// Widget auxiliar para estilos (se queda igual)
+class _InfoItem extends StatelessWidget {
+  final String label;
+  final String value;
 
-  @override
-  void initState() {
-    super.initState();
-    userProfile = ref.read(authRepositoryProvider).getUserProfile();
-  }
+  const _InfoItem({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Perfil")),
-      body: FutureBuilder<ProfileModel>(
-        future: userProfile,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-
-          if (!snapshot.hasData) {
-            return const Center(child: Text('No se encontraron datos del perfil.'));
-          }
-
-          final user = snapshot.data!;
-
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  backgroundImage: NetworkImage(user.avatarUrl),
-                  radius: 40,
-                ),
-                const SizedBox(height: 16),
-                Text('Nombre: ${user.name}', style: TextStyle(fontSize: 20)),
-                Text('Email: ${user.email}', style: TextStyle(fontSize: 18)),
-                Text('Descripción: ${user.description}', style: TextStyle(fontSize: 18)),
-                Text('Tipo de Usuario: ${user.userType}', style: TextStyle(fontSize: 18)),
-                Text('Racha de Juego: ${user.gameStreak}', style: TextStyle(fontSize: 18)),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    context.go('/edit-profile'); // O redirigir a otra página si es necesario
-                  },
-                  child: const Text('Editar Perfil'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    context.go('/passchange'); // O redirigir a otra página si es necesario
-                  },
-                  child: const Text('Cambiar Contraseña'),
-                ),
-              ],
-            ),
-          );
-        },
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label, 
+            style: const TextStyle(
+              fontWeight: FontWeight.bold, 
+              fontSize: 16, 
+              color: Colors.grey
+            )
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value.isEmpty ? "No especificado" : value, 
+            style: const TextStyle(fontSize: 18)
+          ),
+          const Divider(),
+        ],
       ),
     );
   }
