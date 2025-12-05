@@ -9,6 +9,8 @@ import '../models/user_model.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/simulated_data.dart';
+
 class AuthRepositoryImpl implements AuthRepository {
   final AuthDatasource datasource;
   final ApiService apiService;
@@ -27,8 +29,9 @@ class AuthRepositoryImpl implements AuthRepository {
     if (simulate) {
       await Future.delayed(const Duration(milliseconds: 800));
 
+      // 1. Crear el modelo de perfil
       final newProfile = ProfileModel(
-        id: email,
+        id: email, // Usamos el email como ID
         name: name,
         email: email,
         avatarUrl: "",
@@ -43,21 +46,18 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final prefs = await SharedPreferences.getInstance();
 
-      // 1. CONVERTIMOS EL PERFIL A MAPA
-      Map<String, dynamic> dataToSave = newProfile.toJson();
-
-      // 2. ¡TRUCO! AGREGAMOS LA CONTRASEÑA AL MAPA ANTES DE GUARDAR
-      // (Así la "Base de datos" recuerda tu clave)
-      dataToSave['password'] = password;
-
-      // 3. GUARDAMOS TODO EL JSON (Perfil + Password)
-      String profileJson = jsonEncode(dataToSave);
+      // 2. Guardar los datos del usuario en su caja específica
+      String profileJson = jsonEncode(newProfile.toJson());
       await prefs.setString('profile_$email', profileJson);
 
-      // Guardamos sesión activa
+      // 3. ¡¡CRÍTICO!! GUARDAR QUE ESTE ES EL USUARIO ACTIVO
+      // Sin esta línea, el ProfileRepository no sabe qué caja buscar.
       await prefs.setString('current_active_email', email);
+
+      // 4. Guardar token (para la sesión)
       await storage.saveToken("fake-token-$email");
 
+      // 5. Retornar UserEntity para que el Notifier actualice el estado
       return UserModel(
         id: newProfile.id,
         name: newProfile.name,
@@ -81,34 +81,27 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
   }) async {
     const simulate = true;
-
     if (simulate) {
       await Future.delayed(const Duration(milliseconds: 800));
+
       final prefs = await SharedPreferences.getInstance();
 
-      // 1. VERIFICAR SI EL EMAIL EXISTE
-      if (!prefs.containsKey('profile_$email')) {
-        throw Exception("Usuario no encontrado. Verifica el email.");
-      }
-
-      // 2. LEER LOS DATOS GUARDADOS
+      // 1. VERIFICAMOS SI EXISTE LA CAJA DE ESE EMAIL
       final userJson = prefs.getString('profile_$email');
-      final Map<String, dynamic> storedData = jsonDecode(userJson!);
 
-      // 3. VALIDAR LA CONTRASEÑA
-      // Comparamos la pass que escribiste con la que guardamos en el registro
-      if (storedData['password'] != password) {
-        throw Exception("Contraseña incorrecta.");
+      if (userJson == null) {
+        throw Exception("Usuario no encontrado. Regístrate primero.");
       }
 
-      // SI PASA LA VALIDACIÓN, PROCEDEMOS:
-
-      // Marcar como activo
+      // 2. SI EXISTE, LO MARCAMOS COMO ACTIVO
       await prefs.setString('current_active_email', email);
       await storage.saveToken("fake-token-$email");
 
-      // Convertir a modelo de usuario (ignorando el campo password extra que metimos)
-      final user = UserModel.fromJson(storedData);
+      // Reconstruimos el usuario para devolverlo
+      final profileMap = jsonDecode(userJson);
+      final user = UserModel.fromJson(
+        profileMap,
+      ); // Asegúrate que UserModel tenga fromJson o créalo manual
 
       return AuthResponseModel(user: user, accessToken: "fake-token-$email");
     }
@@ -122,7 +115,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('current_active_email');
+    await prefs.remove('my_profile_data');
     //await apiService.post('/auth/logout');
     await storage.deleteToken(); // Asegurar borrado local
   }

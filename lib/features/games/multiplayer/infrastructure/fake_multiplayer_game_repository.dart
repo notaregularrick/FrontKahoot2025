@@ -434,8 +434,8 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
     myAnswerIndex = answerIndex;
     if (answerIndex == 1) {
       pointsEarned = 1000;
-      myTotalScore += pointsEarned;
-      myCorrectCount += 1;
+      myTotalScore = pointsEarned;
+      myCorrectCount = 1;
       myRank = 1;
 
       otherRank1 = 2;
@@ -443,8 +443,8 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
       otherRank3 = 4;
     } else {
       pointsEarned = 0;
-      myTotalScore += pointsEarned;
-      myIncorrectCount += 1;
+      myTotalScore = pointsEarned;
+      myIncorrectCount = 1;
       myRank = 4;
 
       otherRank1 = 1;
