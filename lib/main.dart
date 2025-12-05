@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/core/navigation/router.dart';
+import 'features/auth/presentation/providers/auth_init_provider.dart'; // El nuevo import
 
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Necesario antes de cualquier código asincrónico.
 
-
-void main() {
   runApp(
     const ProviderScope(
       child: MyApp(),
@@ -17,25 +18,31 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // configuración del router
-    final appRouter = ref.watch(appRouterProvider);
+    // Leer la inicialización del token desde SecureStorage
+    final authInit = ref.read(authInitProvider);
 
-    return MaterialApp.router(
-      title: 'Quiz App',
-      debugShowCheckedModeBanner: false,
-      routerConfig: appRouter,
-      
-      //Tema global que luego se puede personalizar (por ejemplo con archivo en core)
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.red, 
-          brightness: Brightness.light,
-        ),
-        appBarTheme: const AppBarTheme(
-          centerTitle: true,
-          backgroundColor: Colors.red,
-          foregroundColor: Colors.white,
+    return authInit.when(
+      loading: () => const MaterialApp(
+        home: Scaffold(body: Center(child: CircularProgressIndicator())),
+      ),
+      error: (_, __) => const MaterialApp(
+        home: Scaffold(body: Center(child: Text("Error loading session"))),
+      ),
+      data: (_) => MaterialApp.router(
+        title: 'Quiz App',
+        debugShowCheckedModeBanner: false,
+        routerConfig: ref.watch(appRouterProvider),
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.red,
+            brightness: Brightness.light,
+          ),
+          appBarTheme: const AppBarTheme(
+            centerTitle: true,
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+          ),
         ),
       ),
     );
