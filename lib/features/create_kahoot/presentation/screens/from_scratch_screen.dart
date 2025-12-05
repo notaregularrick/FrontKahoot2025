@@ -1,10 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:frontkahoot2526/core/domain/entities/answer.dart';
 import 'package:frontkahoot2526/core/domain/entities/question.dart';
 import 'package:frontkahoot2526/core/domain/entities/quiz.dart';
 import 'package:frontkahoot2526/features/create_kahoot/presentation/providers/create_quiz_service_provider.dart';
+import 'package:frontkahoot2526/features/media/presentation/providers/media_service_provider.dart';
 
 // Modelos de datos para gestionar el estado de preguntas y respuestas
 class QuestionData {
@@ -55,6 +58,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
   String quizDescription = '';
   String quizCategory = 'Estudio';
   String quizVisibility = 'private';
+  String? quizCoverImageId;
 
   @override
   void initState() {
@@ -138,7 +142,10 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
 
     // Validar que cada pregunta tenga al menos una respuesta
     for (var question in validQuestions) {
-      final validAnswers = question.answers.where((a) => a.text != null && a.text!.trim().isNotEmpty).toList();
+      final validAnswers = question.answers.where((a) => 
+        (a.text != null && a.text!.trim().isNotEmpty) || 
+        (a.mediaId != null && a.mediaId!.trim().isNotEmpty)
+      ).toList();
       if (validAnswers.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cada pregunta debe tener al menos una respuesta')),
@@ -161,7 +168,10 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     // Construir entidades Question
     final questionEntities = validQuestions.map((q) {
       final validAnswers = q.answers
-          .where((a) => a.text != null && a.text!.trim().isNotEmpty)
+          .where((a) => 
+            (a.text != null && a.text!.trim().isNotEmpty) || 
+            (a.mediaId != null && a.mediaId!.trim().isNotEmpty)
+          )
           .map((a) => Answer(
                 id: a.id,
                 text: a.text,
@@ -186,7 +196,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       id: '', // Será generado por el repositorio
       title: quizTitle,
       description: quizDescription,
-      coverImageId: null,
+      coverImageId: quizCoverImageId,
       visibility: quizVisibility,
       status: 'draft',
       category: quizCategory,
@@ -315,9 +325,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      // Añadir multimedia (funcionalidad pendiente)
-                    },
+                    onPressed: () => _uploadQuizCoverImage(),
                     icon: const Icon(Icons.add_photo_alternate, color: Colors.black87),
                     label: const Text(
                       'Añadir multimedia',
@@ -354,6 +362,77 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                 ),
               ],
             ),
+            // Mostrar imagen de portada si existe
+            if (quizCoverImageId != null && quizCoverImageId!.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Stack(
+                children: [
+                  Container(
+                    height: 200,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        ref.read(mediaServiceProvider).getMediaUrl(quizCoverImageId!),
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            color: Colors.grey[200],
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.error_outline, color: Colors.grey),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Error al cargar imagen',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.black54,
+                        padding: const EdgeInsets.all(8),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          quizCoverImageId = null;
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 24),
             // Campo de pregunta
             GestureDetector(
@@ -397,6 +476,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
               children: List.generate(4, (index) {
                 final answer = currentQ.answers[index];
                 final hasText = answer.text != null && answer.text!.trim().isNotEmpty;
+                final hasImage = answer.mediaId != null && answer.mediaId!.isNotEmpty;
                 return _buildAnswerButton(
                   color: answerColors[index],
                   label: hasText ? answer.text! : (index < 2 ? 'Añadir respuesta' : 'Añadir respuesta (opcional)'),
@@ -404,6 +484,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                   index: index,
                   isCorrect: answer.isCorrect,
                   hasText: hasText,
+                  hasImage: hasImage,
                 );
               }),
             ),
@@ -482,9 +563,11 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     required int index,
     required bool isCorrect,
     required bool hasText,
+    required bool hasImage,
   }) {
     final currentQ = currentQuestion;
     final answer = currentQ.answers[index];
+    final mediaService = ref.read(mediaServiceProvider);
     
     return Stack(
       children: [
@@ -499,41 +582,88 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.zero,
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (hasText)
-                Expanded(
-                  child: Text(
-                    label,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: hasImage
+                ? Image.network(
+                    mediaService.getMediaUrl(answer.mediaId!),
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: color,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: color,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.error_outline, color: Colors.white),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Error al cargar imagen',
+                                style: const TextStyle(color: Colors.white, fontSize: 12),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  )
+                : Container(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (hasText)
+                          Expanded(
+                            child: Text(
+                              label,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          )
+                        else
+                          Text(
+                            label,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                      ],
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                )
-              else
-                Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-            ],
           ),
         ),)
         ],),
         // Slide de respuesta correcta
-        if (hasText && (currentQ.type == 'quiz' || currentQ.type == 'true_false'))
+        if ((hasText || hasImage) && (currentQ.type == 'quiz' || currentQ.type == 'true_false'))
           Positioned(
             top: 8,
             right: 8,
@@ -602,47 +732,114 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       ),
     );
   }
-
+  String? currentMediaId;
   void _showAnswerDialog(BuildContext context, int index, Color color) {
     final currentQ = currentQuestion;
     final answer = currentQ.answers[index];
     final TextEditingController controller = TextEditingController(text: answer.text ?? '');
     bool isCorrect = answer.isCorrect;
+    currentMediaId = answer.mediaId;
     
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: Text('Añadir respuesta ${index + 1}'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: controller,
-                decoration: const InputDecoration(
-                  hintText: 'Escribe la respuesta aquí',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              // Checkbox para marcar respuesta correcta
-              if (currentQ.type == 'quiz' || currentQ.type == 'true_false') ...[
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Checkbox(
-                      value: isCorrect,
-                      onChanged: (value) {
-                        setDialogState(() {
-                          isCorrect = value ?? false;
-                        });
-                      },
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Mostrar imagen actual si existe
+                if (currentMediaId != null && currentMediaId!.isNotEmpty) ...[
+                  Container(
+                    height: 150,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey[300]!),
                     ),
-                    Expanded(child: const Text('Marcar como respuesta correcta')) ,
-                  ],
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        ref.read(mediaServiceProvider).getMediaUrl(currentMediaId!),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.error_outline),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton.icon(
+                    onPressed: () {
+                      setDialogState(() {
+                        currentMediaId = null;
+                        answer.mediaId = null;
+                      });
+                      // Actualizar estado del widget principal
+                      setState(() {
+                        answer.mediaId = null;
+                      });
+                    },
+                    icon: const Icon(Icons.delete, size: 18),
+                    label: const Text('Eliminar imagen'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                ],
+
+                TextField(
+                  controller: controller,
+                  enabled: currentMediaId == null,
+                  decoration: InputDecoration(
+                    hintText: currentMediaId != null 
+                        ? 'Elimina la imagen para escribir texto' 
+                        : 'Escribe la respuesta aquí',
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
+                const SizedBox(height: 12),
+                // Botón para subir imagen
+                if (currentMediaId == null)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _uploadAnswerImage(index, setDialogState),
+                      icon: const Icon(Icons.image),
+                      label: const Text('Subir imagen'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey[200],
+                        foregroundColor: Colors.black87,
+                      ),
+                    ),
+                  ),
+                // Checkbox para marcar respuesta correcta
+                if (currentQ.type == 'quiz' || currentQ.type == 'true_false') ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: isCorrect,
+                        onChanged: (value) {
+                          setDialogState(() {
+                            isCorrect = value ?? false;
+                          });
+                        },
+                      ),
+                      const Expanded(child: Text('Marcar como respuesta correcta')),
+                    ],
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
           actions: [
             TextButton(
@@ -652,8 +849,19 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
             TextButton(
               onPressed: () {
                 setState(() {
-                  answer.text = controller.text.trim().isEmpty ? null : controller.text.trim();
-                  
+                  // Si hay imagen, limpiar texto
+                  print(answer.mediaId);
+                  if (currentMediaId != null && currentMediaId!.isNotEmpty) {
+                    answer.text = null;
+                    answer.mediaId = currentMediaId;
+                  } else {
+                    // Si hay texto, limpiar imagen
+                    answer.text = controller.text.trim().isEmpty ? null : controller.text.trim();
+                    answer.mediaId = null;
+                  }
+                  print(answer.text);
+                  print(answer.mediaId);
+                  print(currentMediaId);
                   // Si se marca como correcta, desmarcar todas las demás
                   if (isCorrect && (currentQ.type == 'quiz' || currentQ.type == 'true_false')) {
                     for (var otherAnswer in currentQ.answers) {
@@ -673,6 +881,114 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _uploadQuizCoverImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+
+      if (image == null) return;
+
+      // Mostrar indicador de carga
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      try {
+        final mediaService = ref.read(mediaServiceProvider);
+        final file = File(image.path);
+        final media = await mediaService.uploadMedia(file);
+
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
+          setState(() {
+            quizCoverImageId = media.id;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Imagen de portada subida exitosamente')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al subir imagen: ${e.toString()}')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al seleccionar imagen: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _uploadAnswerImage(int index, StateSetter setDialogState) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+
+      if (image == null) return;
+
+      // Mostrar indicador de carga
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      try {
+        final mediaService = ref.read(mediaServiceProvider);
+        final file = File(image.path);
+        final media = await mediaService.uploadMedia(file);
+
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
+          final answer = currentQuestion.answers[index];
+          // Actualizar estado del diálogo
+          setDialogState(() {
+            currentMediaId = media.id;
+          });
+          // Actualizar estado del widget principal para forzar reconstrucción
+          setState(() {
+            currentMediaId = media.id;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Imagen subida exitosamente')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al subir imagen: ${e.toString()}')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al seleccionar imagen: ${e.toString()}')),
+        );
+      }
+    }
   }
 
   void _showTimePicker(BuildContext context) {
