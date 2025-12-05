@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/quiz_model.dart';
 import 'package:frontkahoot2526/features/library/presentation/providers/library_notifier.dart';
+import 'package:go_router/go_router.dart';
 
 enum QuizContextType { myCreations, favorites, inProgress, completed }
 
@@ -86,13 +87,13 @@ class QuizOptionsSheet extends ConsumerWidget {
               //3 puntos para descomponer el array
               createEditButton(),
               createPlayMultiplayerButton(),
-              createPlaySoloButton(),
+              createPlaySoloButton(context, ref),
             ],
 
             if (type == QuizContextType.favorites) ...[
               //3 puntos para descomponer el array
               createPlayMultiplayerButton(),
-              createPlaySoloButton(),
+              createPlaySoloButton(context, ref),
               createRemoveFavoriteButton(context, ref, quiz.id),
             ],
 
@@ -100,14 +101,14 @@ class QuizOptionsSheet extends ConsumerWidget {
               //3 puntos para descomponer el array
               createContinueButton(),
               createPlayMultiplayerButton(),
-              createPlaySoloButton(),
+              createPlaySoloButton(context, ref),
             ],
 
             if (type == QuizContextType.completed) ...[
               //3 puntos para descomponer el array
               createWatchResultsButton(),
               createPlayMultiplayerButton(),
-              createPlaySoloButton(),
+              createPlaySoloButton(context, ref),
             ],
           ],
         ),
@@ -149,7 +150,7 @@ class QuizOptionsSheet extends ConsumerWidget {
     );
   }
 
-  Widget createPlaySoloButton() {
+  Widget createPlaySoloButton(BuildContext context, WidgetRef ref) {
     return ListTile(
       leading: Icon(Icons.gamepad),
       title: Text(
@@ -161,7 +162,10 @@ class QuizOptionsSheet extends ConsumerWidget {
         ),
       ),
       onTap: () {
-        //Lleva a la pestaña de juego solitario
+        Navigator.pop(context);
+        // Navigate to the singleplayer orchestrator as a full-screen route and pass title
+        final title = Uri.encodeComponent(quiz.title);
+        context.go('/library/singleplayer/${quiz.id}?title=$title');
       },
     );
   }

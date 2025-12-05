@@ -8,6 +8,7 @@ import 'package:frontkahoot2526/features/library/presentation/screens/library_ho
 import 'package:frontkahoot2526/features/groups/presentation/screens/groups_screen.dart';
 import 'package:frontkahoot2526/features/groups/presentation/screens/group_detail_screen.dart';
 import 'package:frontkahoot2526/features/groups/presentation/screens/join_group_screen.dart';
+import 'package:frontkahoot2526/features/games/singleplayer/presentation/screens/singleplayer_orchestrator_screen.dart';
 import 'package:go_router/go_router.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -54,6 +55,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+
+      // Singleplayer full-screen route (hide navbar when playing)
+      GoRoute(
+        path: '/library/singleplayer/:kahootId',
+        builder: (context, state) {
+          final id = state.pathParameters['kahootId']!;
+          return SingleplayerOrchestratorScreen(kahootId: id);
+        },
       ),
 
       // Groups routes kept as full-screen (accessible from library)
