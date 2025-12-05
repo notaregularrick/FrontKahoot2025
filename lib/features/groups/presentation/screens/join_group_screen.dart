@@ -23,8 +23,8 @@ class _JoinGroupScreenState extends ConsumerState<JoinGroupScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            final router = GoRouter.of(context);
-            if (router.canPop()) router.pop();
+            // Siempre ir a la pantalla 'Unirse' del shell para mostrar la navbar
+            context.go('/join');
           },
         ),
         title: const Text('Unirse a grupo'),

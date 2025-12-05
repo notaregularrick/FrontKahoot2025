@@ -102,7 +102,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
     final notifier = ref.watch(asyncLibraryProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.creamBackground,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),

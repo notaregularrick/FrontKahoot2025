@@ -43,7 +43,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
               ],
           ),
-          //Rama 2: Crear Kahoot
+          //Branch 2: Create Kahoot
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -63,7 +63,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
 
-          // Branch 2: Library-related routes
+          // Branch 3: Library-related routes
           StatefulShellBranch(
             routes: [
               GoRoute(

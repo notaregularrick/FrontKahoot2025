@@ -59,7 +59,7 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.creamBackground,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text("Unirse a un juego"),
         backgroundColor: AppColors.primaryRed,

@@ -4,6 +4,7 @@ import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_en
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/models/multiplayer_game_notifier_state.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/providers/multiplayer_game_notifier.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/player/player_end_game_view.dart';
+import 'package:go_router/go_router.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/player/player_lobby_view.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/player/player_question_view.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/player/player_results_view.dart';
@@ -63,7 +64,7 @@ class _PlayerGameScreenState extends ConsumerState<PlayerGameScreen> {
 
     //
     return Scaffold(
-      backgroundColor: AppColors.creamBackground,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: AppColors.primaryRed,
         foregroundColor: Colors.white,
@@ -153,7 +154,8 @@ class _PlayerGameScreenState extends ConsumerState<PlayerGameScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Cierra dialogo
-              Navigator.pop(context); // Sale de la pantalla (/game)
+              // Navegar a la pantalla 'Unirse' dentro del shell (muestra la barra de navegación)
+              context.go('/join');
             },
             child: const Text("Salir", style: TextStyle(color: Colors.red)),
           ),

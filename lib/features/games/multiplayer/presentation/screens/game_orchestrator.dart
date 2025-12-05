@@ -61,7 +61,7 @@ class GameOrchestratorScreen extends ConsumerWidget {
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                     ),
-                    onPressed: () => context.pop(),
+                    onPressed: () => context.go('/join'),
                   ),
                 ],
               ),

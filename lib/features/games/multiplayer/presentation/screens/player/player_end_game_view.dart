@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/individual_scoreboard.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/library_colors.dart';
+import 'package:go_router/go_router.dart';
 
 class PlayerGameEndView extends StatelessWidget {
   final List<IndividualScoreboard> finalScoreboard;
@@ -28,17 +29,23 @@ class PlayerGameEndView extends StatelessWidget {
     if (top3.length > 2) third = top3[2];
 
     return Scaffold(
-      backgroundColor: AppColors.creamBackground,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
           "Podio Final",
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
         ),
         centerTitle: true,
-        backgroundColor: AppColors.creamBackground,
+        backgroundColor: Colors.white,
         foregroundColor: AppColors.darkBlueText,
         elevation: 0,
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            // Volver a la pantalla con la barra de navegación y la sección 'Unirse'
+            context.go('/join');
+          },
+        ),
       ),
       body: Column(
         children: [
@@ -195,28 +202,34 @@ class PlayerGameEndView extends StatelessWidget {
             ),
           ),
 
-          //Botón para salir
+          //Botón para salir (alineado a la izquierda como en otras pantallas)
           Container(
             color: Colors.white,
             padding: const EdgeInsets.all(20),
-            child: SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); //OJO acomodar esto para volver al inicio
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryRed,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minWidth: 140, maxWidth: 260, minHeight: 48),
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Ir a la pantalla 'Unirse' y mostrar la navbar
+                    context.go('/join');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryRed,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  "Salir del Juego",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+                    child: Text(
+                      "Salir del Juego",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ),
               ),
             ),

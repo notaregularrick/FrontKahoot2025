@@ -250,28 +250,35 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        leadingWidth: 200,
         backgroundColor: Colors.white,
         elevation: 0,
         leading: PopupMenuButton<String>(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Text(
-                  selectedQuizType,
-                  style: const TextStyle(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w500,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 180),
+            child: Container(
+              margin: const EdgeInsets.only(left: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      selectedQuizType,
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(Icons.arrow_drop_down, color: Colors.black87, size: 20),
-              ],
+                  const SizedBox(width: 4),
+                  const Icon(Icons.arrow_drop_down, color: Colors.black87, size: 20),
+                ],
+              ),
             ),
           ),
           onSelected: (value) {
@@ -369,40 +376,46 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
             // Botón Añadir multimedia y tiempo
             Row(
               children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _uploadQuizCoverImage(),
-                    icon: const Icon(Icons.add_photo_alternate, color: Colors.black87),
-                    label: const Text(
-                      'Añadir multimedia',
-                      style: TextStyle(color: Colors.black87),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[200],
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                Flexible(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minWidth: 200),
+                    child: ElevatedButton.icon(
+                      onPressed: () => _uploadQuizCoverImage(),
+                      icon: const Icon(Icons.add_photo_alternate, color: Colors.black87),
+                      label: const Text(
+                        'Añadir multimedia',
+                        style: TextStyle(color: Colors.black87),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey[200],
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    _showTimePicker(context);
-                  },
-                  icon: const Icon(Icons.access_time, color: Colors.white),
-                  label: Text(
-                    '${currentQ.timeLimit} s',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple[600],
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                SizedBox(
+                  width: 92,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      _showTimePicker(context);
+                    },
+                    icon: const Icon(Icons.access_time, color: Colors.white),
+                    label: Text(
+                      '${currentQ.timeLimit} s',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple[600],
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),

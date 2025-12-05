@@ -21,7 +21,7 @@ class LibraryHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.creamBackground.withOpacity(0.3),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Mi Biblioteca', style: TextStyle(fontSize: 25)),
         backgroundColor: AppColors.primaryRed,
