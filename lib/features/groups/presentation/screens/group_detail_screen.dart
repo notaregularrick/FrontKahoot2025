@@ -188,7 +188,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
       error: (e, st) => Scaffold(appBar: AppBar(backgroundColor: AppColors.primaryRed), body: Center(child: Text('Error: $e'))),
       data: (detail) {
         return Scaffold(
-          backgroundColor: AppColors.creamBackground.withOpacity(0.3),
+          backgroundColor: Colors.white,
           appBar: AppBar(
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
@@ -202,6 +202,9 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
             centerTitle: true,
             bottom: TabBar(
               controller: _tabController,
+              indicatorColor: AppColors.mustardYellow,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white70,
               tabs: const [Tab(text: 'Info'), Tab(text: 'Miembros'), Tab(text: 'Quices'), Tab(text: 'Ranking')],
             ),
             actions: [

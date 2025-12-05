@@ -19,60 +19,56 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return ScaffoldWithNavBar(navigationShell: navigationShell);
         },
         branches: [
-          // ---------------------------------------------------------
-          // NOTA: SHELL ROUTE es para las Pantallas que tienen barra de navegación (se llega desde una pantalla de la barra de navegación, como rutas anidadas)
-          //StatefulShellBranch es cada rama de la barra de navegación
-          // ---------------------------------------------------------
-          // Rama 0: Home
+          // Branch 0: Home placeholder (inline, no separate file)
           StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (context, state) => const Scaffold(
+                  body: Center(child: Text('Home (placeholder)')),
+                ),
+              ),
+            ],
+          ),
+          // Branch 1: Join game (so navbar remains visible while joining)
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/join',
+                builder: (context, state) => const JoinGameScreen(),
+              ),
+            ],
+          ),
+
+          // Branch 2: Library-related routes
+          StatefulShellBranch(
+            routes: [
               GoRoute(
                 path: '/library',
-                builder: (context, state) => const LibraryHomeScreen(), // Home that shows two buttons
+                builder: (context, state) => const LibraryHomeScreen(),
               ),
               GoRoute(
                 path: '/library/quices',
-                builder: (context, state) => const LibraryScreen(), // The detailed library screen
-              ),
-              GoRoute(
-                path: '/groups',
-                builder: (context, state) => const GroupsScreen(),
-              ),
-              GoRoute(
-                path: '/groups/:groupId',
-                builder: (context, state) {
-                  final id = state.pathParameters['groupId']!;
-                  return GroupDetailScreen(groupId: id);
-                },
-              ),
-              GoRoute(
-                path: '/library/quices',
-                builder: (context, state) => const LibraryScreen(), // The detailed library screen
-              ),
-              GoRoute(
-                path: '/groups',
-                builder: (context, state) => const GroupsScreen(),
-              ),
-              GoRoute(
-                path: '/groups/:groupId',
-                builder: (context, state) {
-                  final id = state.pathParameters['groupId']!;
-                  return GroupDetailScreen(groupId: id);
-                },
-=======
-                builder: (context, state) =>
-                    const LibraryScreen(), // Tu pantalla
->>>>>>> origin/synchronous-game-branch
+                builder: (context, state) => const LibraryScreen(),
               ),
             ],
           ),
         ],
       ),
-      // ---------------------------------------------------------
-      // ---------------------------------------------------------
-      // B. Rutas con pantalla completa, sin barra de navegación (GoRoute)
-      // ---------------------------------------------------------
-<<<<<<< HEAD
-      // Invite deep link route (public) - opens join screen for groups
+
+      // Groups routes kept as full-screen (accessible from library)
+      GoRoute(
+        path: '/groups',
+        builder: (context, state) => const GroupsScreen(),
+      ),
+      GoRoute(
+        path: '/groups/:groupId',
+        builder: (context, state) {
+          final id = state.pathParameters['groupId']!;
+          return GroupDetailScreen(groupId: id);
+        },
+      ),
+
       GoRoute(
         path: '/groups/join/:token',
         builder: (context, state) {
@@ -80,25 +76,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return JoinGroupScreen(token: token);
         },
       ),
-      // Multiplayer / synchronous-game routes (from synchronous-game-branch)
-      GoRoute(
-        path: '/join',
-        builder: (context, state) => const JoinGameScreen(),
-      ),
+
+      // Multiplayer routes (keep orchestrator full-screen)
       GoRoute(
         path: '/game',
         builder: (context, state) => const GameOrchestratorScreen(),
       ),
-=======
-      GoRoute(
-        path: '/join',
-        builder: (context, state) => const JoinGameScreen(),
-      ),
-      GoRoute(
-        path: '/game',
-        builder: (context, state) => const GameOrchestratorScreen(),
-      ),
->>>>>>> origin/synchronous-game-branch
     ],
   );
 });

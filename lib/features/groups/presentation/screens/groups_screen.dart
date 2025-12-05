@@ -12,7 +12,7 @@ class GroupsScreen extends ConsumerWidget {
     final groupsAsync = ref.watch(groupsListProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.creamBackground.withOpacity(0.3),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),

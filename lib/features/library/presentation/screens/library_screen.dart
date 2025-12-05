@@ -5,6 +5,7 @@ import 'package:frontkahoot2526/features/library/presentation/models/library_col
 import 'package:frontkahoot2526/features/library/presentation/models/quiz_model.dart';
 import 'package:frontkahoot2526/features/library/presentation/providers/library_notifier.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/library_search_bar.dart';
+import 'package:go_router/go_router.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/pagination_control_widget.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/quiz_card_widget.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/quiz_options_widget.dart';
@@ -101,8 +102,15 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
     final notifier = ref.watch(asyncLibraryProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.creamBackground.withOpacity(0.3),
+      backgroundColor: AppColors.creamBackground,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () async {
+            final popped = await Navigator.maybePop(context);
+            if (!popped) context.go('/library');
+          },
+        ),
         title: const Text("Mi Biblioteca", style: TextStyle(fontSize: 25)),
         backgroundColor: AppColors.primaryRed,
         foregroundColor: Colors.white,
