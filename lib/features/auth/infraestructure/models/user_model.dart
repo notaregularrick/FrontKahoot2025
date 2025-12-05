@@ -36,7 +36,8 @@ class UserModel {
         name: json['name'],
         email: json['email'],
         userType: json['userType'],
-        createdAt: json['createdAt'],
+        //createdAt: json['createdAt'],
+        createdAt: DateTime.parse(json['createdAt']),
       );
 
   UserEntity toEntity() => UserEntity(

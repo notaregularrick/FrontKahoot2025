@@ -41,12 +41,26 @@ class ProfileModel {
         updatedAt: DateTime.parse(json["updatedAt"]),
       );
 
+  // Map<String, dynamic> toJson() => {
+  //       "name": name,
+  //       "description": description,
+  //       "avatarUrl": avatarUrl,
+  //       "userType": userType,
+  //       "language": language,
+  //     };
+
   Map<String, dynamic> toJson() => {
+        "id": id, 
         "name": name,
+        "email": email, 
         "description": description,
-        "avatarUrl": avatarUrl,
         "userType": userType,
+        "avatarUrl": avatarUrl,
+        "theme": theme, 
         "language": language,
+        "gameStreak": gameStreak, 
+        "createdAt": createdAt.toIso8601String(), 
+        "updatedAt": updatedAt.toIso8601String(), 
       };
 
   ProfileEntity toEntity() {
