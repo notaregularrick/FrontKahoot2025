@@ -1,6 +1,6 @@
 import '../../domain/entities/user_entity.dart';
 
-class UserModel {
+class UserModel{
   final String id;
   final String name;
   final String email;

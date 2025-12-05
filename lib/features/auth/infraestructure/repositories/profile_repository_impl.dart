@@ -1,11 +1,12 @@
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../../core/services/api_service.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../datasource/profile_datasource.dart';
-import '../models/profile_model.dart';
-
-// IMPORTA LA MISMA BASE DE DATOS SIMULADA
-import '../../../../core/simulated_data.dart'; 
+import '../models/profile_model.dart'; 
 
 class ProfileRepositoryImpl implements ProfileRepository {
   final ProfileDatasource datasource;
@@ -20,20 +21,30 @@ class ProfileRepositoryImpl implements ProfileRepository {
     if (simulate) {
       await Future.delayed(const Duration(milliseconds: 500));
       
-      // 1. LEEMOS DE LA DB COMPARTIDA
-      // Si dbProfile es null, significa que no te has registrado o logueado en esta sesión
-      if (dbProfile == null) {
-         // Fallback de emergencia solo si no hay datos
-         return ProfileModel(
-            id: "guest", name: "Invitado", email: "guest@test.com", 
-            avatarUrl: "", description: "", userType: "Guest", 
-            gameStreak: 0, theme: "Día", language: "ES", 
-            createdAt: DateTime.now(), updatedAt: DateTime.now()
-         );
+      final prefs = await SharedPreferences.getInstance();
+
+      // 1. AVERIGUAR QUIÉN ESTÁ CONECTADO
+      final String? activeEmail = prefs.getString('current_active_email');
+
+      if (activeEmail == null) {
+        throw Exception("No hay sesión activa");
       }
-      
-      // ¡Aquí devolvemos exactamente lo que creaste en el registro!
-      return dbProfile!;
+
+      // 2. BUSCAR LA CAJA ESPECÍFICA DE ESE EMAIL
+      final String? profileString = prefs.getString('profile_$activeEmail');
+
+      if (profileString != null) {
+        Map<String, dynamic> jsonMap = jsonDecode(profileString);
+        return ProfileModel.fromJson(jsonMap);
+      }
+
+      // Fallback
+      return ProfileModel(
+          id: "error", name: "Error", email: "error", 
+          avatarUrl: "", description: "", userType: "", 
+          gameStreak: 0, theme: "", language: "", 
+          createdAt: DateTime.now(), updatedAt: DateTime.now()
+      );
     }
 
     try {
@@ -47,38 +58,35 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<ProfileEntity> updateProfile(Map<String, dynamic> fields) async {
     const simulate = true;
-
     if (simulate) {
-      await Future.delayed(const Duration(milliseconds: 500));
+       final prefs = await SharedPreferences.getInstance();
+       
+       // 1. OBTENER EMAIL ACTIVO
+       final activeEmail = prefs.getString('current_active_email');
+       if (activeEmail == null) throw Exception("No login");
 
-      final current = dbProfile; // Leemos el actual
+       // 2. LEER PERFIL VIEJO
+       final String? currentString = prefs.getString('profile_$activeEmail');
+       // ... decodificar current ... (igual que antes)
+       final current = ProfileModel.fromJson(jsonDecode(currentString!));
 
-      // ACTUALIZAMOS LA DB COMPARTIDA
-      dbProfile = ProfileModel(
-        id: current?.id ?? "temp-id",
-        // Si viene un nombre nuevo, lo usamos. Si no, mantenemos el viejo (dbProfile)
-        name: fields['name'] ?? current?.name ?? "Usuario",
-        email: fields['email'] ?? current?.email ?? "email@test.com",
-        description: fields['description'] ?? current?.description ?? "",
-        
-        avatarUrl: current?.avatarUrl ?? "",
-        userType: current?.userType ?? "Básico",
-        gameStreak: current?.gameStreak ?? 0,
-        theme: current?.theme ?? "Día",
-        language: current?.language ?? "Español",
-        createdAt: current?.createdAt ?? DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
+       // 3. CREAR NUEVO
+       final updated = ProfileModel(
+         id: current.id,
+         name: fields['name'] ?? current.name,
+         email: fields['email'] ?? current.email, // OJO: Si cambia el email, habría que mover la caja
+         description: fields['description'] ?? current.description,
+         // ... resto de campos ...
+         avatarUrl: current.avatarUrl, userType: current.userType, 
+         gameStreak: current.gameStreak, theme: current.theme, 
+         language: current.language, createdAt: current.createdAt, 
+         updatedAt: DateTime.now(),
+       );
 
-      // Sincronizamos también el usuario básico por si acaso
-      if (dbUser != null) {
-          dbUser = dbUser!.copyWith(
-              name: dbProfile!.name, 
-              email: dbProfile!.email
-          );
-      }
-
-      return dbProfile!.toEntity();
+       // 4. GUARDAR EN LA MISMA CAJA
+       await prefs.setString('profile_$activeEmail', jsonEncode(updated.toJson()));
+       
+       return updated.toEntity();
     }
 
     final model = await datasource.updateProfile(fields);

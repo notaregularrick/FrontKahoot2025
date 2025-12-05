@@ -22,37 +22,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/inicio', // Ruta inicial mientras no haya redirección
     //logica de redireccion deprecada por interferir en la simulacion
-    /*redirect: (BuildContext context, GoRouterState state) {
-      print("/nTOKEN ACTUAL: ${ref.read(authNotifierProvider).token}/n");
-      final isLoggedIn = authState.token != null;
-      final currentLocation = state.uri.toString();
-      final isLoginRoute = currentLocation == '/login';
-      final isRegisterRoute = currentLocation == '/register'; // Añadido
-      final isPassResetRoute = currentLocation == '/passreset';
-      final isPassConfirmRoute = currentLocation == '/passconfirm';
-      final isTitleRoute = currentLocation == '/inicio';
-
-      // Si no está logueado y está intentando acceder a rutas protegidas, redirige a login
-      if (!isLoggedIn && !isLoginRoute && !isRegisterRoute && !isPassResetRoute && !isPassConfirmRoute && !isTitleRoute) {
-        return '/inicio';
-      }
-
-      if (isLoggedIn && isTitleRoute) return '/home';
-
-      // Si está logueado y entra en /login, redirige a home
-      if (isLoggedIn && isLoginRoute) {
-        return '/home';
-      }
-
-      if (isLoggedIn && isRegisterRoute) return '/home';
-
-      if (isLoggedIn && isPassResetRoute) return '/home';
-
-      if(isLoggedIn && isPassConfirmRoute) return '/home';
-
-      // Si nada de lo anterior, deja el flujo continuar normalmente
-      return null;
-    },*/
+    
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -119,3 +89,36 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+
+/*redirect: (BuildContext context, GoRouterState state) {
+      print("/nTOKEN ACTUAL: ${ref.read(authNotifierProvider).token}/n");
+      final isLoggedIn = authState.token != null;
+      final currentLocation = state.uri.toString();
+      final isLoginRoute = currentLocation == '/login';
+      final isRegisterRoute = currentLocation == '/register'; // Añadido
+      final isPassResetRoute = currentLocation == '/passreset';
+      final isPassConfirmRoute = currentLocation == '/passconfirm';
+      final isTitleRoute = currentLocation == '/inicio';
+
+      // Si no está logueado y está intentando acceder a rutas protegidas, redirige a login
+      if (!isLoggedIn && !isLoginRoute && !isRegisterRoute && !isPassResetRoute && !isPassConfirmRoute && !isTitleRoute) {
+        return '/inicio';
+      }
+
+      if (isLoggedIn && isTitleRoute) return '/home';
+
+      // Si está logueado y entra en /login, redirige a home
+      if (isLoggedIn && isLoginRoute) {
+        return '/home';
+      }
+
+      if (isLoggedIn && isRegisterRoute) return '/home';
+
+      if (isLoggedIn && isPassResetRoute) return '/home';
+
+      if(isLoggedIn && isPassConfirmRoute) return '/home';
+
+      // Si nada de lo anterior, deja el flujo continuar normalmente
+      return null;
+    },*/

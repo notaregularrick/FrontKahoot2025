@@ -27,27 +27,39 @@ class ProfileModel {
     required this.updatedAt,
   });
 
-  factory ProfileModel.fromJson(Map<String, dynamic> json) => ProfileModel(
-        id: json["id"],
-        name: json["name"],
-        email: json["email"],
-        description: json["description"],
-        userType: json["userType"],
-        avatarUrl: json["avatarUrl"],
-        theme: json["theme"],
-        language: json["language"],
-        gameStreak: json["gameStreak"],
-        createdAt: DateTime.parse(json['createdAt']),
-        updatedAt: DateTime.parse(json["updatedAt"]),
-      );
+  // 1. DE MAPA A MODELO (Lectura)
+  factory ProfileModel.fromJson(Map<String, dynamic> json) {
+    return ProfileModel(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+      avatarUrl: json['avatarUrl'] ?? '',
+      description: json['description'] ?? '',
+      userType: json['userType'] ?? 'Básico',
+      gameStreak: json['gameStreak'] ?? 0,
+      theme: json['theme'] ?? 'Día',
+      language: json['language'] ?? 'Español',
+      // Manejo seguro de fechas
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+  }
 
-  Map<String, dynamic> toJson() => {
-        "name": name,
-        "description": description,
-        "avatarUrl": avatarUrl,
-        "userType": userType,
-        "language": language,
-      };
+  // 2. DE MODELO A MAPA (Escritura)
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      'avatarUrl': avatarUrl,
+      'description': description,
+      'userType': userType,
+      'gameStreak': gameStreak,
+      'theme': theme,
+      'language': language,
+      'createdAt': createdAt.toIso8601String(), // Importante para fechas
+    };
+  }
 
   ProfileEntity toEntity() {
     return ProfileEntity(
