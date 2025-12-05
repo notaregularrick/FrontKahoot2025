@@ -50,7 +50,6 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
   };
 
   Map<String, dynamic> get mockQuestionStartedData => {
-    // 1. Datos Lógicos (Raíz)
     "questionIndex": 1,
     "timeLimitSeconds": 10,
 
@@ -172,15 +171,9 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
         newSession = _processGameStateUpdateData(payload);
         break;
 
-      case 'player_join':
+      case 'player_join'://aun no va
         // Agregamos un jugador a la lista existente
-
-        // final newPlayer = PlayerDto.fromJson(payload);
-        // newSession = _currentSession.copyWith(
-        //   players: [..._currentSession.players, newPlayer],
-        //   playerCount: _currentSession.playerCount + 1,
-        // );
-        newSession = _currentSession.copyWith(status: GameStatus.lobby);
+        //newSession = _currentSession.copyWith(status: GameStatus.lobby);
         break;
 
       case 'question_started':
@@ -194,17 +187,6 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
         break;
 
       case 'game_end':
-        // Cambiamos a modo FIN
-
-        // final finalScores = (payload['finalScoreboard'] as List)
-        //     .map((e) => ScoreboardEntryDto.fromJson(e))
-        //     .toList();
-
-        // newSession = _currentSession.copyWith(
-        //   status: GameStatus.end,
-        //   leaderboard: finalScores,
-        //   winnerNickname: payload['winnerNickname'],
-        // );
         newSession = _processGameEndData(payload);
         break;
     }
@@ -217,7 +199,6 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
     int qIndex = (questionData['questionIndex'] as num?)?.toInt() ?? 0;
     int tLimit = (questionData['timeLimitSeconds'] as num?)?.toInt() ?? 20;
 
-    // Paso C: Obtenemos el objeto "Contenido" (Inner)
     final questionInfo = questionData['currentSlideData'];
 
     if (questionInfo != null && questionInfo is Map<String, dynamic>) {
@@ -237,19 +218,15 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
         );
       }).toList();
 
-      // Paso D: Construimos la entidad final mezclando ambos niveles
       return CurrentQuestion(
-        // Datos del Inner (Contenido)
         questionId: questionInfo['slideId'] ?? '',
         questionText: questionInfo['questionText'] ?? '',
         questionImageUrl: questionInfo['mediaUrl'],
         type: questionInfo['type'] ?? 'MULTIPLE_CHOICE',
 
-        // Datos del Outer (Lógica de la partida)
         questionIndex: qIndex,
         timeLimitSeconds: tLimit,
 
-        // Opciones (Dentro del Inner)
         options: optionsList,
       );
     }
@@ -281,7 +258,7 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
   }
 
   GameSession _processGameStateUpdateData(Map<String, dynamic> data) {
-    //Parseo de datos básicos (Raíz)
+    //Parseo de datos básicos 
     String pin = _currentSession.pin;
 
     // Mapeo del estado
@@ -301,23 +278,21 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
         status = GameStatus.lobby;
     }
 
-    // 2. Parseo de Jugadores
+    //Parseo de Jugadores
     List<dynamic> playersData = data['players'] as List<dynamic>? ?? [];
     List<Player> players = playersData.map((playerMap) {
       return _parsePlayer(playerMap as Map<String, dynamic>);
     }).toList();
 
-    // 3. Parseo de la Pregunta (DOBLE ANIDACIÓN)
+    //Parseo de la Pregunta 
     CurrentQuestion? currentQuestion;
 
-    // Paso A: Obtenemos el objeto "Envoltorio" (Outer)
     final outerSlideData = data['currentSlideData'];
 
     if (outerSlideData != null && outerSlideData is Map<String, dynamic>) {
       currentQuestion = _parseCurrentQuestion(outerSlideData);
     }
 
-    // 4. Retorno de la Sesión
     return GameSession(
       pin: pin,
       status: status,
@@ -388,41 +363,6 @@ class FakeGameRepositoryImpl implements IMultiplayerGameRepository {
     myNickname = nickname;
     runPlayerScript();
   }
-
-  // void _runScript() async {
-  //   // --- PREGUNTA 1 ---
-  //   _handleIncomingEvent('question_started', {
-  //     "questionIndex": 1,
-  //     "timeLimit": 10,
-  //     "currentSlideData": {
-  //       "id": "q1",
-  //       "questionText": "¿Qué widget se usa para layouts verticales?",
-  //       "options": [
-  //         {"id": "0", "text": "Row"},
-  //         {"id": "1", "text": "Column"},
-  //         {"id": "2", "text": "Stack"},
-  //         {"id": "3", "text": "ListView"},
-  //       ],
-  //     },
-  //   });
-  //   await Future.delayed(const Duration(seconds: 6));
-  //   // --- RESULTADOS 1 ---
-  //   _handleIncomingEvent('question_results', {
-  //     "correctAnswerIndex": 1,
-  //     "pointsEarned": 950,
-  //     "playerScoreboard": [
-  //       {"nickname": "Yo", "score": 950, "rank": 1},
-  //     ],
-  //   });
-  //   await Future.delayed(const Duration(seconds: 4));
-  //   // --- FIN DEL JUEGO ---
-  //   _handleIncomingEvent('game_end', {
-  //     "winnerNickname": "Yo",
-  //     "finalScoreboard": [
-  //       {"nickname": "Yo", "score": 950, "rank": 1},
-  //     ],
-  //   });
-  // }
 
   @override
   Future<void> submitAnswer(

@@ -83,10 +83,9 @@ class MultiplayerGameNotifier
     state = const AsyncValue.loading();
 
     try {
-      //Primero crea sala y se conecta al juego (no como jugador) pero aún no está suscrito a eventos
       final useCase = ref.read(
         createGameUseCaseProvider,
-      ); //OJO actualizar porque esto es un post, no un evento y debo obtener la respuesta
+      );
       String pin = await useCase.execute(quizId);
 
       //Actualizo estado para el host
@@ -99,7 +98,7 @@ class MultiplayerGameNotifier
       );
 
       //Ahora sí escucha eventos
-      _subscribeToGameStream();
+      _subscribeToGameStream(); //OJO creo que deberia ir al comienzo?
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }

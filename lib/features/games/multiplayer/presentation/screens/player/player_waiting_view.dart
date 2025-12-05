@@ -12,7 +12,7 @@ class PlayerWaitingView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 1. Círculo de "Listo" animado o estático
+            // Icono de listo
             Container(
               width: 100,
               height: 100,
@@ -31,14 +31,14 @@ class PlayerWaitingView extends StatelessWidget {
                 child: Icon(
                   Icons.check_rounded,
                   size: 60,
-                  color: AppColors.primaryRed, // Tu rojo de marca
+                  color: AppColors.primaryRed, 
                 ),
               ),
             ),
 
             const SizedBox(height: 40),
 
-            // 2. Mensaje Principal
+            //Mensaje
             const Text(
               "¡Respuesta enviada!",
               textAlign: TextAlign.center,
@@ -51,7 +51,7 @@ class PlayerWaitingView extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // 3. Mensaje Secundario con indicador de carga sutil
+            //Mensaje seundario
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
@@ -80,11 +80,11 @@ class PlayerWaitingView extends StatelessWidget {
 
             const SizedBox(height: 40),
 
-            // 4. Frase motivacional aleatoria (Opcional)
+            //
             Text(
-              "¿Fuiste el más rápido?",
+              "¿Seguro que respondiste correctamente?",
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 16,
                 color: Colors.grey[500],
                 fontStyle: FontStyle.italic,
               ),

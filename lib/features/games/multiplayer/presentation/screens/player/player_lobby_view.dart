@@ -22,7 +22,7 @@ class PlayerLobbyView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // 1. CABECERA: Tarjeta del Quiz
+        //Tarjeta con info del quiz
         Container(
           width: double.infinity,
           margin: const EdgeInsets.all(16),
@@ -40,7 +40,7 @@ class PlayerLobbyView extends StatelessWidget {
           ),
           child: Column(
             children: [
-              // Imagen del Quiz
+              //Imagen del quiz
               Container(
                 height: 150,
                 width: double.infinity,
@@ -57,7 +57,7 @@ class PlayerLobbyView extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Título del Quiz
+              // Título del quiz
               Text(
                 quizTitle,
                 textAlign: TextAlign.center,
@@ -69,7 +69,7 @@ class PlayerLobbyView extends StatelessWidget {
               ),
               const SizedBox(height: 8),
 
-              // Contador de Jugadores
+              //Jugadores
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -91,7 +91,7 @@ class PlayerLobbyView extends StatelessWidget {
           ),
         ),
 
-        // 2. CUERPO: Lista de Nombres (Grid o Lista)
+        //Lista de jugadores
         Expanded(
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -143,7 +143,7 @@ class PlayerLobbyView extends StatelessWidget {
           ),
         ),
 
-        // 3. FOOTER: Estado y PIN
+        //Estado y pin
         Container(
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
           color: AppColors.primaryRed,
