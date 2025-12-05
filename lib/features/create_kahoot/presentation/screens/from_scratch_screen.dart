@@ -15,6 +15,7 @@ class QuestionData {
   String text;
   String type;
   int timeLimit;
+  int points;
   String? mediaId;
   List<AnswerData> answers;
 
@@ -23,6 +24,7 @@ class QuestionData {
     required this.text,
     required this.type,
     required this.timeLimit,
+    required this.points,
     this.mediaId,
     required this.answers,
   });
@@ -85,20 +87,24 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
 
   void _addNewQuestion() {
     setState(() {
+      final questionType = _mapQuizTypeToQuestionType(selectedQuizType);
+      final isTrueFalse = questionType == 'true_false';
+      
       questions.add(QuestionData(
         id: 'question_${DateTime.now().millisecondsSinceEpoch}_${questions.length}',
         text: '',
-        type: _mapQuizTypeToQuestionType(selectedQuizType),
+        type: questionType,
         timeLimit: 20,
+        points: 1000,
         answers: [
           AnswerData(
             id: 'answer_${DateTime.now().millisecondsSinceEpoch}_0',
-            text: null,
+            text: isTrueFalse ? 'Verdadero' : null,
             isCorrect: false,
           ),
           AnswerData(
             id: 'answer_${DateTime.now().millisecondsSinceEpoch}_1',
-            text: null,
+            text: isTrueFalse ? 'Falso' : null,
             isCorrect: false,
           ),
           AnswerData(
@@ -121,8 +127,6 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     switch (quizType) {
       case 'Verdadero/Falso':
         return 'true_false';
-      case 'Encuesta':
-        return 'survey';
       default:
         return 'quiz';
     }
@@ -185,7 +189,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         text: q.text,
         type: q.type,
         timeLimit: q.timeLimit,
-        points: 1000, 
+        points: q.points,
         mediaId: q.mediaId,
         answers: validAnswers,
       );
@@ -273,13 +277,23 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
           onSelected: (value) {
             setState(() {
               selectedQuizType = value;
-              currentQ.type = _mapQuizTypeToQuestionType(value);
+              final newType = _mapQuizTypeToQuestionType(value);
+              currentQ.type = newType;
+              
+              // Si se cambia a modo Verdadero/Falso, establecer textos y limpiar imágenes
+              if (newType == 'true_false') {
+                for (int i = 0; i < currentQ.answers.length; i++) {
+                  currentQ.answers[i].mediaId = null;
+                  if (i < 2) {
+                    currentQ.answers[i].text = i == 0 ? 'Verdadero' : 'Falso';
+                  }
+                }
+              }
             });
           },
           itemBuilder: (context) => [
             const PopupMenuItem(value: 'Quiz', child: Text('Quiz')),
             const PopupMenuItem(value: 'Verdadero/Falso', child: Text('Verdadero/Falso')),
-            const PopupMenuItem(value: 'Encuesta', child: Text('Encuesta')),
           ],
         ),
         actions: [
@@ -311,6 +325,38 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                 ),
               ),
             ),
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.black87),
+            onSelected: (value) {
+              if (value == 'duplicate') {
+                _duplicateQuestion();
+              } else if (value == 'points') {
+                _showPointsPicker(context);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'duplicate',
+                child: Row(
+                  children: [
+                    Icon(Icons.content_copy, size: 20),
+                    SizedBox(width: 8),
+                    Text('Duplicar pregunta'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'points',
+                child: Row(
+                  children: [
+                    Icon(Icons.star, size: 20),
+                    SizedBox(width: 8),
+                    Text('Cambiar puntos'),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(width: 8),
         ],
@@ -473,20 +519,31 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
               childAspectRatio: 1.5,
-              children: List.generate(4, (index) {
-                final answer = currentQ.answers[index];
-                final hasText = answer.text != null && answer.text!.trim().isNotEmpty;
-                final hasImage = answer.mediaId != null && answer.mediaId!.isNotEmpty;
-                return _buildAnswerButton(
-                  color: answerColors[index],
-                  label: hasText ? answer.text! : (index < 2 ? 'Añadir respuesta' : 'Añadir respuesta (opcional)'),
-                  isOptional: index >= 2,
-                  index: index,
-                  isCorrect: answer.isCorrect,
-                  hasText: hasText,
-                  hasImage: hasImage,
-                );
-              }),
+              children: List.generate(
+                currentQ.type == 'true_false' ? 2 : 4,
+                (index) {
+                  final answer = currentQ.answers[index];
+                  final hasText = answer.text != null && answer.text!.trim().isNotEmpty;
+                  final hasImage = answer.mediaId != null && answer.mediaId!.isNotEmpty;
+                  String label;
+                  if (hasText) {
+                    label = answer.text!;
+                  } else if (currentQ.type == 'true_false') {
+                    label = index == 0 ? 'Verdadero' : 'Falso';
+                  } else {
+                    label = index < 2 ? 'Añadir respuesta' : 'Añadir respuesta (opcional)';
+                  }
+                  return _buildAnswerButton(
+                    color: answerColors[index],
+                    label: label,
+                    isOptional: index >= 2,
+                    index: index,
+                    isCorrect: answer.isCorrect,
+                    hasText: hasText,
+                    hasImage: hasImage,
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -586,7 +643,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: hasImage
+            child: hasImage && currentQ.type != 'true_false'
                 ? Image.network(
                     mediaService.getMediaUrl(answer.mediaId!),
                     fit: BoxFit.cover,
@@ -736,6 +793,10 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
   void _showAnswerDialog(BuildContext context, int index, Color color) {
     final currentQ = currentQuestion;
     final answer = currentQ.answers[index];
+    // En modo Verdadero/Falso, establecer el texto automáticamente
+    if (currentQ.type == 'true_false' && index < 2) {
+      answer.text = index == 0 ? 'Verdadero' : 'Falso';
+    }
     final TextEditingController controller = TextEditingController(text: answer.text ?? '');
     bool isCorrect = answer.isCorrect;
     currentMediaId = answer.mediaId;
@@ -750,8 +811,8 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Mostrar imagen actual si existe
-                if (currentMediaId != null && currentMediaId!.isNotEmpty) ...[
+                // Mostrar imagen actual si existe (solo en modo Quiz)
+                if (currentMediaId != null && currentMediaId!.isNotEmpty && currentQ.type != 'true_false') ...[
                   Container(
                     height: 150,
                     width: double.infinity,
@@ -796,19 +857,44 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                   const SizedBox(height: 12),
                 ],
 
-                TextField(
-                  controller: controller,
-                  enabled: currentMediaId == null,
-                  decoration: InputDecoration(
-                    hintText: currentMediaId != null 
-                        ? 'Elimina la imagen para escribir texto' 
-                        : 'Escribe la respuesta aquí',
-                    border: const OutlineInputBorder(),
+                // En modo Verdadero/Falso, mostrar texto fijo en lugar de TextField editable
+                if (currentQ.type == 'true_false')
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.lock, color: Colors.grey, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          index == 0 ? 'Verdadero' : 'Falso',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  TextField(
+                    controller: controller,
+                    enabled: currentMediaId == null,
+                    decoration: InputDecoration(
+                      hintText: currentMediaId != null 
+                          ? 'Elimina la imagen para escribir texto' 
+                          : 'Escribe la respuesta aquí',
+                      border: const OutlineInputBorder(),
+                    ),
                   ),
-                ),
                 const SizedBox(height: 12),
-                // Botón para subir imagen
-                if (currentMediaId == null)
+                // Botón para subir imagen (solo en modo Quiz)
+                if (currentMediaId == null && currentQ.type != 'true_false')
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -849,19 +935,22 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
             TextButton(
               onPressed: () {
                 setState(() {
-                  // Si hay imagen, limpiar texto
-                  print(answer.mediaId);
-                  if (currentMediaId != null && currentMediaId!.isNotEmpty) {
-                    answer.text = null;
-                    answer.mediaId = currentMediaId;
+                  // En modo Verdadero/Falso, mantener el texto fijo
+                  if (currentQ.type == 'true_false') {
+                    answer.text = index == 0 ? 'Verdadero' : 'Falso';
+                    answer.mediaId = null; // No permitir imágenes en Verdadero/Falso
                   } else {
-                    // Si hay texto, limpiar imagen
-                    answer.text = controller.text.trim().isEmpty ? null : controller.text.trim();
-                    answer.mediaId = null;
+                    // Si hay imagen, limpiar texto
+                    if (currentMediaId != null && currentMediaId!.isNotEmpty) {
+                      answer.text = null;
+                      answer.mediaId = currentMediaId;
+                    } else {
+                      // Si hay texto, limpiar imagen
+                      answer.text = controller.text.trim().isEmpty ? null : controller.text.trim();
+                      answer.mediaId = null;
+                    }
                   }
-                  print(answer.text);
-                  print(answer.mediaId);
-                  print(currentMediaId);
+                  
                   // Si se marca como correcta, desmarcar todas las demás
                   if (isCorrect && (currentQ.type == 'quiz' || currentQ.type == 'true_false')) {
                     for (var otherAnswer in currentQ.answers) {
@@ -961,7 +1050,6 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
 
         if (mounted) {
           Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
-          final answer = currentQuestion.answers[index];
           // Actualizar estado del diálogo
           setDialogState(() {
             currentMediaId = media.id;
@@ -1038,6 +1126,96 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                 ),
               );
             },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _duplicateQuestion() {
+    final currentQ = currentQuestion;
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    
+    // Duplicar todas las respuestas
+    final duplicatedAnswers = currentQ.answers.map((answer) {
+      return AnswerData(
+        id: 'answer_${timestamp}_${answer.id}',
+        text: answer.text,
+        isCorrect: answer.isCorrect,
+        mediaId: answer.mediaId,
+      );
+    }).toList();
+
+    // Crear pregunta duplicada
+    final duplicatedQuestion = QuestionData(
+      id: 'question_${timestamp}_${questions.length}',
+      text: currentQ.text,
+      type: currentQ.type,
+      timeLimit: currentQ.timeLimit,
+      points: currentQ.points,
+      mediaId: currentQ.mediaId,
+      answers: duplicatedAnswers,
+    );
+
+    setState(() {
+      // Insertar después de la pregunta actual
+      questions.insert(currentQuestionIndex + 1, duplicatedQuestion);
+      // Cambiar al índice de la pregunta duplicada
+      currentQuestionIndex = currentQuestionIndex + 1;
+    });
+  }
+
+  void _showPointsPicker(BuildContext context) {
+    final currentQ = currentQuestion;
+    final List<int> pointsOptions = [0, 1000, 2000];
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cambiar puntos'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: pointsOptions.map((points) {
+              final isSelected = currentQ.points == points;
+              
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        currentQ.points = points;
+                      });
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isSelected ? Colors.purple[600] : Colors.grey[200],
+                      foregroundColor: isSelected ? Colors.white : Colors.black87,
+                      elevation: isSelected ? 4 : 0,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      '$points puntos',
+                      style: TextStyle(
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ),
         actions: [

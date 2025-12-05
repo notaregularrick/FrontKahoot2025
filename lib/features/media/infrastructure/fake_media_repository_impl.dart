@@ -83,7 +83,7 @@ class FakeMediaRepositoryImpl implements IMediaRepository {
   @override
   String getMediaUrl(String mediaId) {
     // Retornar URL mock (en producción sería la URL real del backend)
-    return 'https://placehold.co/400/png?text=Media+$mediaId';
+    return 'https://placehold.co/400/gif?text=Media+$mediaId';
   }
 }
 
