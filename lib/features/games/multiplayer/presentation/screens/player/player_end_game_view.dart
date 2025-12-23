@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/individual_scoreboard.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/library_colors.dart';
-import 'package:go_router/go_router.dart';
 
 class PlayerGameEndView extends StatelessWidget {
   final List<IndividualScoreboard> finalScoreboard;
   final String myPlayerId;
   final String winnerNickname;
+  final VoidCallback onQuit;
 
   const PlayerGameEndView({
     super.key,
     required this.finalScoreboard,
     required this.myPlayerId,
     required this.winnerNickname,
+    required this.onQuit,
   });
 
   @override
@@ -39,13 +40,7 @@ class PlayerGameEndView extends StatelessWidget {
         backgroundColor: Colors.white,
         foregroundColor: AppColors.darkBlueText,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            // Volver a la pantalla con la barra de navegación y la sección 'Unirse'
-            context.go('/join');
-          },
-        ),
+        automaticallyImplyLeading: false,
       ),
       body: Column(
         children: [
@@ -211,10 +206,7 @@ class PlayerGameEndView extends StatelessWidget {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(minWidth: 140, maxWidth: 260, minHeight: 48),
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Ir a la pantalla 'Unirse' y mostrar la navbar
-                    context.go('/join');
-                  },
+                  onPressed: onQuit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryRed,
                     foregroundColor: Colors.white,

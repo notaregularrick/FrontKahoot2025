@@ -156,6 +156,21 @@ class MultiplayerGameNotifier
       //Posible snackbar del error
     }
   }
+
+  void leaveGame() {
+    _gameSubscription?.cancel();
+    _gameSubscription = null;
+
+    _questionStartTime = null;
+
+    state = AsyncValue.data(
+      GameNotifierState(
+        session: GameSession.initial(),
+        role: GameRole.none,
+        myPlayerId: null,
+      ),
+    );
+  }
 }
 
 //revisar
