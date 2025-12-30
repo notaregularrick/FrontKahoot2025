@@ -22,9 +22,9 @@ extension BackendTypeExtension on BackendType {
     //modificar según las de los equipos
     switch (this) {
       case BackendType.back1:
-        return "https://backcomun-production.up.railway.app/";
+        return "https://backcomun-gc5j.onrender.com/";
       case BackendType.back2:
-        return "http://10.0.2.2:3001/api";
+        return "https://quizzy-backend-0wh2.onrender.com/api";
     }
   }
 }
@@ -32,9 +32,6 @@ extension BackendTypeExtension on BackendType {
 class BackendNotifier extends Notifier<BackendType> {
   @override
   BackendType build() {
-    // // Al iniciar, leemos la guardada o usamos una por defecto
-    // final prefs = ref.read(sharedPrefsProvider);
-    // return prefs.getString('api_url') ?? 'http://10.0.2.2:3000/api';
     return BackendType.back1; // Valor por defecto inicial
   }
 

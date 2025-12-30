@@ -134,6 +134,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                 unselectedLabelColor: Colors.white70,
                 tabs: _tabs,
                 labelStyle: const TextStyle(fontSize: 18),
+                onTap: (index){
+                  if(_tabController.index == index){
+                    FocusManager.instance.primaryFocus?.unfocus();
+                    _searchController.clear();
+                    _onTabChanged(_tabController.index);
+                  }
+                },
               ),
             ],
           ),
@@ -156,7 +163,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
         data: (notifierState) {
           final quizList = notifierState.quizList;
           if (quizList.isEmpty) {
-            return const Center(child: Text("No hay quices disponibles."));
+            return const Center(child: Text("No se encontraron quices"));
           }
           return Column(
             children: [

@@ -5,7 +5,9 @@ import 'package:frontkahoot2526/features/library/domain/library_filter_params.da
 import 'package:frontkahoot2526/features/library/domain/library_quiz.dart';
 import 'package:frontkahoot2526/features/library/domain/library_repository.dart';
 
-class FakeLibraryRepository implements ILibraryRepository {
+class LibraryRepositoryImpl implements ILibraryRepository {
+  final Dio _dio;
+  LibraryRepositoryImpl(this._dio);
   Map<String, dynamic> toQuery(LibraryFilterParams params) {
     Map<String, dynamic> query = {
       'page': params.page,
@@ -16,7 +18,7 @@ class FakeLibraryRepository implements ILibraryRepository {
       'order': params.order,
     };
     if (params.q != null && params.q!.isNotEmpty) {
-      query['search'] = params.q;
+      query['q'] = params.q;
     }
     return query;
   }
@@ -27,9 +29,8 @@ class FakeLibraryRepository implements ILibraryRepository {
     LibraryFilterParams params,
   ) async {
     try {
-      final Dio dio = Dio();
-      Response response = await dio.get(
-        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/my-creations',
+      Response response = await _dio.get(
+        '/library/my-creations?',
         queryParameters: toQuery(params),
       );
       final Map<String, dynamic> responseBody = response.data;
@@ -88,11 +89,13 @@ class FakeLibraryRepository implements ILibraryRepository {
         throw AppException(message: 'Error desconocido', statusCode: 500);
       }
     } catch (e) {
+      print(e);
       throw AppException(
         message: "Ocurrió un error inesperado",
         statusCode: 500,
         error: e.toString(),
       );
+      
     }
   }
 
@@ -102,9 +105,8 @@ class FakeLibraryRepository implements ILibraryRepository {
     LibraryFilterParams params,
   ) async {
     try {
-      final Dio dio = Dio();
-      Response response = await dio.get(
-        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/favorites',
+      Response response = await _dio.get(
+        '/library/favorites',
         queryParameters: toQuery(params),
       );
       final Map<String, dynamic> responseBody = response.data;
@@ -177,9 +179,8 @@ class FakeLibraryRepository implements ILibraryRepository {
     LibraryFilterParams params,
   ) async {
     try {
-      final Dio dio = Dio();
-      Response response = await dio.get(
-        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/in-progress',
+      Response response = await _dio.get(
+        '/library/in-progress',
         queryParameters: toQuery(params),
       );
       final Map<String, dynamic> responseBody = response.data;
@@ -256,9 +257,8 @@ class FakeLibraryRepository implements ILibraryRepository {
     LibraryFilterParams params,
   ) async {
     try {
-      final Dio dio = Dio();
-      Response response = await dio.get(
-        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/completed',
+      Response response = await _dio.get(
+        '/library/completed',
         queryParameters: toQuery(params),
       );
       final Map<String, dynamic> responseBody = response.data;
@@ -383,4 +383,11 @@ class FakeLibraryRepository implements ILibraryRepository {
       );
     }
   }
+}
+
+void main(List<String> args) {
+  final repo = LibraryRepositoryImpl(Dio());
+  repo.findMyCreations(
+    LibraryFilterParams(q: 'funcione')
+  );
 }

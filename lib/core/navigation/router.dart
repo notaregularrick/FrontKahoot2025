@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/core/navigation/navbar.dart';
+import 'package:frontkahoot2526/core/presentation/change_backend_screen.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/game_orchestrator.dart';
 // import 'package:frontkahoot2526/features/auth/games/multiplayer/presentation/screens/game_orchestrator.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/join_game.dart';
@@ -118,7 +119,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const LibraryHomeScreen(),
                 routes: [
                   GoRoute(
-                    path: 'quices', // Nota: Sin '/' al principio. La ruta final será /library/quices
+                    path: 'quices', 
                     builder: (context, state) => const LibraryScreen(), // Tu pantalla con los tabs y la lista
                   ),
                 ],
@@ -193,7 +194,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/edit-profile',
       builder: (context, state) => const EditProfilePage(),
-      )
+      ),
+      GoRoute(
+        path: '/back-settings',
+        builder: (context, state) => const ChangeBackendScreen(),
+      ),
     ],
   );
 });
