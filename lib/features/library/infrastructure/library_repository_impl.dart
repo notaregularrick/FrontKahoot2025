@@ -30,8 +30,9 @@ class LibraryRepositoryImpl implements ILibraryRepository {
   ) async {
     try {
       Response response = await _dio.get(
-        '/library/my-creations?',
+        '/library/my-creations',
         queryParameters: toQuery(params),
+        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
       final Map<String, dynamic> responseBody = response.data;
       final List<dynamic> data = responseBody['data'];
@@ -108,6 +109,7 @@ class LibraryRepositoryImpl implements ILibraryRepository {
       Response response = await _dio.get(
         '/library/favorites',
         queryParameters: toQuery(params),
+        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
       final Map<String, dynamic> responseBody = response.data;
       final List<dynamic> data = responseBody['data'];
@@ -182,6 +184,7 @@ class LibraryRepositoryImpl implements ILibraryRepository {
       Response response = await _dio.get(
         '/library/in-progress',
         queryParameters: toQuery(params),
+        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
       final Map<String, dynamic> responseBody = response.data;
       final List<dynamic> data = responseBody['data'];
@@ -260,6 +263,7 @@ class LibraryRepositoryImpl implements ILibraryRepository {
       Response response = await _dio.get(
         '/library/completed',
         queryParameters: toQuery(params),
+        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
       final Map<String, dynamic> responseBody = response.data;
       final List<dynamic> data = responseBody['data'];
@@ -334,7 +338,8 @@ class LibraryRepositoryImpl implements ILibraryRepository {
     try {
       final Dio dio = Dio();
       await dio.post(
-        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/favorites/:$quizId',
+        '/library/favorites/$quizId',
+        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
     } on DioException catch (e) {
       print(e);
@@ -362,7 +367,8 @@ class LibraryRepositoryImpl implements ILibraryRepository {
     try {
       final Dio dio = Dio();
       await dio.delete(
-        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/favorites/:$quizId',
+        '/library/favorites/$quizId',
+        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
     } on DioException catch (e) {
       if (e.response != null) {
@@ -383,11 +389,4 @@ class LibraryRepositoryImpl implements ILibraryRepository {
       );
     }
   }
-}
-
-void main(List<String> args) {
-  final repo = LibraryRepositoryImpl(Dio());
-  repo.findMyCreations(
-    LibraryFilterParams(q: 'funcione')
-  );
 }

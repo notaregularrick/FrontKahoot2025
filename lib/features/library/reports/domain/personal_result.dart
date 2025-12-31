@@ -8,6 +8,7 @@ class PersonalResult {
   final int correctAnswers;
   final int totalQuestions;
   final num averageTimeMs;
+  final int? rankingPosition;
   final List<PersonalQuestionResult> questionResults;
 
   const PersonalResult({
@@ -18,6 +19,7 @@ class PersonalResult {
     required this.correctAnswers,
     required this.totalQuestions,
     required this.averageTimeMs,
+    this.rankingPosition,
     required this.questionResults,
   });
 }

@@ -151,6 +151,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
 
         error: (error, stackTrace) {
           if (error is AppException) {
+            if (error.statusCode == 404) {
+              return const Center(child: Text("No se encontraron quices"));
+            }
             return Center(
               child: Text(
                 "Error: ${error.message} (Code: ${error.statusCode}), Details: ${error.error}",
