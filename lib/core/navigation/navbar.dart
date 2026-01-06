@@ -53,7 +53,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
           }
         },
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.home), label: 'Inicio'),
+          NavigationDestination(icon: Icon(Icons.home), label: 'Descubrir'),
           NavigationDestination(icon: Icon(Icons.videogame_asset), label: 'Unirse'),
           NavigationDestination(icon: Icon(Icons.add_circle), label: 'Crear\nKahoot'),
           NavigationDestination(icon: Icon(Icons.library_books), label: 'Biblioteca'),

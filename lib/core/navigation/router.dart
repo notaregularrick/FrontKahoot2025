@@ -22,6 +22,7 @@ import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/crea
 import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/from_scratch_screen.dart';
 import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/quiz_metadata_screen.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/library_screen.dart';
+import 'package:frontkahoot2526/features/explore/presentation/screens/explore_screen.dart';
 import 'package:go_router/go_router.dart';
 
 //import '../../features/auth/presentation/providers/auth_providers.dart';
@@ -73,11 +74,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           // Branch 0: Home placeholder (inline, no separate file)
           StatefulShellBranch(
                 routes: [
-                GoRoute(
-                  path: '/home',
-                    builder: (context, state) => const Scaffold(
-                    body: Center(child: Text('Home (placeholder)')),
+                GoRoute(path: '/home',
+                builder: (context, state) => const ExploreScreen(),
+                routes: [
+                  GoRoute(path: 'quiz/:quizId',
+                    builder: (context, state) {
+                    final quizId = state.pathParameters['quizId'];
+                    // Retorna tu pantalla de detalle, ej: QuizDetailScreen(id: quizId)
+                    return Scaffold(body: Center(child: Text("Detalle del Quiz: $quizId"))); 
+                    },
                   ),
+                ]
                 ),
               ],
           ),
@@ -193,7 +200,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/edit-profile',
       builder: (context, state) => const EditProfilePage(),
-      )
+      ),
     ],
   );
 });
