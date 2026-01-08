@@ -1,5 +1,6 @@
 import 'package:frontkahoot2526/features/library/reports/domain/game_type.dart';
 
+//H10.3
 class Results{
   final String kahootId;
   final String gameId;
@@ -18,4 +19,8 @@ class Results{
     required this.finalScore,
     this.rankingPosition,
   });
+
+  String get completationDateFormatted {
+    return '${completionDate.day}/${completionDate.month}/${completionDate.year}';
+  }
 }

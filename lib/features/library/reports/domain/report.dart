@@ -1,6 +1,7 @@
 import 'package:frontkahoot2526/features/library/reports/domain/player_ranking.dart';
 import 'package:frontkahoot2526/features/library/reports/domain/question_analysis.dart';
 
+//Informe de sesión
 class Report {
   final String reportId;
   final String sessionId;

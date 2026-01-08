@@ -23,6 +23,7 @@ import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/crea
 import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/from_scratch_screen.dart';
 import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/quiz_metadata_screen.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/library_screen.dart';
+import 'package:frontkahoot2526/features/library/reports/presentation/screens/reports_screen.dart';
 import 'package:go_router/go_router.dart';
 
 //import '../../features/auth/presentation/providers/auth_providers.dart';
@@ -149,6 +150,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['groupId']!;
           return GroupDetailScreen(groupId: id);
         },
+      ),
+
+      GoRoute(path: '/reports',
+      builder:(context, state) => const PlayerReportsScreen(),
       ),
 
       GoRoute(

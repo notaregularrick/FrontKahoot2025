@@ -50,6 +50,15 @@ class LibraryHomeScreen extends StatelessWidget {
                 child: const Text('Grupos', style: TextStyle(fontSize: 18)),
               ),
             ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => context.push('/reports'),
+                style: _flatButtonStyle(),
+                child: const Text('Reportes', style: TextStyle(fontSize: 18)),
+              ),
+            ),
           ],
         ),
       ),
