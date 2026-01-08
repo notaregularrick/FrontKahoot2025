@@ -7,31 +7,38 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
 
   ExploreNotifier(this.repository) : super(ExploreState.initial());
 
-  // Método unificado para cargar todo al inicio
   Future<void> loadInitialData() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     
-    // Ejecutamos ambas peticiones en paralelo para ahorrar tiempo
+    // Ejecutamos las 3 peticiones en paralelo
     await Future.wait([
       loadFeaturedQuizzes(),
+      loadCategories(), // NUEVO
       loadQuizzes(isLoadMore: false, setGlobalLoading: false),
     ]);
     
     state = state.copyWith(isLoading: false);
   }
 
-  //Cargar destacados
+  // NUEVO: Cargar Categorías
+  Future<void> loadCategories() async {
+    try {
+      final categories = await repository.getCategories();
+      state = state.copyWith(availableCategories: categories);
+    } catch (e) {
+      print("Error cargando categorías: $e");
+    }
+  }
+
   Future<void> loadFeaturedQuizzes() async {
     try {
-      final result = await repository.getFeaturedQuizzes(limit: 5); // Limitamos a 5 para el carrusel
+      final result = await repository.getFeaturedQuizzes(limit: 5);
       state = state.copyWith(featuredQuizzes: result.quizzes);
     } catch (e) {
-      // Si falla solo destacados, no rompemos toda la pantalla, solo logueamos o guardamos error local
       print("Error cargando destacados: $e");
     }
   }
 
-  // Cargar quices (Lista Principal)
   Future<void> loadQuizzes({bool isLoadMore = false, bool setGlobalLoading = true}) async {
     if (setGlobalLoading && state.isLoading) return;
     if (isLoadMore && !state.hasMoreData) return;
@@ -75,9 +82,13 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
     loadQuizzes(isLoadMore: false);
   }
 
+  // Selección de categoría actualizada
   void onCategorySelected(String? categoryId) {
-    if (state.selectedCategory == categoryId) return;
-    state = state.copyWith(selectedCategory: categoryId);
+    // Si seleccionas la misma que ya estaba, la deseleccionas (toggle)
+    final newCategory = state.selectedCategory == categoryId ? null : categoryId;
+
+    if (state.selectedCategory == newCategory) return;
+    state = state.copyWith(selectedCategory: newCategory);
     loadQuizzes(isLoadMore: false);
   }
   

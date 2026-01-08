@@ -1,9 +1,11 @@
 import '../../domain/entities/quiz_entity.dart';
+import '../../domain/entities/category_entity.dart';
 
 class ExploreState {
   final bool isLoading;
   final List<QuizEntity> quizzes; // Lista principal (Búsqueda/Scroll)
   final List<QuizEntity> featuredQuizzes; //Lista de destacados (Horizontal)
+  final List<CategoryEntity> availableCategories; // Categorías disponibles
   final String? errorMessage;
   
   // Filtros
@@ -19,6 +21,7 @@ class ExploreState {
     this.isLoading = false,
     this.quizzes = const [],
     this.featuredQuizzes = const [],
+    this.availableCategories = const [],
     this.errorMessage,
     this.searchQuery = '',
     this.selectedCategory,
@@ -33,6 +36,7 @@ class ExploreState {
     bool? isLoading,
     List<QuizEntity>? quizzes,
     List<QuizEntity>? featuredQuizzes,
+    List<CategoryEntity>? availableCategories, 
     String? errorMessage,
     String? searchQuery,
     String? selectedCategory,
@@ -44,6 +48,7 @@ class ExploreState {
       isLoading: isLoading ?? this.isLoading,
       quizzes: quizzes ?? this.quizzes,
       featuredQuizzes: featuredQuizzes ?? this.featuredQuizzes,
+      availableCategories: availableCategories ?? this.availableCategories,
       errorMessage: errorMessage, 
       searchQuery: searchQuery ?? this.searchQuery,
       selectedCategory: selectedCategory ?? this.selectedCategory,

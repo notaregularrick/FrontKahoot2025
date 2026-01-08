@@ -1,3 +1,4 @@
+import '../models/category_model.dart';
 import '../models/paginated_quizzes_model.dart';
 
 abstract class ExploreDatasource {
@@ -13,4 +14,6 @@ abstract class ExploreDatasource {
   Future<PaginatedQuizzesModel> getFeaturedQuizzes({
     int limit = 10,
   });
+
+  Future<List<CategoryModel>> getCategories();
 }

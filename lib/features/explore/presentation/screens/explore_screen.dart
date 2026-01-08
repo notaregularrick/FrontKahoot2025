@@ -21,7 +21,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // CAMBIO: Llamamos a loadInitialData para traer destacados + lista general
       ref.read(exploreNotifierProvider.notifier).loadInitialData();
     });
     _scrollController.addListener(_onScroll);
@@ -57,12 +56,18 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
       appBar: AppBar(
         title: const Text('Descubrir'),
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: notifier.refresh,
+          )
+        ],
       ),
       body: Column(
         children: [
-          // --- BARRA DE BÚSQUEDA ---
+          // 1. BARRA DE BÚSQUEDA
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: TextField(
               controller: _searchController,
               onChanged: _onSearchChanged,
@@ -88,7 +93,37 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             ),
           ),
 
-          // --- CONTENIDO PRINCIPAL ---
+          // 2. FILTROS DE CATEGORÍAS (Horizontal Chips)
+          // Solo mostramos si hay categorías cargadas
+          if (state.availableCategories.isNotEmpty)
+            SizedBox(
+              height: 50,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: state.availableCategories.length,
+                separatorBuilder: (c, i) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final category = state.availableCategories[index];
+                  final isSelected = state.selectedCategory == category.id;
+                  
+                  return FilterChip(
+                    label: Text(category.name),
+                    selected: isSelected,
+                    onSelected: (bool selected) {
+                      notifier.onCategorySelected(category.id);
+                    },
+                    // CORRECCIÓN: Usamos withValues en lugar de withOpacity
+                    selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                    checkmarkColor: Theme.of(context).primaryColor,
+                  );
+                },
+              ),
+            ),
+
+          const SizedBox(height: 8),
+
+          // 3. CONTENIDO PRINCIPAL (Listas)
           Expanded(
             child: state.isLoading && state.quizzes.isEmpty && state.featuredQuizzes.isEmpty
                 ? const Center(child: CircularProgressIndicator())
@@ -114,12 +149,12 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                           padding: const EdgeInsets.only(bottom: 20),
                           children: [
                             
-                            // --- SECCIÓN DESTACADOS (Solo si no hay búsqueda activa) ---
-                            if (state.searchQuery.isEmpty && state.featuredQuizzes.isNotEmpty) ...[
+                            // A. SECCIÓN DESTACADOS (Solo si no hay filtros activos)
+                            if (state.searchQuery.isEmpty && state.selectedCategory == null && state.featuredQuizzes.isNotEmpty) ...[
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                                 child: Text(
-                                  "Destacados para ti",
+                                  "Destacados",
                                   style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                                 ),
                               ),
@@ -144,21 +179,23 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                                   },
                                 ),
                               ),
-                              const SizedBox(height: 20),
-                              const Divider(height: 1),
                               const SizedBox(height: 10),
+                              const Divider(),
                             ],
 
-                            // --- TÍTULO DE LISTA GENERAL ---
+                            // B. LISTA GENERAL
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                               child: Text(
-                                state.searchQuery.isEmpty ? "Todos los Kahoots" : "Resultados de búsqueda",
+                                state.searchQuery.isNotEmpty 
+                                    ? "Resultados de búsqueda" 
+                                    : state.selectedCategory != null 
+                                        ? "Categoría: ${state.selectedCategory}"
+                                        : "Explorar todos",
                                 style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                               ),
                             ),
 
-                            // --- LISTA GENERAL DE QUICES ---
                             if (state.quizzes.isEmpty)
                               const Padding(
                                 padding: EdgeInsets.all(40.0),
@@ -176,7 +213,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                                 );
                               }),
 
-                            // --- LOADING AL FINAL ---
                             if (state.hasMoreData && state.quizzes.isNotEmpty)
                               const Padding(
                                 padding: EdgeInsets.all(16.0),

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../models/category_model.dart';
 import 'explore_datasource.dart';
 import '../models/paginated_quizzes_model.dart';
 
@@ -68,6 +69,22 @@ class ExploreDatasourceImpl implements ExploreDatasource {
       return PaginatedQuizzesModel.fromJson(response.data);
     } catch (e) {
       throw Exception('Error en getFeaturedQuizzes: $e');
+    }
+  }
+
+  @override
+  Future<List<CategoryModel>> getCategories() async {
+    try {
+      final response = await dio.get('/explore/categories');
+      
+      // La respuesta es una lista directa: [ {name: "A"}, {name: "B"} ]
+      final List<dynamic> data = response.data as List<dynamic>;
+      
+      return data
+          .map((json) => CategoryModel.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception('Error en getCategories: $e');
     }
   }
 }

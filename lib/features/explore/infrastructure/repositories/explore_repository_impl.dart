@@ -1,3 +1,4 @@
+import '../../domain/entities/category_entity.dart';
 import '../../domain/repositories/explore_repository.dart';
 import '../../domain/entities/paginated_quizzes_entity.dart';
 import '../datasource/explore_datasource.dart';
@@ -43,6 +44,16 @@ class ExploreRepositoryImpl implements ExploreRepository {
       return await datasource.getFeaturedQuizzes(limit: limit);
     } catch (e) {
       throw Exception('Error obteniendo destacados: $e');
+    }
+  }
+
+  @override
+  Future<List<CategoryEntity>> getCategories() async {
+    try {
+      // Retornamos directamente la lista de modelos (que son entidades)
+      return await datasource.getCategories();
+    } catch (e) {
+      throw Exception('Error obteniendo categorías: $e');
     }
   }
 }

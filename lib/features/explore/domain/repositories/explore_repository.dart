@@ -1,3 +1,4 @@
+import '../entities/category_entity.dart';
 import '../entities/paginated_quizzes_entity.dart';
 
 abstract class ExploreRepository {
@@ -17,6 +18,6 @@ abstract class ExploreRepository {
     int limit = 10,
   });
   
-  // Future<List<CategoryEntity>> getCategories();
-  // Future<List<QuizEntity>> getFeaturedQuizzes();
+  // H6.3: Listado de Categorías
+  Future<List<CategoryEntity>> getCategories();
 }
