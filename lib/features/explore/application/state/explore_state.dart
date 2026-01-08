@@ -2,14 +2,15 @@ import '../../domain/entities/quiz_entity.dart';
 
 class ExploreState {
   final bool isLoading;
-  final List<QuizEntity> quizzes;
+  final List<QuizEntity> quizzes; // Lista principal (Búsqueda/Scroll)
+  final List<QuizEntity> featuredQuizzes; //Lista de destacados (Horizontal)
   final String? errorMessage;
   
-  // Filtros activos
+  // Filtros
   final String searchQuery;
-  final String? selectedCategory; // null significa "Todas"
+  final String? selectedCategory;
   
-  // Paginación
+  // Paginación (para la lista principal)
   final int currentPage;
   final int totalPages;
   final bool hasMoreData;
@@ -17,6 +18,7 @@ class ExploreState {
   const ExploreState({
     this.isLoading = false,
     this.quizzes = const [],
+    this.featuredQuizzes = const [],
     this.errorMessage,
     this.searchQuery = '',
     this.selectedCategory,
@@ -30,6 +32,7 @@ class ExploreState {
   ExploreState copyWith({
     bool? isLoading,
     List<QuizEntity>? quizzes,
+    List<QuizEntity>? featuredQuizzes,
     String? errorMessage,
     String? searchQuery,
     String? selectedCategory,
@@ -40,9 +43,7 @@ class ExploreState {
     return ExploreState(
       isLoading: isLoading ?? this.isLoading,
       quizzes: quizzes ?? this.quizzes,
-      // Si errorMessage es null en el copyWith, mantenemos el actual.
-      // Para limpiar el error explícitamente, podrías pasar una cadena vacía o manejar lógica extra,
-      // pero aquí asumiremos que cada nueva carga limpia el error en el Notifier.
+      featuredQuizzes: featuredQuizzes ?? this.featuredQuizzes,
       errorMessage: errorMessage, 
       searchQuery: searchQuery ?? this.searchQuery,
       selectedCategory: selectedCategory ?? this.selectedCategory,

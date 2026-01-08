@@ -15,15 +15,15 @@ class ExploreScreen extends ConsumerStatefulWidget {
 class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
-  Timer? _debounce; 
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(exploreNotifierProvider.notifier).loadQuizzes();
+      // CAMBIO: Llamamos a loadInitialData para traer destacados + lista general
+      ref.read(exploreNotifierProvider.notifier).loadInitialData();
     });
-
     _scrollController.addListener(_onScroll);
   }
 
@@ -35,14 +35,12 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     super.dispose();
   }
 
-  // Lógica para detectar fin de lista
   void _onScroll() {
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
       ref.read(exploreNotifierProvider.notifier).loadQuizzes(isLoadMore: true);
     }
   }
 
-  // Lógica de búsqueda con retraso (Debounce)
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -92,8 +90,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
           // --- CONTENIDO PRINCIPAL ---
           Expanded(
-            child: state.isLoading && state.quizzes.isEmpty
-                ? const Center(child: CircularProgressIndicator()) // Carga inicial
+            child: state.isLoading && state.quizzes.isEmpty && state.featuredQuizzes.isEmpty
+                ? const Center(child: CircularProgressIndicator())
                 : state.errorMessage != null
                     ? Center(
                         child: Column(
@@ -111,34 +109,81 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                       )
                     : RefreshIndicator(
                         onRefresh: notifier.refresh,
-                        child: state.quizzes.isEmpty
-                            ? ListView(
-                                children: const [
-                                  SizedBox(height: 100),
-                                  Center(child: Text("No se encontraron resultados")),
-                                ],
-                              )
-                            : ListView.builder(
-                                controller: _scrollController,
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                itemCount: state.quizzes.length + (state.hasMoreData ? 1 : 0),
-                                itemBuilder: (context, index) {
-                                  if (index == state.quizzes.length) {
-                                    return const Padding(
-                                      padding: EdgeInsets.all(16.0),
-                                      child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                                    );
-                                  }
-
-                                  final quiz = state.quizzes[index];
-                                  return QuizCard(
-                                    quiz: quiz,
-                                    onTap: () {
-                                      context.push('/quiz/${quiz.id}');
-                                    },
-                                  );
-                                },
+                        child: ListView(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.only(bottom: 20),
+                          children: [
+                            
+                            // --- SECCIÓN DESTACADOS (Solo si no hay búsqueda activa) ---
+                            if (state.searchQuery.isEmpty && state.featuredQuizzes.isNotEmpty) ...[
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                                child: Text(
+                                  "Destacados para ti",
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                                ),
                               ),
+                              SizedBox(
+                                height: 260,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  itemCount: state.featuredQuizzes.length,
+                                  itemBuilder: (context, index) {
+                                    final quiz = state.featuredQuizzes[index];
+                                    return SizedBox(
+                                      width: 280,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(right: 12.0),
+                                        child: QuizCard(
+                                          quiz: quiz,
+                                          onTap: () => context.push('/quiz/${quiz.id}'),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              const Divider(height: 1),
+                              const SizedBox(height: 10),
+                            ],
+
+                            // --- TÍTULO DE LISTA GENERAL ---
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                              child: Text(
+                                state.searchQuery.isEmpty ? "Todos los Kahoots" : "Resultados de búsqueda",
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+
+                            // --- LISTA GENERAL DE QUICES ---
+                            if (state.quizzes.isEmpty)
+                              const Padding(
+                                padding: EdgeInsets.all(40.0),
+                                child: Center(child: Text("No se encontraron resultados")),
+                              )
+                            else
+                              ...List.generate(state.quizzes.length, (index) {
+                                final quiz = state.quizzes[index];
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                  child: QuizCard(
+                                    quiz: quiz,
+                                    onTap: () => context.push('/quiz/${quiz.id}'),
+                                  ),
+                                );
+                              }),
+
+                            // --- LOADING AL FINAL ---
+                            if (state.hasMoreData && state.quizzes.isNotEmpty)
+                              const Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                              ),
+                          ],
+                        ),
                       ),
           ),
         ],

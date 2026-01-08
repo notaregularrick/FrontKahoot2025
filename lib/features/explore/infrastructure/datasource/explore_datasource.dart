@@ -9,4 +9,8 @@ abstract class ExploreDatasource {
     String? orderBy,
     String? order,
   });
+
+  Future<PaginatedQuizzesModel> getFeaturedQuizzes({
+    int limit = 10,
+  });
 }

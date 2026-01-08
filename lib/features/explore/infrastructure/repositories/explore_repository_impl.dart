@@ -36,4 +36,13 @@ class ExploreRepositoryImpl implements ExploreRepository {
       throw Exception('Error en ExploreRepository: $e');
     }
   }
+
+  @override
+  Future<PaginatedQuizzesEntity> getFeaturedQuizzes({int limit = 10}) async {
+    try {
+      return await datasource.getFeaturedQuizzes(limit: limit);
+    } catch (e) {
+      throw Exception('Error obteniendo destacados: $e');
+    }
+  }
 }

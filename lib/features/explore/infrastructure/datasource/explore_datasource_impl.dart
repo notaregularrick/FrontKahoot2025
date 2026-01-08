@@ -56,4 +56,18 @@ class ExploreDatasourceImpl implements ExploreDatasource {
       throw Exception('Error en ExploreDatasource: $e');
     }
   }
+
+  @override
+  Future<PaginatedQuizzesModel> getFeaturedQuizzes({int limit = 10}) async {
+    try {
+      final response = await dio.get(
+        '/explore/featured',
+        queryParameters: {'limit': limit},
+      );
+      
+      return PaginatedQuizzesModel.fromJson(response.data);
+    } catch (e) {
+      throw Exception('Error en getFeaturedQuizzes: $e');
+    }
+  }
 }

@@ -7,21 +7,39 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
 
   ExploreNotifier(this.repository) : super(ExploreState.initial());
 
-  // Cargar quices (inicial o paginación)
-  Future<void> loadQuizzes({bool isLoadMore = false}) async {
-    // Evitar cargas duplicadas si ya está cargando
-    if (state.isLoading) return;
+  // Método unificado para cargar todo al inicio
+  Future<void> loadInitialData() async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
     
-    // Si es "Cargar más" y ya no hay datos, salimos
+    // Ejecutamos ambas peticiones en paralelo para ahorrar tiempo
+    await Future.wait([
+      loadFeaturedQuizzes(),
+      loadQuizzes(isLoadMore: false, setGlobalLoading: false),
+    ]);
+    
+    state = state.copyWith(isLoading: false);
+  }
+
+  //Cargar destacados
+  Future<void> loadFeaturedQuizzes() async {
+    try {
+      final result = await repository.getFeaturedQuizzes(limit: 5); // Limitamos a 5 para el carrusel
+      state = state.copyWith(featuredQuizzes: result.quizzes);
+    } catch (e) {
+      // Si falla solo destacados, no rompemos toda la pantalla, solo logueamos o guardamos error local
+      print("Error cargando destacados: $e");
+    }
+  }
+
+  // Cargar quices (Lista Principal)
+  Future<void> loadQuizzes({bool isLoadMore = false, bool setGlobalLoading = true}) async {
+    if (setGlobalLoading && state.isLoading) return;
     if (isLoadMore && !state.hasMoreData) return;
 
     try {
-      // Si NO es loadMore (es una búsqueda nueva o refresh), ponemos loading y limpiamos error
-      if (!isLoadMore) {
+      if (setGlobalLoading && !isLoadMore) {
         state = state.copyWith(isLoading: true, errorMessage: null);
-      } 
-      // Si ES loadMore, no ponemos isLoading global para no bloquear toda la UI,
-      // pero podrías manejar un booleano 'isLoadingMore' separado si quisieras mostrar un spinner abajo.
+      }
 
       final pageToLoad = isLoadMore ? state.currentPage + 1 : 1;
 
@@ -29,19 +47,17 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
         searchQuery: state.searchQuery,
         categories: state.selectedCategory != null ? [state.selectedCategory!] : null,
         page: pageToLoad,
-        limit: 20, // Puedes hacerlo configurable
+        limit: 20,
       );
 
       final newQuizzes = result.quizzes;
       final pagination = result.pagination;
 
       state = state.copyWith(
-        isLoading: false,
-        // Si es loadMore, concatenamos. Si no, reemplazamos.
+        isLoading: setGlobalLoading ? false : state.isLoading,
         quizzes: isLoadMore ? [...state.quizzes, ...newQuizzes] : newQuizzes,
         currentPage: pagination.page,
         totalPages: pagination.totalPages,
-        // Calculamos si hay más páginas
         hasMoreData: pagination.page < pagination.totalPages,
       );
 
@@ -53,25 +69,19 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
     }
   }
 
-  // Cambio en la barra de búsqueda
   void onSearchChanged(String query) {
     if (state.searchQuery == query) return;
-    
-    // Actualizamos el query y reseteamos la lista
     state = state.copyWith(searchQuery: query);
     loadQuizzes(isLoadMore: false);
   }
 
-  // Cambio de categoría
   void onCategorySelected(String? categoryId) {
     if (state.selectedCategory == categoryId) return;
-
     state = state.copyWith(selectedCategory: categoryId);
     loadQuizzes(isLoadMore: false);
   }
   
-  // Pull to refresh
   Future<void> refresh() async {
-    await loadQuizzes(isLoadMore: false);
+    await loadInitialData();
   }
 }

@@ -2,8 +2,7 @@ import '../entities/paginated_quizzes_entity.dart';
 
 abstract class ExploreRepository {
   
-  // Endpoint: GET /explore
-  // Este método recupera la lista paginada de quices con filtros opcionales.
+  // H6.1: Búsqueda y Filtrado
   Future<PaginatedQuizzesEntity> getQuizzes({
     String? searchQuery,        // 'q' en el API: Texto a buscar
     List<String>? categories,   // 'categories' en el API: Filtro por tema
@@ -13,7 +12,11 @@ abstract class ExploreRepository {
     String? order,              // Dirección ('asc' o 'desc')
   });
 
-  // Espacio reservado para los futuros endpoints (H6.2 y H6.3)
+  // H6.2: Quices Destacados
+  Future<PaginatedQuizzesEntity> getFeaturedQuizzes({
+    int limit = 10,
+  });
+  
   // Future<List<CategoryEntity>> getCategories();
   // Future<List<QuizEntity>> getFeaturedQuizzes();
 }
