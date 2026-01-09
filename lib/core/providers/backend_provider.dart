@@ -22,7 +22,7 @@ extension BackendTypeExtension on BackendType {
     //modificar según las de los equipos
     switch (this) {
       case BackendType.back1:
-        return "https://zany-phylys-backcomun-57c1dfd0.koyeb.app/";
+        return "https://backcomun-gc5j.onrender.com";
       case BackendType.back2:
         return "https://quizzy-backend-0wh2.onrender.com/api";
     }
