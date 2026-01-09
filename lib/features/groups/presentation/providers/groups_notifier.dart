@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/features/groups/domain/repositories/groups_repository.dart';
-import 'package:frontkahoot2526/features/groups/infrastructure/repositories/groups_repository_mock.dart';
+import 'package:frontkahoot2526/features/groups/infrastructure/repositories/groups_api_repository.dart';
 import 'package:frontkahoot2526/features/groups/domain/entities/group_models.dart';
 import 'package:frontkahoot2526/features/groups/application/usecases/get_groups.dart';
 import 'package:frontkahoot2526/features/groups/application/usecases/create_group.dart';
@@ -14,8 +14,12 @@ import 'package:frontkahoot2526/features/groups/application/usecases/assign_quiz
 import 'package:frontkahoot2526/features/groups/application/usecases/remove_quiz.dart';
 import 'package:frontkahoot2526/features/groups/application/usecases/generate_invite_link.dart';
 import 'package:frontkahoot2526/features/groups/application/usecases/join_group_by_token.dart';
+import 'package:frontkahoot2526/core/network/dio_provider.dart';
 
-final groupsRepositoryProvider = Provider<GroupsRepository>((ref) => MockGroupsRepository());
+final groupsRepositoryProvider = Provider<GroupsRepository>((ref) {
+  final dio = ref.watch(dioProvider);
+  return GroupsApiRepository(dio);
+});
 
 final groupsListProvider = StateNotifierProvider<GroupsListNotifier, AsyncValue<List<GroupSummary>>>((ref) {
   final repo = ref.watch(groupsRepositoryProvider);
