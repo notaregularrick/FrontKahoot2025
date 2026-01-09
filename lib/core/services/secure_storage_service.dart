@@ -18,4 +18,16 @@ class SecureStorageService {
   Future<void> deleteToken() async {
     await _storage.delete(key: 'auth_token');
   }
+
+  Future<void> saveGeminiApiKey(String key) async {
+    await _storage.write(key: 'gemini_api_key', value: key);
+  }
+
+  Future<String?> getGeminiApiKey() async {
+    return await _storage.read(key: 'gemini_api_key');
+  }
+
+  Future<void> deleteGeminiApiKey() async {
+    await _storage.delete(key: 'gemini_api_key');
+  }
 }

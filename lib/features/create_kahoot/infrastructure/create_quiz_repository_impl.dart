@@ -68,7 +68,7 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
     }
   }
 
-  /// Convierte entidad Quiz a JSON camelCase según especificación de API
+  /// Convierte entidad Quiz a JSON camelCase 
   Map<String, dynamic> _quizToJson(Quiz quiz) {
     // Helper para convertir mediaId a URL completa
     String? _mediaIdToUrl(String? mediaId) {

@@ -82,7 +82,71 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         quizDescription = Uri.decodeComponent(queryParams['description'] ?? '');
         quizCategory = Uri.decodeComponent(queryParams['category'] ?? 'Estudio');
         quizVisibility = queryParams['visibility'] ?? 'private';
+        
+        // Si viene de IA, cargar las preguntas generadas
+        if (queryParams['ai_generated'] == 'true' && queryParams['questions'] != null) {
+          _loadAIGeneratedQuestions(queryParams['questions']!);
+        }
       });
+    }
+  }
+
+  void _loadAIGeneratedQuestions(String questionsParam) {
+    try {
+      final decodedQuestions = Uri.decodeComponent(questionsParam);
+      final questionsList = decodedQuestions.split('|||');
+      
+      questions.clear(); // Limpiar preguntas iniciales
+      
+      for (int i = 0; i < questionsList.length; i++) {
+        final questionParts = questionsList[i].split('|');
+        if (questionParts.length >= 4) {
+          final questionText = questionParts[0];
+          final questionType = questionParts[1];
+          final timeLimit = int.tryParse(questionParts[2]) ?? 20;
+          final points = int.tryParse(questionParts[3]) ?? 1000;
+          
+          final answers = <AnswerData>[];
+          if (questionParts.length > 4) {
+            final answersList = questionParts[4].split(';');
+            for (int j = 0; j < answersList.length; j++) {
+              final answerParts = answersList[j].split('|');
+              if (answerParts.length >= 2) {
+                answers.add(AnswerData(
+                  id: 'answer_${i}_$j',
+                  text: answerParts[0].isEmpty ? null : answerParts[0],
+                  isCorrect: answerParts[1] == 'true',
+                  mediaId: null,
+                ));
+              }
+            }
+          }
+          
+          questions.add(QuestionData(
+            id: 'question_$i',
+            text: questionText,
+            type: questionType,
+            timeLimit: timeLimit,
+            points: points,
+            mediaId: null,
+            answers: answers,
+          ));
+        }
+      }
+      
+      if (questions.isNotEmpty) {
+        currentQuestionIndex = 0;
+      } else {
+        // Si no se pudieron cargar preguntas, mantener las por defecto
+        if (questions.isEmpty) {
+          _addNewQuestion();
+        }
+      }
+    } catch (e) {
+      // Si hay error al parsear, mantener las preguntas por defecto
+      if (questions.isEmpty) {
+        _addNewQuestion();
+      }
     }
   }
 
