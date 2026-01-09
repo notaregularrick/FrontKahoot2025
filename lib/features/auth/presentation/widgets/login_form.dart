@@ -36,12 +36,9 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           ElevatedButton(
             onPressed: () {
               final notifier = ref.read(authNotifierProvider.notifier);
-              notifier.login(
-                emailCtrl.text.trim(),
-                passCtrl.text.trim(),
-              );
+              notifier.login(emailCtrl.text.trim(), passCtrl.text.trim());
               // Después de hacer login, navegar al Home en lugar de Profile
-              context.go('/home');
+              //context.go('/home');
             },
             child: const Text("Login"),
           ),
@@ -52,8 +49,13 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           TextButton(
             onPressed: () => context.push('/passreset'),
             child: const Text("Olvide mi Contraseña"),
-          )
-
+          ),
+          TextButton(
+            onPressed: () {
+              context.push('/back-settings'); // Navega a la ruta nueva
+            },
+            child: const Text("Cambiar backend"),
+          ),
         ],
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../providers/auth_providers.dart';
 import '../widgets/login_form.dart';
@@ -20,7 +21,8 @@ class LoginPage extends ConsumerWidget {
 
       if (next.user != null) {
         // Login OK → navega
-        Navigator.pushReplacementNamed(context, '/home');
+        //Navigator.pushReplacementNamed(context, '/home');
+        context.go('/home');
       }
     });
 

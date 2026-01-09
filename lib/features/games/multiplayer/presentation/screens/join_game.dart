@@ -53,7 +53,7 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
 
       if (next is AsyncData && !next.isLoading && !next.hasError) {
         if (next.value?.myPlayerId != null) {
-          context.push('/game');
+          context.go('/game');
         }
       }
     });

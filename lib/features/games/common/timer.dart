@@ -10,7 +10,7 @@ class GameTimerWidget extends StatelessWidget {
     return SizedBox(
       width: 50,
       height: 50,
-      // TweenAnimationBuilder hace la magia: anima de 1.0 (lleno) a 0.0 (vacío)
+      //anima el progreso del tiempo restante
       child: TweenAnimationBuilder<double>(
         tween: Tween(begin: 1.0, end: 0.0),
         duration: Duration(seconds: totalSeconds),

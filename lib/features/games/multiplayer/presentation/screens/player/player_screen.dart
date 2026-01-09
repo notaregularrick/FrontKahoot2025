@@ -63,31 +63,38 @@ class _PlayerGameScreenState extends ConsumerState<PlayerGameScreen> {
     });
 
     //
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: AppColors.primaryRed,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        //Desactivar botón de salida automático
-        automaticallyImplyLeading: false,
-        actions: [
-          //Botón de salida
-          IconButton(
-            icon: const Icon(Icons.exit_to_app),
-            onPressed: () => _showExitConfirmation(context),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _showExitConfirmation(context); // Muestra tu diálogo al intentar salir
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: AppColors.primaryRed,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-        ],
-      ),
+          centerTitle: true,
+          //Desactivar botón de salida automático
+          automaticallyImplyLeading: false,
+          actions: [
+            //Botón de salida
+            IconButton(
+              icon: const Icon(Icons.exit_to_app),
+              onPressed: () => _showExitConfirmation(context),
+            ),
+          ],
+        ),
 
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),//Para transiciones
-        child: _buildContent(state),
+        body: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300), //Para transiciones
+          child: _buildContent(state),
+        ),
       ),
     );
   }
@@ -136,6 +143,11 @@ class _PlayerGameScreenState extends ConsumerState<PlayerGameScreen> {
               state.session.playerScoreboard, // <--- Lista completa
           myPlayerId: state.myPlayerId ?? "",
           winnerNickname: state.session.winnerNickname ?? "Ganador",
+          onQuit: () {
+            ref.read(multiplayerGameNotifierProvider.notifier).leaveGame();
+            // 2. Navegamos
+            context.go('/join');
+          },
         );
     }
   }
@@ -145,7 +157,9 @@ class _PlayerGameScreenState extends ConsumerState<PlayerGameScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("¿Salir del juego?"),
-        content: const Text("Si sales perderás tu progreso actual."), //Temporal?
+        content: const Text(
+          "Si sales perderás tu progreso actual.",
+        ), //Temporal?
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -155,6 +169,7 @@ class _PlayerGameScreenState extends ConsumerState<PlayerGameScreen> {
             onPressed: () {
               Navigator.pop(context); // Cierra dialogo
               // Navegar a la pantalla 'Unirse' dentro del shell (muestra la barra de navegación)
+              ref.read(multiplayerGameNotifierProvider.notifier).leaveGame();
               context.go('/join');
             },
             child: const Text("Salir", style: TextStyle(color: Colors.red)),

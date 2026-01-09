@@ -6,9 +6,10 @@ import '../datasource/auth_datasource.dart';
 import '../models/auth_response_model.dart';
 import '../models/profile_model.dart';
 import '../models/user_model.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// IMPORTA TU BASE DE DATOS SIMULADA
-import '../../../../core/simulated_data.dart'; 
+import '../../../../core/simulated_data.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthDatasource datasource;
@@ -28,21 +29,13 @@ class AuthRepositoryImpl implements AuthRepository {
     if (simulate) {
       await Future.delayed(const Duration(milliseconds: 800));
 
-      // 1. GUARDAMOS EN LA DB COMPARTIDA
-      dbUser = UserModel(
-        id: "user-id-123",
-        name: name,     // <--- Usamos el nombre del form
-        email: email,   // <--- Usamos el email del form
-        userType: 'default',
-        createdAt: DateTime.now(),
-      );
-
-      dbProfile = ProfileModel(
-        id: "user-id-123",
-        name: name,     // <--- ¡IMPORTANTE! Guardamos lo mismo aquí
+      // 1. Crear el modelo de perfil
+      final newProfile = ProfileModel(
+        id: email, // Usamos el email como ID
+        name: name,
         email: email,
         avatarUrl: "",
-        description: "Hola, soy nuevo aquí",
+        description: "Nuevo usuario",
         userType: "Básico",
         gameStreak: 0,
         theme: "Día",
@@ -51,55 +44,79 @@ class AuthRepositoryImpl implements AuthRepository {
         updatedAt: DateTime.now(),
       );
 
-      dbToken = "fake-token-xyz";
-      await storage.saveToken(dbToken);
+      final prefs = await SharedPreferences.getInstance();
 
-      return dbUser?.toEntity();
+      // 2. Guardar los datos del usuario en su caja específica
+      String profileJson = jsonEncode(newProfile.toJson());
+      await prefs.setString('profile_$email', profileJson);
+
+      // 3. ¡¡CRÍTICO!! GUARDAR QUE ESTE ES EL USUARIO ACTIVO
+      // Sin esta línea, el ProfileRepository no sabe qué caja buscar.
+      await prefs.setString('current_active_email', email);
+
+      // 4. Guardar token (para la sesión)
+      await storage.saveToken("fake-token-$email");
+
+      // 5. Retornar UserEntity para que el Notifier actualice el estado
+      return UserModel(
+        id: newProfile.id,
+        name: newProfile.name,
+        email: newProfile.email,
+        userType: newProfile.userType,
+        createdAt: newProfile.createdAt,
+      ).toEntity();
     }
 
-    // Lógica real...
-    final userModel = await datasource.register(name: name, email: email, password: password);
+    final userModel = await datasource.register(
+      name: name,
+      email: email,
+      password: password,
+    );
     return userModel.toEntity();
   }
 
   @override
-  Future<AuthResponseModel> login({required String email, required String password}) async {
+  Future<AuthResponseModel> login({
+    required String email,
+    required String password,
+  }) async {
     const simulate = true;
-
     if (simulate) {
       await Future.delayed(const Duration(milliseconds: 800));
 
-      // 2. VALIDAMOS CONTRA LA DB COMPARTIDA
-      if (dbUser == null) {
-        throw Exception("Usuario no encontrado. Debes registrarte primero.");
-      }
-      if (dbUser!.email != email) {
-        throw Exception("Credenciales incorrectas.");
+      final prefs = await SharedPreferences.getInstance();
+
+      // 1. VERIFICAMOS SI EXISTE LA CAJA DE ESE EMAIL
+      final userJson = prefs.getString('profile_$email');
+
+      if (userJson == null) {
+        throw Exception("Usuario no encontrado. Regístrate primero.");
       }
 
-      dbToken = "fake-token-xyz";
-      await storage.saveToken(dbToken);
+      // 2. SI EXISTE, LO MARCAMOS COMO ACTIVO
+      await prefs.setString('current_active_email', email);
+      await storage.saveToken("fake-token-$email");
 
-      return AuthResponseModel(
-        user: dbUser!,
-        accessToken: dbToken!,
-      );
+      // Reconstruimos el usuario para devolverlo
+      final profileMap = jsonDecode(userJson);
+      final user = UserModel.fromJson(
+        profileMap,
+      ); // Asegúrate que UserModel tenga fromJson o créalo manual
+
+      return AuthResponseModel(user: user, accessToken: "fake-token-$email");
     }
-    
+
     // Lógica real...
     final response = await datasource.login(email: email, password: password);
     await storage.saveToken(response.accessToken);
     return response;
   }
+
   @override
   Future<void> logout() async {
-    const simulate = true;
-    if (simulate) {
-      dbToken = null;
-      await storage.deleteToken();
-      return;
-    }
-    await apiService.post('/auth/logout');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('my_profile_data');
+    //await apiService.post('/auth/logout');
     await storage.deleteToken(); // Asegurar borrado local
   }
 
@@ -113,14 +130,20 @@ class AuthRepositoryImpl implements AuthRepository {
     }
     // ... tu lógica real (estaba bien) ...
     try {
-      await apiService.post('/auth/password-reset/request', data: {'email': email});
+      await apiService.post(
+        '/auth/password-reset/request',
+        data: {'email': email},
+      );
     } catch (e) {
       throw Exception('Error al solicitar reset: $e');
     }
   }
 
   @override
-  Future<void> confirmPasswordReset(String resetToken, String newPassword) async {
+  Future<void> confirmPasswordReset(
+    String resetToken,
+    String newPassword,
+  ) async {
     const simulate = true;
 
     if (simulate) {
@@ -128,7 +151,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await Future.delayed(const Duration(milliseconds: 1500));
 
       // 2. Simular Validaciones (Opcional, para probar errores en tu UI)
-      
+
       // Simular error si el token está vacío o es un token específico de prueba "bad"
       if (resetToken.isEmpty || resetToken == "invalid-token") {
         throw Exception("El token es inválido o ha expirado.");
@@ -142,23 +165,25 @@ class AuthRepositoryImpl implements AuthRepository {
       // 3. Éxito
       // En una DB real aquí se actualizaría el hash del password.
       // En simulación, simplemente retornamos (void) indicando que todo salió bien.
-      print("SIMULACIÓN: Contraseña restablecida exitosamente. Nueva pass: $newPassword");
+      print(
+        "SIMULACIÓN: Contraseña restablecida exitosamente. Nueva pass: $newPassword",
+      );
       return;
     }
 
     // --- LÓGICA REAL ---
     try {
-      await apiService.post('/auth/password-reset/confirm', data: {
-        'resetToken': resetToken,
-        'newPassword': newPassword,
-      });
+      await apiService.post(
+        '/auth/password-reset/confirm',
+        data: {'resetToken': resetToken, 'newPassword': newPassword},
+      );
     } catch (e) {
       // Es buena práctica atrapar el error de red y lanzar una Exception limpia
       throw Exception('Error al confirmar cambio de contraseña: $e');
     }
   }
 
- /* @override
+  /* @override
   Future<ProfileModel> getUserProfile() async {
     const simulate = true;
 
