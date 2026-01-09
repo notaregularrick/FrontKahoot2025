@@ -50,8 +50,8 @@ class QuizCardUiModel {
       status: quiz.status == 'draft' ? 'Borrador' : 'Publicado',
       authorName: null,
       authorId: null,
-      visibilityText: quiz.visibility == 'public' ? 'Público' : 'Privado',
-      visibilityIcon: quiz.visibility == 'public' ? Icons.public : Icons.lock,
+      visibilityText: quiz.visibility == 'public' || quiz.visibility == 'PUBLIC' ? 'Público' : 'Privado',
+      visibilityIcon: quiz.visibility == 'public' || quiz.visibility == 'PUBLIC' ? Icons.public : Icons.lock,
       gameId: null,
       gameType: null,
     );

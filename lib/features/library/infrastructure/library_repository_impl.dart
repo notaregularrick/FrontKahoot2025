@@ -203,8 +203,8 @@ class LibraryRepositoryImpl implements ILibraryRepository {
         int playCount = (quiz['playCount'] as num?)?.toInt() ?? 0;
         String category = quiz['category'] as String;
         String status = quiz['status'] as String;
-        String gameId = quiz['gameId'] as String;
-        String gameType = quiz['gameType'] as String;
+        String? gameId = quiz['gameId'] as String?;
+        String? gameType = quiz['gameType'] as String?;
 
         LibraryQuiz newQuiz = LibraryQuiz(
           id: id,
@@ -282,8 +282,8 @@ class LibraryRepositoryImpl implements ILibraryRepository {
         int playCount = (quiz['playCount'] as num?)?.toInt() ?? 0;
         String category = quiz['category'] as String;
         String status = quiz['status'] as String;
-        String gameId = quiz['gameId'] as String;
-        String gameType = quiz['gameType'] as String;
+        String? gameId = quiz['gameId'] as String?;
+        String? gameType = quiz['gameType'] as String?;
 
         LibraryQuiz newQuiz = LibraryQuiz(
           id: id,
