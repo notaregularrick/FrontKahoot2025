@@ -102,22 +102,6 @@ class ProfilePage extends ConsumerWidget {
                         child: const Text('Cambiar Contraseña'),
                       ),
                     ),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red.shade100,
-                          foregroundColor: Colors.red.shade900,
-                        ),
-                        icon: const Icon(Icons.build_circle_outlined),
-                        label: const Text("Configurar Backend"),
-                        onPressed: () {
-                          context.push(
-                            '/back-settings',
-                          ); // Navega a la ruta nueva
-                        },
-                      ),
-                    ),
 
                     // Espacio extra al final para que no quede pegado
                     const SizedBox(height: 50),
