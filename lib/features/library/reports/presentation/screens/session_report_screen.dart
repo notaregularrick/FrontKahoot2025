@@ -96,53 +96,6 @@ class _SessionReportScreenState extends ConsumerState<SessionReportScreen>
     );
   }
 
-  // class SessionReportScreen extends ConsumerWidget {
-  //   final String sessionId;
-  //   const SessionReportScreen({super.key, required this.sessionId});
-
-  //   @override
-  //   Widget build(BuildContext context, WidgetRef ref) {
-  //     final reportAsync = ref.watch(sessionReportProvider(sessionId));
-  //     return Scaffold(
-  //       backgroundColor: Colors.white,
-  //       appBar: AppBar(
-  //         title: const Text('Reporte de sesión', style: TextStyle(fontSize: 25)),
-  //         backgroundColor: AppColors.primaryRed,
-  //         foregroundColor: Colors.white,
-  //         centerTitle: true,
-  //       ),
-  //       body: reportAsync.when(
-  //         loading: () => const Center(child: CircularProgressIndicator()),
-  //         error: (err, stack) => Text("Error: $err"),
-  //         data: (report) {
-  //           return SingleChildScrollView(
-  //             padding: const EdgeInsets.all(16.0),
-  //             child: Column(
-  //               crossAxisAlignment: CrossAxisAlignment.start,
-  //               children: [
-  //                 // 1. Cabecera con Título y Fecha
-  //                 _buildHeader(report),
-  //                 const SizedBox(height: 24),
-
-  //                 // 2. Sección de Ranking (Estilo imagen)
-  //                 _buildSectionTitle("Marcador Global"),
-  //                 const SizedBox(height: 12),
-  //                 _buildRankingList(report.playerRanking),
-  //                 const SizedBox(height: 30),
-
-  //                 // // 3. Sección de Análisis de Preguntas
-  //                 _buildSectionTitle("Análisis de Preguntas"),
-  //                 const SizedBox(height: 12),
-  //                 _buildQuestionAnalysisList(report.questionAnalysis),
-  //                 const SizedBox(height: 40),
-  //               ],
-  //             ),
-  //           );
-  //         },
-  //       ),
-  //     );
-  //   }
-
   Widget _buildHeader(Report report) {
     final String dateStr =
         "${report.executionDate.day}/${report.executionDate.month}/${report.executionDate.year}";

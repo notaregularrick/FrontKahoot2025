@@ -118,6 +118,7 @@ class FakeReportRepositoryImpl implements IReportsRepository {
     "correctAnswers": 4,
     "totalQuestions": 4,
     "averageTimeMs": 5425,
+    "rankingPosition": 2,
     "questionResults": [
       {
         "questionIndex": 0,
@@ -133,7 +134,7 @@ class FakeReportRepositoryImpl implements IReportsRepository {
         "isCorrect": true,
         "answerText": [],
         "answerMediaID": [
-          "https://cdn.example.com/biology/plant-cell.png",
+          "https://img.freepik.com/vector-gratis/diagrama-celulas-animales-colores_1308-15232.jpg?w=360",
           "https://cdn.example.com/biology/plant-cell.png",
         ],
         "timeTakenMs": 6100,
