@@ -8,6 +8,7 @@ import 'package:frontkahoot2526/core/domain/entities/question.dart';
 import 'package:frontkahoot2526/core/domain/entities/quiz.dart';
 import 'package:frontkahoot2526/features/create_kahoot/presentation/providers/create_quiz_service_provider.dart';
 import 'package:frontkahoot2526/features/media/presentation/providers/media_service_provider.dart';
+import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
 
 // Modelos de datos para gestionar el estado de preguntas y respuestas
 class QuestionData {
@@ -222,11 +223,14 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         );
         context.go('/create-kahoot');
       }
-    } catch (e) {
+    } on AppException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al crear el quiz: ${e.toString()}')),
+          SnackBar(content: Text('Error al crear el quiz: ${e.message}')),
         );
+        print('Error al crear el quiz: ${e.message}');
+        print('Error al crear el quiz: ${e.statusCode}');
+        print('Error al crear el quiz: ${e.error}');  
       }
     }
   }
