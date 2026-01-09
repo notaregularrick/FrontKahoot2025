@@ -23,7 +23,10 @@ import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/crea
 import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/from_scratch_screen.dart';
 import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/quiz_metadata_screen.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/library_screen.dart';
+import 'package:frontkahoot2526/features/library/reports/domain/game_type.dart';
+import 'package:frontkahoot2526/features/library/reports/presentation/screens/personal_results_secreen.dart';
 import 'package:frontkahoot2526/features/library/reports/presentation/screens/reports_screen.dart';
+import 'package:frontkahoot2526/features/library/reports/presentation/screens/session_report_screen.dart';
 import 'package:go_router/go_router.dart';
 
 //import '../../features/auth/presentation/providers/auth_providers.dart';
@@ -74,14 +77,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         branches: [
           // Branch 0: Home placeholder (inline, no separate file)
           StatefulShellBranch(
-                routes: [
-                GoRoute(
-                  path: '/home',
-                    builder: (context, state) => const Scaffold(
-                    body: Center(child: Text('Home (placeholder)')),
-                  ),
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (context, state) => const Scaffold(
+                  body: Center(child: Text('Home (placeholder)')),
                 ),
-              ],
+              ),
+            ],
           ),
           // Branch 1: Join game (so navbar remains visible while joining)
           StatefulShellBranch(
@@ -90,22 +93,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: '/join',
                 builder: (context, state) => const JoinGameScreen(),
               ),
-              ],
+            ],
           ),
           //Branch 2: Create Kahoot
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/create-kahoot',
-                builder: (context, state) => const CreateKahootScreen(), // Pantalla de selección
+                builder: (context, state) =>
+                    const CreateKahootScreen(), // Pantalla de selección
                 routes: [
                   GoRoute(
                     path: 'quiz-metadata',
-                    builder: (context, state) => const QuizMetadataScreen(), // Pantalla de metadata
+                    builder: (context, state) =>
+                        const QuizMetadataScreen(), // Pantalla de metadata
                   ),
                   GoRoute(
                     path: 'from-scratch',
-                    builder: (context, state) => const FromScratchScreen(), // Pantalla de edición
+                    builder: (context, state) =>
+                        const FromScratchScreen(), // Pantalla de edición
                   ),
                 ],
               ),
@@ -115,13 +121,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           // Branch 3: Library-related routes
           StatefulShellBranch(
             routes: [
-             GoRoute(
+              GoRoute(
                 path: '/library',
                 builder: (context, state) => const LibraryHomeScreen(),
                 routes: [
                   GoRoute(
-                    path: 'quices', 
-                    builder: (context, state) => const LibraryScreen(), // Tu pantalla con los tabs y la lista
+                    path: 'quices',
+                    builder: (context, state) =>
+                        const LibraryScreen(), // Tu pantalla con los tabs y la lista
                   ),
                 ],
               ),
@@ -152,8 +159,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      GoRoute(path: '/reports',
-      builder:(context, state) => const PlayerReportsScreen(),
+      GoRoute(
+        path: '/reports',
+        builder: (context, state) => const PlayerReportsScreen(),
+      ),
+
+      GoRoute(
+        path: '/reports/sessionReport/:sessionId',
+        builder: (context, state) {
+          final sessionId = state.pathParameters['sessionId']!;
+          return SessionReportScreen(sessionId: sessionId);
+        },
+      ),
+
+      GoRoute(
+        path: '/reports/personalResults/:gameId/:typeName',
+        builder: (context, state) {
+          final gameId = state.pathParameters['gameId']!;
+          final typeName = state.pathParameters['typeName']!;
+          final gameType = typeName == 'multiplayer'
+              ? GameType.multiplayer
+              : GameType.singleplayer;
+          return PersonalResultsScreen(gameId: gameId, gameType: gameType);
+        },
       ),
 
       GoRoute(
@@ -169,14 +197,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/game',
         builder: (context, state) => const GameOrchestratorScreen(),
       ),
-      GoRoute(
-        path: '/inicio',
-        builder: (context, state) => const TitlePage(),
-      ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginPage(),
-      ),
+      GoRoute(path: '/inicio', builder: (context, state) => const TitlePage()),
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfilePage(),
@@ -197,8 +219,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/passconfirm',
         builder: (context, state) => const PasswordResetConfirmPage(),
       ),
-      GoRoute(path: '/edit-profile',
-      builder: (context, state) => const EditProfilePage(),
+      GoRoute(
+        path: '/edit-profile',
+        builder: (context, state) => const EditProfilePage(),
       ),
       GoRoute(
         path: '/back-settings',

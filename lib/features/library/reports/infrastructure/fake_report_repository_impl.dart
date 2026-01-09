@@ -83,7 +83,31 @@ class FakeReportRepositoryImpl implements IReportsRepository {
         "rankingPosition": 2,
       },
     ],
-    "meta": {"totalItems": 5, "currentPage": 1, "totalPages": 1, "limit": 10},
+    "meta": {"totalItems": 7, "currentPage": 1, "totalPages": 2, "limit": 10},
+  };
+
+  Map<String, dynamic> get mockFindMyResults2 => {
+    "results": [
+      {
+        "kahootId": "123e4567-e89b-12d3-a456-426614174000",
+        "gameId": "a1b2c3d4-e89b-12d3-a456-426614174001",
+        "gameType": "Multiplayer",
+        "title": "Capitales de Europa - Desafío Final",
+        "completionDate": "2025-10-25T14:30:00.000Z",
+        "finalScore": 12500,
+        "rankingPosition": 1,
+      },
+      {
+        "kahootId": "223e4567-e89b-12d3-a456-426614174002",
+        "gameId": "b1b2c3d4-e89b-12d3-a456-426614174002",
+        "gameType": "Singleplayer",
+        "title": "Matemáticas Básicas: Álgebra",
+        "completionDate": "2025-10-24T09:15:00.000Z",
+        "finalScore": 8400,
+        "rankingPosition": null,
+      },
+    ],
+    "meta": {"totalItems": 7, "currentPage": 2, "totalPages": 2, "limit": 10},
   };
 
   Map<String, dynamic> get mockPersonalMultiplayerResults => {
@@ -254,7 +278,12 @@ class FakeReportRepositoryImpl implements IReportsRepository {
     ReportsFilterParams params,
   ) async {
     try {
-      final Map<String, dynamic> responseBody = mockFindMyResults;
+      Map<String, dynamic> responseBody;
+      if (params.page == 1) {
+        responseBody = mockFindMyResults;
+      } else {
+        responseBody = mockFindMyResults2;
+      }
       final List<dynamic> data = responseBody['results'];
       List<Results> resultsList = [];
       for (var item in data) {
@@ -492,23 +521,26 @@ void main(List<String> args) {
   //       print('Error: $error');
   //     });
 
-  repo.getGeneralReport('b1b2c3d4-e89b-12d3-a456-426614174002').then((report) {
-    print('General Report for Session ID: ${report.sessionId}');
-    print('Title: ${report.title}');
-    print('Execution Date: ${report.executionDate}');
-    print('Player Ranking:');
-    for (var player in report.playerRanking) {
-      print(
-        '  Position: ${player.position}, Username: ${player.username}, Score: ${player.score}, Correct Answers: ${player.correctAnswers}',
-      );
-    }
-    print('Question Analysis:');
-    for (var question in report.questionAnalysis) {
-      print(
-        '  Question ${question.questionIndex + 1}: ${question.questionText}, Correct Percentage: ${question.correctPercentage * 100}%',
-      );
-    }
-  }).catchError((error) {
-    print('Error: $error');
-  });
+  repo
+      .getGeneralReport('b1b2c3d4-e89b-12d3-a456-426614174002')
+      .then((report) {
+        print('General Report for Session ID: ${report.sessionId}');
+        print('Title: ${report.title}');
+        print('Execution Date: ${report.executionDate}');
+        print('Player Ranking:');
+        for (var player in report.playerRanking) {
+          print(
+            '  Position: ${player.position}, Username: ${player.username}, Score: ${player.score}, Correct Answers: ${player.correctAnswers}',
+          );
+        }
+        print('Question Analysis:');
+        for (var question in report.questionAnalysis) {
+          print(
+            '  Question ${question.questionIndex + 1}: ${question.questionText}, Correct Percentage: ${question.correctPercentage * 100}%',
+          );
+        }
+      })
+      .catchError((error) {
+        print('Error: $error');
+      });
 }
