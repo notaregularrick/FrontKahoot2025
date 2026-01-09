@@ -39,8 +39,6 @@ class _PlayerReportsScreenState extends ConsumerState<PlayerReportsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
           children: [
-            const SizedBox(height: 10),
-
             //Resultados
             Expanded(
               child: reportsAsync.when(
@@ -105,10 +103,10 @@ class _PlayerReportsScreenState extends ConsumerState<PlayerReportsScreen> {
                     children: [
                       Expanded(
                         child: ListView.separated(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(12),
                           itemCount: results.length,
                           separatorBuilder: (context, index) =>
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 2),
                           itemBuilder: (context, index) {
                             return ReportCardWidget(
                               result: results[index],

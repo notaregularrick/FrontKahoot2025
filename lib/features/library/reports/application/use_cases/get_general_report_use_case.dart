@@ -7,6 +7,8 @@ class GetGeneralReportUseCase {
   GetGeneralReportUseCase(this.repository);
   //falta obtener la url de la imagen y mostrarla
   Future<Report> execute(String sessionId){
-    return repository.getGeneralReport(sessionId);
+    final report = repository.getGeneralReport(sessionId);
+    report.then((value) => value.orderRanking());
+    return report;
   }
 }

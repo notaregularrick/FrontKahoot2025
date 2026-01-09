@@ -248,8 +248,58 @@ class FakeReportRepositoryImpl implements IReportsRepository {
         "score": 2100,
         "correctAnswers": 1,
       },
+      {
+        "position": 1,
+        "username": "TuUsuario",
+        "score": 12500,
+        "correctAnswers": 4,
+      },
+      {
+        "position": 2,
+        "username": "AnaGamer",
+        "score": 11200,
+        "correctAnswers": 4,
+      },
+      {
+        "position": 3,
+        "username": "CarlosPro",
+        "score": 9800,
+        "correctAnswers": 3,
+      },
+      {
+        "position": 4,
+        "username": "Luisa123",
+        "score": 5400,
+        "correctAnswers": 2,
+      },
+      {
+        "position": 5,
+        "username": "Invitado_99",
+        "score": 2100,
+        "correctAnswers": 1,
+      },
     ],
     "questionAnalysis": [
+      {
+        "questionIndex": 0,
+        "questionText": "¿Cuál es la capital de Francia?",
+        "correctPercentage": 0.95,
+      },
+      {
+        "questionIndex": 1,
+        "questionText": "¿Cuál es la capital de Alemania?",
+        "correctPercentage": 0.75,
+      },
+      {
+        "questionIndex": 2,
+        "questionText": "Selecciona la bandera de Italia",
+        "correctPercentage": 0.88,
+      },
+      {
+        "questionIndex": 3,
+        "questionText": "¿Cuál es la capital de España?",
+        "correctPercentage": 0.92,
+      },
       {
         "questionIndex": 0,
         "questionText": "¿Cuál es la capital de Francia?",

@@ -18,4 +18,9 @@ class Report {
     required this.playerRanking,
     required this.questionAnalysis,
   });
+
+  void orderRanking() {
+    if (playerRanking.isEmpty) return;
+    playerRanking.sort((a, b) => a.position.compareTo(b.position));
+  }
 }
