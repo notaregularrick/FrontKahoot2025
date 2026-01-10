@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/core/navigation/navbar.dart';
+import 'package:frontkahoot2526/core/presentation/change_backend_screen.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/game_orchestrator.dart';
 // import 'package:frontkahoot2526/features/auth/games/multiplayer/presentation/screens/game_orchestrator.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/join_game.dart';
@@ -22,6 +23,10 @@ import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/crea
 import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/from_scratch_screen.dart';
 import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/quiz_metadata_screen.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/library_screen.dart';
+import 'package:frontkahoot2526/features/library/reports/domain/game_type.dart';
+import 'package:frontkahoot2526/features/library/reports/presentation/screens/personal_results_secreen.dart';
+import 'package:frontkahoot2526/features/library/reports/presentation/screens/reports_screen.dart';
+import 'package:frontkahoot2526/features/library/reports/presentation/screens/session_report_screen.dart';
 import 'package:frontkahoot2526/features/explore/presentation/screens/explore_screen.dart';
 import 'package:go_router/go_router.dart';
 
@@ -95,22 +100,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: '/join',
                 builder: (context, state) => const JoinGameScreen(),
               ),
-              ],
+            ],
           ),
           //Branch 2: Create Kahoot
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/create-kahoot',
-                builder: (context, state) => const CreateKahootScreen(), // Pantalla de selección
+                builder: (context, state) =>
+                    const CreateKahootScreen(), // Pantalla de selección
                 routes: [
                   GoRoute(
                     path: 'quiz-metadata',
-                    builder: (context, state) => const QuizMetadataScreen(), // Pantalla de metadata
+                    builder: (context, state) =>
+                        const QuizMetadataScreen(), // Pantalla de metadata
                   ),
                   GoRoute(
                     path: 'from-scratch',
-                    builder: (context, state) => const FromScratchScreen(), // Pantalla de edición
+                    builder: (context, state) =>
+                        const FromScratchScreen(), // Pantalla de edición
                   ),
                 ],
               ),
@@ -120,13 +128,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           // Branch 3: Library-related routes
           StatefulShellBranch(
             routes: [
-             GoRoute(
+              GoRoute(
                 path: '/library',
                 builder: (context, state) => const LibraryHomeScreen(),
                 routes: [
                   GoRoute(
-                    path: 'quices', // Nota: Sin '/' al principio. La ruta final será /library/quices
-                    builder: (context, state) => const LibraryScreen(), // Tu pantalla con los tabs y la lista
+                    path: 'quices',
+                    builder: (context, state) =>
+                        const LibraryScreen(), // Tu pantalla con los tabs y la lista
                   ),
                 ],
               ),
@@ -158,6 +167,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       GoRoute(
+        path: '/reports',
+        builder: (context, state) => const PlayerReportsScreen(),
+      ),
+
+      GoRoute(
+        path: '/reports/sessionReport/:sessionId',
+        builder: (context, state) {
+          final sessionId = state.pathParameters['sessionId']!;
+          return SessionReportScreen(sessionId: sessionId);
+        },
+      ),
+
+      GoRoute(
+        path: '/reports/personalResults/:gameId/:typeName',
+        builder: (context, state) {
+          final gameId = state.pathParameters['gameId']!;
+          final typeName = state.pathParameters['typeName']!;
+          final gameType = typeName == 'multiplayer'
+              ? GameType.multiplayer
+              : GameType.singleplayer;
+          return PersonalResultsScreen(gameId: gameId, gameType: gameType);
+        },
+      ),
+
+      GoRoute(
         path: '/groups/join/:token',
         builder: (context, state) {
           final token = state.pathParameters['token']!;
@@ -170,14 +204,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/game',
         builder: (context, state) => const GameOrchestratorScreen(),
       ),
-      GoRoute(
-        path: '/inicio',
-        builder: (context, state) => const TitlePage(),
-      ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginPage(),
-      ),
+      GoRoute(path: '/inicio', builder: (context, state) => const TitlePage()),
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfilePage(),
@@ -198,8 +226,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/passconfirm',
         builder: (context, state) => const PasswordResetConfirmPage(),
       ),
-      GoRoute(path: '/edit-profile',
-      builder: (context, state) => const EditProfilePage(),
+      GoRoute(
+        path: '/edit-profile',
+        builder: (context, state) => const EditProfilePage(),
+      ),
+      GoRoute(
+        path: '/back-settings',
+        builder: (context, state) => const ChangeBackendScreen(),
       ),
     ],
   );

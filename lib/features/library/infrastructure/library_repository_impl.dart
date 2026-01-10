@@ -5,7 +5,9 @@ import 'package:frontkahoot2526/features/library/domain/library_filter_params.da
 import 'package:frontkahoot2526/features/library/domain/library_quiz.dart';
 import 'package:frontkahoot2526/features/library/domain/library_repository.dart';
 
-class FakeLibraryRepository implements ILibraryRepository {
+class LibraryRepositoryImpl implements ILibraryRepository {
+  final Dio _dio;
+  LibraryRepositoryImpl(this._dio);
   Map<String, dynamic> toQuery(LibraryFilterParams params) {
     Map<String, dynamic> query = {
       'page': params.page,
@@ -16,7 +18,7 @@ class FakeLibraryRepository implements ILibraryRepository {
       'order': params.order,
     };
     if (params.q != null && params.q!.isNotEmpty) {
-      query['search'] = params.q;
+      query['q'] = params.q;
     }
     return query;
   }
@@ -27,10 +29,10 @@ class FakeLibraryRepository implements ILibraryRepository {
     LibraryFilterParams params,
   ) async {
     try {
-      final Dio dio = Dio();
-      Response response = await dio.get(
-        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/my-creations',
+      Response response = await _dio.get(
+        '/library/my-creations',
         queryParameters: toQuery(params),
+        data: {"userId": "8e5c1f34-cd53-4180-8e6d-da2bd5399f62"}//QUITAR
       );
       final Map<String, dynamic> responseBody = response.data;
       final List<dynamic> data = responseBody['data'];
@@ -88,11 +90,13 @@ class FakeLibraryRepository implements ILibraryRepository {
         throw AppException(message: 'Error desconocido', statusCode: 500);
       }
     } catch (e) {
+      print(e);
       throw AppException(
         message: "Ocurrió un error inesperado",
         statusCode: 500,
         error: e.toString(),
       );
+      
     }
   }
 
@@ -102,10 +106,10 @@ class FakeLibraryRepository implements ILibraryRepository {
     LibraryFilterParams params,
   ) async {
     try {
-      final Dio dio = Dio();
-      Response response = await dio.get(
-        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/favorites',
+      Response response = await _dio.get(
+        '/library/favorites',
         queryParameters: toQuery(params),
+        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
       final Map<String, dynamic> responseBody = response.data;
       final List<dynamic> data = responseBody['data'];
@@ -177,10 +181,10 @@ class FakeLibraryRepository implements ILibraryRepository {
     LibraryFilterParams params,
   ) async {
     try {
-      final Dio dio = Dio();
-      Response response = await dio.get(
-        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/in-progress',
+      Response response = await _dio.get(
+        '/library/in-progress',
         queryParameters: toQuery(params),
+        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
       final Map<String, dynamic> responseBody = response.data;
       final List<dynamic> data = responseBody['data'];
@@ -199,8 +203,8 @@ class FakeLibraryRepository implements ILibraryRepository {
         int playCount = (quiz['playCount'] as num?)?.toInt() ?? 0;
         String category = quiz['category'] as String;
         String status = quiz['status'] as String;
-        String gameId = quiz['gameId'] as String;
-        String gameType = quiz['gameType'] as String;
+        String? gameId = quiz['gameId'] as String?;
+        String? gameType = quiz['gameType'] as String?;
 
         LibraryQuiz newQuiz = LibraryQuiz(
           id: id,
@@ -256,10 +260,10 @@ class FakeLibraryRepository implements ILibraryRepository {
     LibraryFilterParams params,
   ) async {
     try {
-      final Dio dio = Dio();
-      Response response = await dio.get(
-        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/completed',
+      Response response = await _dio.get(
+        '/library/completed',
         queryParameters: toQuery(params),
+        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
       final Map<String, dynamic> responseBody = response.data;
       final List<dynamic> data = responseBody['data'];
@@ -278,8 +282,8 @@ class FakeLibraryRepository implements ILibraryRepository {
         int playCount = (quiz['playCount'] as num?)?.toInt() ?? 0;
         String category = quiz['category'] as String;
         String status = quiz['status'] as String;
-        String gameId = quiz['gameId'] as String;
-        String gameType = quiz['gameType'] as String;
+        String? gameId = quiz['gameId'] as String?;
+        String? gameType = quiz['gameType'] as String?;
 
         LibraryQuiz newQuiz = LibraryQuiz(
           id: id,
@@ -334,7 +338,8 @@ class FakeLibraryRepository implements ILibraryRepository {
     try {
       final Dio dio = Dio();
       await dio.post(
-        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/favorites/$quizId',
+        '/library/favorites/$quizId',
+        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
     } on DioException catch (e) {
       print(e);
@@ -362,7 +367,8 @@ class FakeLibraryRepository implements ILibraryRepository {
     try {
       final Dio dio = Dio();
       await dio.delete(
-        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/favorites/$quizId',
+        '/library/favorites/$quizId',
+        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
     } on DioException catch (e) {
       if (e.response != null) {
