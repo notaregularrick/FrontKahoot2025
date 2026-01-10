@@ -22,7 +22,7 @@ extension BackendTypeExtension on BackendType {
     //modificar según las de los equipos
     switch (this) {
       case BackendType.back1:
-        return "https://zany-phylys-backcomun-57c1dfd0.koyeb.app/";
+        return "https://zany-phylys-backcomun-57c1dfd0.koyeb.app/api";
       case BackendType.back2:
         return "https://quizzy-backend-0wh2.onrender.com/api";
     }
@@ -32,7 +32,7 @@ extension BackendTypeExtension on BackendType {
 class BackendNotifier extends Notifier<BackendType> {
   @override
   BackendType build() {
-    return BackendType.back1; // Valor por defecto inicial
+    return BackendType.back2; // Valor por defecto inicial
   }
 
   // Función para cambiar la URL desde la UI

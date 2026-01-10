@@ -16,6 +16,7 @@ class MockGroupsRepository implements GroupsRepository {
   final Map<String, List<Member>> _members = {};
   final Map<String, List<AssignedQuiz>> _assigned = {};
   final Map<String, String> _inviteTokens = {}; // token -> groupId
+  final List<SimpleQuiz> _myCreations = List.generate(6, (i) => SimpleQuiz(id: 'q$i', title: 'Quiz $i'));
 
   @override
   Future<GroupSummary> createGroup({required String name, String? description}) async {
@@ -67,6 +68,18 @@ class MockGroupsRepository implements GroupsRepository {
   }
 
   @override
+  Future<List<RankingEntry>> fetchQuizLeaderboard(String groupId, String quizId) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return List.generate(5, (i) => RankingEntry(
+      userId: 'u$i',
+      userName: 'Usuario $i',
+      completedCount: 1 + (i % 2),
+      totalScore: 80 - i * 8,
+      position: i + 1,
+    ));
+  }
+
+  @override
   Future<void> inviteMember(String groupId, String email, String role) async {
     await Future.delayed(const Duration(milliseconds: 300));
     final memberId = '${groupId}_u${DateTime.now().millisecondsSinceEpoch}';
@@ -114,11 +127,10 @@ class MockGroupsRepository implements GroupsRepository {
   }
 
   @override
-  Future<String> generateInviteLink(String groupId, {String role = 'student'}) async {
+  Future<String> generateInviteLink(String groupId, {required String expiresIn}) async {
     await Future.delayed(const Duration(milliseconds: 200));
-    final token = 'inv_${DateTime.now().millisecondsSinceEpoch}';
+    final token = 'inv_${DateTime.now().millisecondsSinceEpoch}_$expiresIn';
     _inviteTokens[token] = groupId;
-    // return a fake deep link (your production app should provide a real URL)
     return 'frontkahoot://groups/join/$token';
   }
 
@@ -155,10 +167,10 @@ class MockGroupsRepository implements GroupsRepository {
   }
 
   @override
-  Future<void> assignQuiz(String groupId, String quizId) async {
+  Future<void> assignQuiz(String groupId, String quizId, {String? availableFrom, String? availableUntil}) async {
     await Future.delayed(const Duration(milliseconds: 300));
     final list = _assigned.putIfAbsent(groupId, () => []);
-    final assigned = AssignedQuiz(id: quizId, title: 'Quiz $quizId', description: 'Asignado $quizId', author: 'Autor', status: 'published', assignedAt: DateTime.now());
+    final assigned = AssignedQuiz(id: quizId, quizId: quizId, title: 'Quiz $quizId', description: 'Asignado $quizId', author: 'Autor', status: 'published', assignedAt: DateTime.now());
     list.insert(0, assigned);
     final idx = _groups.indexWhere((g) => g.id == groupId);
     if (idx >= 0) {
@@ -166,6 +178,11 @@ class MockGroupsRepository implements GroupsRepository {
       _groups[idx] = GroupSummary(id: g.id, name: g.name, description: g.description, createdAt: g.createdAt, memberCount: g.memberCount, role: g.role, assignedQuizzesCount: g.assignedQuizzesCount + 1);
     }
     return;
+  }
+  @override
+  Future<List<SimpleQuiz>> fetchMyCreations() async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    return List<SimpleQuiz>.from(_myCreations);
   }
 
   @override

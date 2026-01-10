@@ -22,6 +22,10 @@ class AuthDatasourceImpl implements AuthDatasource{
       },
     );
 
+    // Debug log del cuerpo
+    // ignore: avoid_print
+    print('[auth/datasource/login] status=${response.statusCode} body=${response.data}');
+
     return AuthResponseModel.fromJson(response.data);
   }
 
