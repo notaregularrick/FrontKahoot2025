@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../domain/entities/quiz_entity.dart'; // Importa la entidad
+import '../../domain/entities/quiz_entity.dart';
 import '../../application/controllers/quiz_detail_notifier.dart';
 import '../providers/quiz_providers.dart';
 
 class QuizDetailScreen extends ConsumerWidget {
   final String quizId;
-  final QuizEntity? quizSummary; // Recibimos el objeto opcional
+  final QuizEntity? quizSummary;
 
   const QuizDetailScreen({
     super.key, 
@@ -17,10 +17,7 @@ class QuizDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Construimos los parámetros para el provider
     final params = QuizDetailFamilyParams(id: quizId, quiz: quizSummary);
-    
-    // Escuchamos el provider
     final state = ref.watch(quizDetailProvider(params));
 
     final theme = Theme.of(context);

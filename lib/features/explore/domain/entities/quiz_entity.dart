@@ -4,12 +4,12 @@ class QuizEntity {
   final String description;
   final String themeId;
   final String categoryName;
-  final String coverImageUrl; // coverImageId en el JSON
+  final String coverImageUrl;
   final int playCount;
   final String authorName;
   final String authorId;
   final DateTime createdAt;
-  final String status; // 'published' | 'draft'
+  final String status;
 
   const QuizEntity({
     required this.id,

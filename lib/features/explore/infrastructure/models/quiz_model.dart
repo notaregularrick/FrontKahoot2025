@@ -34,7 +34,7 @@ class QuizModel extends QuizEntity {
       createdAt: json['createdAt'] != null 
           ? DateTime.tryParse(json['createdAt']) ?? DateTime.now() 
           : DateTime.now(),
-      status: json['Status'] ?? 'draft', // Nota: Tu JSON tenía "Status" con mayúscula
+      status: json['Status'] ?? 'draft',
     );
   }
 }

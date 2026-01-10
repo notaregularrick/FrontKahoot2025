@@ -7,6 +7,7 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
 
   ExploreNotifier(this.repository) : super(ExploreState.initial());
 
+  //Carga de Datos Paralela
   Future<void> loadInitialData() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     await Future.wait([
@@ -43,7 +44,7 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
       if (setGlobalLoading && !isLoadMore) {
         state = state.copyWith(isLoading: true, errorMessage: null);
       }
-
+      //Pagina Inf
       final pageToLoad = isLoadMore ? state.currentPage + 1 : 1;
 
       final result = await repository.getQuizzes(

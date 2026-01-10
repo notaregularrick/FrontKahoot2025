@@ -5,12 +5,12 @@ abstract class ExploreRepository {
   
   // H6.1: Búsqueda y Filtrado
   Future<PaginatedQuizzesEntity> getQuizzes({
-    String? searchQuery,        // 'q' en el API: Texto a buscar
-    List<String>? categories,   // 'categories' en el API: Filtro por tema
-    int limit = 20,             // Cantidad por página
-    int page = 1,               // Página actual
-    String? orderBy,            // Campo de ordenamiento (ej: 'createdAt')
-    String? order,              // Dirección ('asc' o 'desc')
+    String? searchQuery,        
+    List<String>? categories,   
+    int limit = 20,             
+    int page = 1,               
+    String? orderBy,            
+    String? order,              
   });
 
   // H6.2: Quices Destacados

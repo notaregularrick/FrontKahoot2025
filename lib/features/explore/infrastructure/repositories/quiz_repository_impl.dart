@@ -8,9 +8,7 @@ class QuizRepositoryImpl implements QuizRepository {
 
   @override
   Future<QuizEntity> getQuizDetail(String id) async {
-    // Aquí obtenemos el MODELO
     final model = await datasource.getQuizDetail(id);
-    // Aquí devolvemos la ENTIDAD (Polimorfismo: QuizModel "es un" QuizEntity)
     return model; 
   }
 }

@@ -21,9 +21,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(exploreNotifierProvider.notifier).loadInitialData();
+      ref.read(exploreNotifierProvider.notifier).loadInitialData(); //Carga en paralelo
     });
-    _scrollController.addListener(_onScroll);
+    _scrollController.addListener(_onScroll); //Paginacion Infinita
   }
 
   @override
@@ -34,12 +34,13 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
     super.dispose();
   }
 
+  //Paginacion inf
   void _onScroll() {
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
       ref.read(exploreNotifierProvider.notifier).loadQuizzes(isLoadMore: true);
     }
   }
-
+  //Debounce
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -113,7 +114,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                     onSelected: (bool selected) {
                       notifier.onCategorySelected(category.id);
                     },
-                    // CORRECCIÓN: Usamos withValues en lugar de withOpacity
                     selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                     checkmarkColor: Theme.of(context).primaryColor,
                   );
@@ -145,7 +145,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                     : RefreshIndicator(
                         onRefresh: notifier.refresh,
                         child: ListView(
-                          controller: _scrollController,
+                          controller: _scrollController, //Paginacion Infinita
                           padding: const EdgeInsets.only(bottom: 20),
                           children: [
                             

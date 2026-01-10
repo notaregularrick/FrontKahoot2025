@@ -8,8 +8,8 @@ final mockQuiz1 = QuizModel(
   categoryName: 'Technology',
   coverImageUrl: 'https://cdn-images-1.medium.com/max/1200/1*5-aoK8IBmXve5whBQM90GA.png',
   playCount: 9999,
-  authorName: 'Gemini AI',
-  authorId: 'ai-bot',
+  authorName: 'Joanes Klimt',
+  authorId: 'joank2',
   createdAt: DateTime.now(),
   status: 'published',
 );
