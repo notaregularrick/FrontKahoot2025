@@ -70,12 +70,10 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
 
   /// Convierte entidad Quiz a JSON camelCase 
   Map<String, dynamic> _quizToJson(Quiz quiz) {
-    // Helper para convertir mediaId a URL completa
-    String? _mediaIdToUrl(String? mediaId) {
-      if (mediaId == null || mediaId.isEmpty) return null;
-      final baseUrl = _dio.options.baseUrl;
-      final baseUrlNormalized = baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
-      return '${baseUrlNormalized}media/$mediaId';
+    // Helper para pasar URL o null si está vacío
+    String? _urlOrNull(String? url) {
+      if (url == null || url.isEmpty) return null;
+      return url; // Pasar la URL directamente sin transformar
     }
 
     // Mapear tipo de pregunta: "quiz" -> "single", "true_false" -> "true_false"
@@ -128,9 +126,9 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
           answersJson = question.answers.map((answer) {
             final answerJson = <String, dynamic>{};
             
-            // Si tiene mediaId, text debe ser null
+            // Si tiene mediaId (URL), text debe ser null
             if (answer.mediaId != null && answer.mediaId!.isNotEmpty) {
-              answerJson['mediaId'] = _mediaIdToUrl(answer.mediaId);
+              answerJson['mediaId'] = _urlOrNull(answer.mediaId);
               answerJson['text'] = null;
             } else if (answer.text != null && answer.text!.isNotEmpty) {
               answerJson['text'] = answer.text;
@@ -159,7 +157,7 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
 
         // Campos opcionales: null si están vacíos o no existen
         questionJson['text'] = (question.text.isEmpty) ? null : question.text;
-        questionJson['mediaId'] = _mediaIdToUrl(question.mediaId);
+        questionJson['mediaId'] = _urlOrNull(question.mediaId);
         questionJson['points'] = question.points; // Puede ser null según especificación
         questionJson['answers'] = answersJson;
 
@@ -178,8 +176,8 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
     json['title'] = (quiz.title.isEmpty) ? null : quiz.title;
     json['description'] = (quiz.description.isEmpty) ? null : quiz.description;
     
-    // coverImageId debe ser una URL completa según la especificación
-    json['coverImageId'] = _mediaIdToUrl(quiz.coverImageId);
+    // coverImageId: URL completa o null (se pasa directamente)
+    json['coverImageId'] = _urlOrNull(quiz.coverImageId);
     
     json['category'] = (quiz.category.isEmpty) ? null : quiz.category;
     json['questions'] = questionsJson;

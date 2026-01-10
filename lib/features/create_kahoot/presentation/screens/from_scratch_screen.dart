@@ -63,12 +63,31 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
   String quizCategory = 'Estudio';
   String quizVisibility = 'private';
   String? quizCoverImageId;
+  String? _defaultThemeId;
 
   @override
   void initState() {
     super.initState();
     // Inicializar con la primera pregunta
     _addNewQuestion();
+    // Cargar themeId del backend
+    _loadDefaultTheme();
+  }
+
+  Future<void> _loadDefaultTheme() async {
+    try {
+      final mediaService = ref.read(mediaServiceProvider);
+      final themes = await mediaService.getThemes();
+      if (themes.isNotEmpty && mounted) {
+        setState(() {
+          _defaultThemeId = themes.first.assetId;
+        });
+        print('[FROM SCRATCH] Theme cargado: $_defaultThemeId');
+      }
+    } catch (e) {
+      print('[FROM SCRATCH] Error al cargar themes: $e');
+      // Si falla, continuamos sin theme - el usuario verá un error al crear
+    }
   }
 
   @override
@@ -359,6 +378,16 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
   QuestionData get currentQuestion => questions[currentQuestionIndex];
 
   Future<void> _createQuiz() async {
+    // Validar que se haya cargado el themeId
+    if (_defaultThemeId == null || _defaultThemeId!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: No se pudo cargar el tema. Intenta de nuevo.')),
+      );
+      // Intentar cargar el theme de nuevo
+      await _loadDefaultTheme();
+      return;
+    }
+
     // Validar que haya al menos una pregunta con texto
     final validQuestions = questions.where((q) => q.text.trim().isNotEmpty).toList();
     if (validQuestions.isEmpty) {
@@ -428,9 +457,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       visibility: quizVisibility,
       status: 'draft',
       category: quizCategory,
-      themeId: 'default-theme-id', 
-      authorId: 'default-author-id', 
-      authorName: 'Usuario', 
+      themeId: _defaultThemeId ?? '', 
+      authorId: '', // Será asignado por el backend
+      authorName: '', // Será asignado por el backend 
       questions: questionEntities,
       createdAt: DateTime.now(),
       playCount: 0,
@@ -663,7 +692,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: Image.network(
-                        ref.read(mediaServiceProvider).getMediaUrl(quizCoverImageId!),
+                        quizCoverImageId!,
                         fit: BoxFit.cover,
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
@@ -888,7 +917,6 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       currentQ.answers.add(tempAnswer);
     }
     final answer = currentQ.answers[index];
-    final mediaService = ref.read(mediaServiceProvider);
     
     return Stack(
       children: [
@@ -909,7 +937,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
             borderRadius: BorderRadius.circular(12),
             child: hasImage && currentQ.type != 'true_false'
                 ? Image.network(
-                    mediaService.getMediaUrl(answer.mediaId!),
+                    answer.mediaId!,
                     fit: BoxFit.cover,
                     width: double.infinity,
                     height: double.infinity,
@@ -1100,7 +1128,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: Image.network(
-                        ref.read(mediaServiceProvider).getMediaUrl(currentMediaId!),
+                        currentMediaId!,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
@@ -1277,7 +1305,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         if (mounted) {
           Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
           setState(() {
-            quizCoverImageId = media.id;
+            quizCoverImageId = media.url;
           });
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Imagen de portada subida exitosamente')),
@@ -1286,15 +1314,17 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       } catch (e) {
         if (mounted) {
           Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
+          final errorMessage = e is AppException ? e.message : e.toString();
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error al subir imagen: ${e.toString()}')),
+            SnackBar(content: Text('Error al subir imagen: $errorMessage')),
           );
         }
       }
     } catch (e) {
       if (mounted) {
+        final errorMessage = e is AppException ? e.message : e.toString();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al seleccionar imagen: ${e.toString()}')),
+          SnackBar(content: Text('Error al seleccionar imagen: $errorMessage')),
         );
       }
     }
@@ -1329,11 +1359,11 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
           Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
           // Actualizar estado del diálogo
           setDialogState(() {
-            currentMediaId = media.id;
+            currentMediaId = media.url;
           });
           // Actualizar estado del widget principal para forzar reconstrucción
           setState(() {
-            currentMediaId = media.id;
+            currentMediaId = media.url;
           });
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Imagen subida exitosamente')),
@@ -1342,15 +1372,17 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       } catch (e) {
         if (mounted) {
           Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
+          final errorMessage = e is AppException ? e.message : e.toString();
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error al subir imagen: ${e.toString()}')),
+            SnackBar(content: Text('Error al subir imagen: $errorMessage')),
           );
         }
       }
     } catch (e) {
       if (mounted) {
+        final errorMessage = e is AppException ? e.message : e.toString();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al seleccionar imagen: ${e.toString()}')),
+          SnackBar(content: Text('Error al seleccionar imagen: $errorMessage')),
         );
       }
     }
