@@ -3,7 +3,7 @@ import 'answer.dart';
 class Question {
   final String id;
   final String text;
-  final String type; // 'quiz' | 'true_false'
+  final String type; // 'quiz' (single) | 'multiple' | 'true_false'
   final int timeLimit;
   final int points;
   final String? mediaId;
