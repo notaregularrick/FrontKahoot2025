@@ -9,18 +9,14 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
 
   Future<void> loadInitialData() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
-    
-    // Ejecutamos las 3 peticiones en paralelo
     await Future.wait([
       loadFeaturedQuizzes(),
-      loadCategories(), // NUEVO
+      loadCategories(),
       loadQuizzes(isLoadMore: false, setGlobalLoading: false),
     ]);
-    
     state = state.copyWith(isLoading: false);
   }
 
-  // NUEVO: Cargar Categorías
   Future<void> loadCategories() async {
     try {
       final categories = await repository.getCategories();
@@ -82,13 +78,17 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
     loadQuizzes(isLoadMore: false);
   }
 
-  // Selección de categoría actualizada
   void onCategorySelected(String? categoryId) {
-    // Si seleccionas la misma que ya estaba, la deseleccionas (toggle)
     final newCategory = state.selectedCategory == categoryId ? null : categoryId;
 
     if (state.selectedCategory == newCategory) return;
-    state = state.copyWith(selectedCategory: newCategory);
+
+    
+    state = state.copyWith(
+      selectedCategory: newCategory,
+      clearSelectedCategory: newCategory == null,
+    );
+    
     loadQuizzes(isLoadMore: false);
   }
   

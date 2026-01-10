@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
 import '../models/category_model.dart';
+import '../models/pagination_model.dart';
 import 'explore_datasource.dart';
 import '../models/paginated_quizzes_model.dart';
+import 'mock_data.dart';
 
 class ExploreDatasourceImpl implements ExploreDatasource {
-  // Inyectamos Dio para realizar las peticiones
+  
   final Dio dio;
 
   ExploreDatasourceImpl(this.dio);
@@ -19,8 +21,6 @@ class ExploreDatasourceImpl implements ExploreDatasource {
     String? order,
   }) async {
     try {
-      // 1. Construimos el mapa de parámetros dinámicamente
-      // Solo agregamos al mapa los valores que no sean nulos
       final Map<String, dynamic> queryParams = {
         'limit': limit,
         'page': page,
@@ -30,7 +30,6 @@ class ExploreDatasourceImpl implements ExploreDatasource {
         queryParams['q'] = searchQuery;
       }
 
-      // Dio maneja listas en query params automáticamente (ej: categories[]=math&categories[]=science)
       if (categories != null && categories.isNotEmpty) {
         queryParams['categories'] = categories;
       }
@@ -43,17 +42,14 @@ class ExploreDatasourceImpl implements ExploreDatasource {
         queryParams['order'] = order;
       }
 
-      // 2. Hacemos la petición GET
       final response = await dio.get(
         '/explore',
         queryParameters: queryParams,
       );
 
-      // 3. Convertimos el JSON crudo en nuestro Modelo PaginatedQuizzesModel
       return PaginatedQuizzesModel.fromJson(response.data);
       
     } catch (e) {
-      // Aquí podrías capturar DioException para errores más específicos (404, 500)
       throw Exception('Error en ExploreDatasource: $e');
     }
   }
@@ -61,14 +57,33 @@ class ExploreDatasourceImpl implements ExploreDatasource {
   @override
   Future<PaginatedQuizzesModel> getFeaturedQuizzes({int limit = 10}) async {
     try {
+      
       final response = await dio.get(
         '/explore/featured',
         queryParameters: {'limit': limit},
       );
       
-      return PaginatedQuizzesModel.fromJson(response.data);
+      final apiData = PaginatedQuizzesModel.fromJson(response.data);
+
+      
+      final combinedQuizzes = [
+        mockQuiz1, 
+        mockQuiz2, 
+        ...apiData.quizzes 
+      ];
+
+      
+      return PaginatedQuizzesModel(
+        quizzes: combinedQuizzes,
+        pagination: apiData.pagination, 
+      );
+
     } catch (e) {
-      throw Exception('Error en getFeaturedQuizzes: $e');
+      print("Error en backend, mostrando solo mocks: $e");
+      return PaginatedQuizzesModel(
+        quizzes: [mockQuiz1, mockQuiz2],
+        pagination: PaginationModel(page: 1, limit: 10, totalCount: 2, totalPages: 1),
+      );
     }
   }
 
@@ -76,8 +91,7 @@ class ExploreDatasourceImpl implements ExploreDatasource {
   Future<List<CategoryModel>> getCategories() async {
     try {
       final response = await dio.get('/explore/categories');
-      
-      // La respuesta es una lista directa: [ {name: "A"}, {name: "B"} ]
+
       final List<dynamic> data = response.data as List<dynamic>;
       
       return data

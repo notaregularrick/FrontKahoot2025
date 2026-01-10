@@ -28,9 +28,11 @@ import 'package:frontkahoot2526/features/library/reports/presentation/screens/pe
 import 'package:frontkahoot2526/features/library/reports/presentation/screens/reports_screen.dart';
 import 'package:frontkahoot2526/features/library/reports/presentation/screens/session_report_screen.dart';
 import 'package:frontkahoot2526/features/explore/presentation/screens/explore_screen.dart';
+import 'package:frontkahoot2526/features/explore/presentation/screens/quiz_detail_screen.dart';
 import 'package:go_router/go_router.dart';
 
 //import '../../features/auth/presentation/providers/auth_providers.dart';
+import '../../features/explore/domain/entities/quiz_entity.dart';
 import 'inicio.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -76,20 +78,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return ScaffoldWithNavBar(navigationShell: navigationShell);
         },
         branches: [
-          // Branch 0: Home placeholder (inline, no separate file)
+          // Branch 0: Explore
           StatefulShellBranch(
                 routes: [
                 GoRoute(path: '/home',
                 builder: (context, state) => const ExploreScreen(),
-                routes: [
-                  GoRoute(path: 'quiz/:quizId',
-                    builder: (context, state) {
-                    final quizId = state.pathParameters['quizId'];
-                    // Retorna tu pantalla de detalle, ej: QuizDetailScreen(id: quizId)
-                    return Scaffold(body: Center(child: Text("Detalle del Quiz: $quizId"))); 
-                    },
-                  ),
-                ]
                 ),
               ],
           ),
@@ -145,6 +138,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       // Singleplayer full-screen route (hide navbar when playing)
+      GoRoute(
+        path: '/quiz/:quizId',
+        builder: (context, state) {
+          final quizId = state.pathParameters['quizId'] ?? 'no-id';
+          final quiz = state.extra as QuizEntity?;
+          return QuizDetailScreen(
+            quizId: quizId,
+            quizSummary: quiz
+          );
+        },
+      ),
+      
       GoRoute(
         path: '/library/singleplayer/:kahootId',
         builder: (context, state) {
@@ -235,5 +240,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ChangeBackendScreen(),
       ),
     ],
+
+    // Manejo de Error: Si algo falla, volver a Home
+    errorBuilder: (context, state) => Scaffold(
+      appBar: AppBar(title: const Text('Error de Navegación')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('No se encontró la ruta.'),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => context.go('/home'),
+              child: const Text('Ir al Inicio'),
+            ),
+          ],
+        ),
+      ),
+    ),
   );
 });

@@ -172,6 +172,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                                         padding: const EdgeInsets.only(right: 12.0),
                                         child: QuizCard(
                                           quiz: quiz,
+                                          isFeatured: true,
                                           onTap: () => context.push('/quiz/${quiz.id}'),
                                         ),
                                       ),
