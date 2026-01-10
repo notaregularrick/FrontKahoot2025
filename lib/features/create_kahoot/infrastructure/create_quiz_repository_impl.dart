@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:frontkahoot2526/core/domain/entities/answer.dart';
 import 'package:frontkahoot2526/core/domain/entities/question.dart';
@@ -13,14 +14,31 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
   @override
   Future<Quiz> createQuiz(Quiz quiz) async {
     try {
+      print('╔══════════════════════════════════════════════════════════════');
+      print('║ [CREATE QUIZ] Iniciando creación de quiz...');
+      print('╠══════════════════════════════════════════════════════════════');
+      
       // Convertir entidad Quiz a JSON camelCase
       final jsonData = _quizToJson(quiz);
+
+      // Imprimir JSON completo formateado
+      final jsonPretty = const JsonEncoder.withIndent('  ').convert(jsonData);
+      print('║ [CREATE QUIZ] JSON a enviar:');
+      print('║ $jsonPretty');
+      print('╠══════════════════════════════════════════════════════════════');
+      print('║ [CREATE QUIZ] URL base: ${_dio.options.baseUrl}');
+      print('║ [CREATE QUIZ] Endpoint: POST /kahoots');
+      print('╠══════════════════════════════════════════════════════════════');
 
       // Realizar POST request
       final response = await _dio.post(
         '/kahoots',
         data: jsonData,
       );
+
+      print('║ [CREATE QUIZ] Respuesta recibida - Status: ${response.statusCode}');
+      print('║ [CREATE QUIZ] Response data: ${response.data}');
+      print('╚══════════════════════════════════════════════════════════════');
 
       // Validar respuesta
       if (response.statusCode == 201) {
@@ -32,13 +50,21 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
         );
       }
     } on DioException catch (e) {
+      print('║ [CREATE QUIZ] ❌ DioException capturada');
+      print('║ [CREATE QUIZ] Tipo: ${e.type}');
+      print('║ [CREATE QUIZ] Mensaje: ${e.message}');
+      
       if (e.response != null) {
         final statusCode = e.response!.statusCode;
-        String message = 'Error al crear el quiz';
+        final responseData = e.response?.data;
         
-        if (statusCode == 400) {
-          message = 'Datos del quiz inválidos';
-        } else if (statusCode == 401) {
+        print('║ [CREATE QUIZ] Status code: $statusCode');
+        print('║ [CREATE QUIZ] Response data: $responseData');
+        print('╚══════════════════════════════════════════════════════════════');
+        
+        String message = 'Datos del quiz inválidos';
+        
+        if (statusCode == 401) {
           message = 'No autorizado';
         } else if (statusCode == 404) {
           message = 'El recurso no existe o no es accesible';
@@ -50,6 +76,9 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
           error: e.response?.data?.toString(),
         );
       } else {
+        print('║ [CREATE QUIZ] Sin respuesta del servidor');
+        print('╚══════════════════════════════════════════════════════════════');
+        
         throw AppException(
           message: 'Error de conexión al crear el quiz',
           statusCode: 500,
@@ -57,6 +86,10 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
         );
       }
     } catch (e) {
+      print('║ [CREATE QUIZ] ❌ Excepción no manejada: ${e.runtimeType}');
+      print('║ [CREATE QUIZ] Mensaje: $e');
+      print('╚══════════════════════════════════════════════════════════════');
+      
       if (e is AppException) {
         rethrow;
       }
@@ -70,10 +103,10 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
 
   /// Convierte entidad Quiz a JSON camelCase 
   Map<String, dynamic> _quizToJson(Quiz quiz) {
-    // Helper para pasar URL o null si está vacío
-    String? _urlOrNull(String? url) {
-      if (url == null || url.isEmpty) return null;
-      return url; // Pasar la URL directamente sin transformar
+    // Helper para pasar ID o null si está vacío
+    String? _idOrNull(String? id) {
+      if (id == null || id.isEmpty) return null;
+      return id; // Pasar el ID directamente
     }
 
     // Mapear tipo de pregunta: "quiz" -> "single", "multiple" -> "multiple", "true_false" -> "true_false"
@@ -130,7 +163,7 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
             
             // Si tiene mediaId (URL), text debe ser null
             if (answer.mediaId != null && answer.mediaId!.isNotEmpty) {
-              answerJson['mediaId'] = _urlOrNull(answer.mediaId);
+              answerJson['mediaId'] = _idOrNull(answer.mediaId);
               answerJson['text'] = null;
             } else if (answer.text != null && answer.text!.isNotEmpty) {
               answerJson['text'] = answer.text;
@@ -159,7 +192,7 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
 
         // Campos opcionales: null si están vacíos o no existen
         questionJson['text'] = (question.text.isEmpty) ? null : question.text;
-        questionJson['mediaId'] = _urlOrNull(question.mediaId);
+        questionJson['mediaId'] = _idOrNull(question.mediaId);
         questionJson['points'] = question.points; // Puede ser null según especificación
         questionJson['answers'] = answersJson;
 
@@ -179,7 +212,7 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
     json['description'] = (quiz.description.isEmpty) ? null : quiz.description;
     
     // coverImageId: URL completa o null (se pasa directamente)
-    json['coverImageId'] = _urlOrNull(quiz.coverImageId);
+    json['coverImageId'] = _idOrNull(quiz.coverImageId);
     
     json['category'] = (quiz.category.isEmpty) ? null : quiz.category;
     json['questions'] = questionsJson;

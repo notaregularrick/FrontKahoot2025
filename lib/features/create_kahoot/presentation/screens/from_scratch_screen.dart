@@ -62,7 +62,8 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
   String quizDescription = '';
   String quizCategory = 'Estudio';
   String quizVisibility = 'private';
-  String? quizCoverImageId;
+  String? quizCoverImageId; // ID para enviar al backend
+  String? quizCoverImageUrl; // URL para mostrar preview
   String? _defaultThemeId;
 
   @override
@@ -692,7 +693,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
               ],
             ),
             // Mostrar imagen de portada si existe
-            if (quizCoverImageId != null && quizCoverImageId!.isNotEmpty) ...[
+            if (quizCoverImageUrl != null && quizCoverImageUrl!.isNotEmpty) ...[
               const SizedBox(height: 16),
               Stack(
                 children: [
@@ -706,7 +707,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: Image.network(
-                        quizCoverImageId!,
+                        quizCoverImageUrl!,
                         fit: BoxFit.cover,
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
@@ -755,6 +756,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                       onPressed: () {
                         setState(() {
                           quizCoverImageId = null;
+                          quizCoverImageUrl = null;
                         });
                       },
                     ),
@@ -1095,7 +1097,8 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       ),
     );
   }
-  String? currentMediaId;
+  String? currentMediaId; // ID para guardar en la respuesta
+  String? currentMediaUrl; // URL para mostrar preview
   void _showAnswerDialog(BuildContext context, int index, Color color) {
     final currentQ = currentQuestion;
     // Proteger acceso a respuestas
@@ -1131,7 +1134,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Mostrar imagen actual si existe (solo en modo Quiz)
-                if (currentMediaId != null && currentMediaId!.isNotEmpty && currentQ.type != 'true_false') ...[
+                if (currentMediaUrl != null && currentMediaUrl!.isNotEmpty && currentQ.type != 'true_false') ...[
                   Container(
                     height: 150,
                     width: double.infinity,
@@ -1142,7 +1145,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: Image.network(
-                        currentMediaId!,
+                        currentMediaUrl!,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
@@ -1158,6 +1161,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                     onPressed: () {
                       setDialogState(() {
                         currentMediaId = null;
+                        currentMediaUrl = null;
                         answer.mediaId = null;
                       });
                       // Actualizar estado del widget principal
@@ -1319,7 +1323,8 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         if (mounted) {
           Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
           setState(() {
-            quizCoverImageId = media.url;
+            quizCoverImageId = media.assetId; // ID para backend
+            quizCoverImageUrl = media.url; // URL para preview
           });
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Imagen de portada subida exitosamente')),
@@ -1373,11 +1378,13 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
           Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
           // Actualizar estado del diálogo
           setDialogState(() {
-            currentMediaId = media.url;
+            currentMediaId = media.assetId; // ID para backend
+            currentMediaUrl = media.url; // URL para preview
           });
           // Actualizar estado del widget principal para forzar reconstrucción
           setState(() {
-            currentMediaId = media.url;
+            currentMediaId = media.assetId; // ID para backend
+            currentMediaUrl = media.url; // URL para preview
           });
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Imagen subida exitosamente')),
