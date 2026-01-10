@@ -1,9 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/secure_storage_provider.dart';
-// Asegúrate de que este import apunte a donde definiste SecureStorageService
-import '../services/secure_storage_service.dart'; 
-import '../providers/backend_provider.dart'; 
+import '../services/secure_storage_service.dart'; // Verifica esta ruta
+import '../providers/backend_provider.dart'; // <--- IMPORTANTE: Importar el provider del backend
 
 class ApiService {
   final Dio _dio;
@@ -12,42 +11,33 @@ class ApiService {
 
   Dio get dio => _dio;
 
-  // CORRECCIÓN: Recibimos SecureStorageService directamente, NO 'Ref'
+  // Configuración de interceptores (Token)
   void setUpInterceptors(SecureStorageService storage) {
-    _dio.interceptors.clear(); // Limpiamos previos
+    _dio.interceptors.clear();
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        // Usamos la instancia de storage inyectada directamente
-        // Esto evita el error de "ref functions" porque no usamos ref aquí dentro
-        final token = await storage.getToken(); 
-
+        final token = await storage.getToken();
         if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
         }
-
         return handler.next(options);
       },
-      onResponse: (response, handler) {
-        return handler.next(response);
-      },
-      onError: (error, handler) {
-        return handler.next(error);
-      },
+      onResponse: (response, handler) => handler.next(response),
+      onError: (error, handler) => handler.next(error),
     ));
 
-    // Log para depuración
+    // Log para ver qué URL está usando realmente en la consola
     _dio.interceptors.add(LogInterceptor(
       request: true,
-      requestBody: true,
-      responseBody: true,
+      requestHeader: false,
+      responseHeader: false,
       error: true,
     ));
   }
 
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
     try {
-      final response = await _dio.get(path, queryParameters: queryParameters);
-      return response;
+      return await _dio.get(path, queryParameters: queryParameters);
     } catch (e) {
       rethrow;
     }
@@ -55,23 +45,27 @@ class ApiService {
 
   Future<Response> post(String path, {Map<String, dynamic>? data}) async {
     try {
-      final response = await _dio.post(path, data: data);
-      return response;
+      return await _dio.post(path, data: data);
     } catch (e) {
       rethrow;
     }
   }
 }
 
+// --- EL PROVIDER QUE CONECTA TODO ---
 final apiServiceProvider = Provider<ApiService>((ref) {
-  // 1. Escuchamos cambios en la URL del backend
-  final backendType = ref.watch(backendProvider);
+  // 1. ESCUCHAMOS QUÉ BACKEND ESTÁ SELECCIONADO
+  // Si esto cambia (Back1 -> Back2), este provider se reconstruye con la nueva URL.
+  final backendType = ref.watch(backendProvider); 
   
-  // 2. Leemos el servicio de almacenamiento UNA VEZ durante la construcción
+  // 2. OBTENEMOS EL STORAGE
   final storage = ref.read(secureStorageProvider);
 
+  // 3. CONFIGURAMOS DIO CON LA URL DEL BACKEND SELECCIONADO
+  print("API Service configurado con URL: ${backendType.url}"); // <--- Debug en consola
+
   final options = BaseOptions(
-    baseUrl: backendType.url,
+    baseUrl: backendType.url, // <--- AQUÍ ESTÁ LA MAGIA
     connectTimeout: const Duration(seconds: 10),
     receiveTimeout: const Duration(seconds: 10),
     headers: {
@@ -80,12 +74,11 @@ final apiServiceProvider = Provider<ApiService>((ref) {
     },
   );
 
-  final dio = Dio(options); 
-  
+  final dio = Dio(options);
   final apiService = ApiService(dio);
   
-  // 3. Pasamos el servicio de storage ya resuelto
-  apiService.setUpInterceptors(storage); 
+  // Configuramos interceptores pasando el storage directamente
+  apiService.setUpInterceptors(storage);
 
   return apiService;
 });

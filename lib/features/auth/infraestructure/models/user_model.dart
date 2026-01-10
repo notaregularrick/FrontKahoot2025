@@ -1,50 +1,51 @@
 import '../../domain/entities/user_entity.dart';
 
-class UserModel {
-  final String id;
-  final String name;
-  final String email;
-  final String userType;
-  final DateTime createdAt;
+class UserModel extends UserEntity {
+  final List<String> roles;
 
   UserModel({
-    required this.id,
-    required this.name,
-    required this.email,
-    required this.userType,
-    required this.createdAt,
-  });
+    required super.id,
+    required super.email,
+    required super.name,
+    required this.roles,
+    String userType = 'default', 
+    DateTime? createdAt, 
+  }) : super(
+          userType: userType,
+          createdAt: createdAt ?? DateTime.now(), 
+        );
 
-  UserModel copyWith({
-    String? id,
-    String? name,
-    String? email,
-    String? userType,
-    DateTime? createdAt,
-  }) {
+  factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      email: email ?? this.email,
-      userType: userType ?? this.userType,
-      createdAt: createdAt ?? this.createdAt,
+      id: json['id'] ?? '',
+      email: json['email'] ?? '',
+      name: json['name'] ?? 'Usuario',
+      roles: List<String>.from(json['roles'] ?? ['user']),
+      userType: (json['roles'] as List?)?.contains('admin') == true ? 'admin' : 'default',
+      createdAt: json['createdAt'] != null 
+          ? DateTime.tryParse(json['createdAt'])
+          : null,
     );
   }
 
-  factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-        id: json['id'],
-        name: json['name'],
-        email: json['email'],
-        userType: json['userType'],
-        //createdAt: json['createdAt'],
-        createdAt: DateTime.parse(json['createdAt']),
-      );
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'name': name,
+      'roles': roles,
+      'userType': userType,
+      'createdAt': createdAt.toIso8601String(),
+    };
+  }
 
-  UserEntity toEntity() => UserEntity(
-        id: id,
-        name: name,
-        email: email,
-        userType: userType,
-        createdAt: createdAt,
-      );
+  UserEntity toEntity() {
+    return UserEntity(
+      id: id,
+      email: email,
+      name: name,
+      userType: userType,
+      createdAt: createdAt,
+    );
+  }
 }

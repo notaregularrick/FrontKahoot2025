@@ -12,4 +12,6 @@ abstract class AuthDatasource {
     required String email,
     required String password,
   });
+
+  Future<AuthResponseModel> checkAuthStatus(String token);
 }

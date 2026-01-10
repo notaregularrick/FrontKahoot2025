@@ -24,7 +24,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
   }) async {
-    const simulate = true;
+    /*const simulate = false;
 
     if (simulate) {
       await Future.delayed(const Duration(milliseconds: 800));
@@ -65,7 +65,7 @@ class AuthRepositoryImpl implements AuthRepository {
         userType: newProfile.userType,
         createdAt: newProfile.createdAt,
       ).toEntity();
-    }
+    }*/
 
     final userModel = await datasource.register(
       name: name,
@@ -76,58 +76,48 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<AuthResponseModel> login({
-    required String email,
-    required String password,
-  }) async {
-    const simulate = true;
-    if (simulate) {
-      await Future.delayed(const Duration(milliseconds: 800));
-
-      final prefs = await SharedPreferences.getInstance();
-
-      // 1. VERIFICAMOS SI EXISTE LA CAJA DE ESE EMAIL
-      final userJson = prefs.getString('profile_$email');
-
-      if (userJson == null) {
-        throw Exception("Usuario no encontrado. Regístrate primero.");
-      }
-
-      // 2. SI EXISTE, LO MARCAMOS COMO ACTIVO
-      await prefs.setString('current_active_email', email);
-      await storage.saveToken("fake-token-$email");
-
-      // Reconstruimos el usuario para devolverlo
-      final profileMap = jsonDecode(userJson);
-      final user = UserModel.fromJson(
-        profileMap,
-      ); // Asegúrate que UserModel tenga fromJson o créalo manual
-
-      return AuthResponseModel(user: user, accessToken: "fake-token-$email");
-    }
-
-    // Lógica real...
+  Future<AuthResponseModel> login({required String email, required String password}) async {
+    // 1. Llamada a la API Real
     final response = await datasource.login(email: email, password: password);
+    
+    // 2. Guardar Token y Datos
     await storage.saveToken(response.accessToken);
+    // Opcional: Guardar datos del usuario en SharedPreferences si lo necesitas offline
+    
     return response;
   }
 
   @override
+  Future<AuthResponseModel> checkAuthStatus() async {
+    // 1. Leemos el token guardado
+    final token = await storage.getToken();
+
+    if (token == null) {
+      throw Exception('No hay token guardado');
+    }
+
+    try {
+      // 2. Verificamos con el backend y obtenemos token renovado
+      final response = await datasource.checkAuthStatus(token);
+      
+      // 3. Guardamos el NUEVO token
+      await storage.saveToken(response.accessToken);
+      
+      return response;
+    } catch (e) {
+      // Si falla (token expirado), limpiamos todo
+      await logout();
+      throw Exception('Sesión expirada');
+    }
+  }
+
+  @override
   Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('my_profile_data');
-    //await apiService.post('/auth/logout');
-    await storage.deleteToken(); // Asegurar borrado local
+    await storage.deleteToken();
   }
 
   @override
   Future<void> requestPasswordReset(String email) async {
-    const simulate = true;
-    if (simulate) {
-      await Future.delayed(const Duration(seconds: 1));
-      if (!email.contains('@')) throw Exception("Email inválido");
-      return;
-    }
     // ... tu lógica real (estaba bien) ...
     try {
       await apiService.post(
@@ -144,9 +134,9 @@ class AuthRepositoryImpl implements AuthRepository {
     String resetToken,
     String newPassword,
   ) async {
-    const simulate = true;
+    const simulate = false;
 
-    if (simulate) {
+  /*  if (simulate) {
       // 1. Simular retraso de red (1.5 segundos)
       await Future.delayed(const Duration(milliseconds: 1500));
 
@@ -169,7 +159,7 @@ class AuthRepositoryImpl implements AuthRepository {
         "SIMULACIÓN: Contraseña restablecida exitosamente. Nueva pass: $newPassword",
       );
       return;
-    }
+    }*/
 
     // --- LÓGICA REAL ---
     try {

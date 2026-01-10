@@ -3,11 +3,11 @@ import '../../../../core/services/api_service.dart';
 import '../../application/state/profile_state.dart';
 import '../../infraestructure/datasource/profile_datasource.dart';
 import '../../infraestructure/repositories/profile_repository_impl.dart';
-import '../controllers/profile_notifier.dart';
+import '../../application/controllers/profile_notifier.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepositoryImpl>((ref) {
   // 1. Obtenemos el servicio completo (ApiService)
-  final apiService = ref.read(apiServiceProvider);
+  final apiService = ref.watch(apiServiceProvider);
   
   // 2. Obtenemos Dio del servicio para el Datasource
   final dio = apiService.dio; 
