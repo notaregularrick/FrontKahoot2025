@@ -180,7 +180,8 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                 continue;
               }
               
-              final answerParts = answersList[j].split('|');
+              // Usar ~ como separador entre texto e isCorrect (evita conflicto con | usado en partes de pregunta)
+              final answerParts = answersList[j].split('~');
               if (answerParts.length >= 2) {
                 final answerText = answerParts[0].isEmpty ? null : answerParts[0].trim();
                 final isCorrect = answerParts[1].trim() == 'true';

@@ -204,9 +204,11 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
       if (mounted) {
         print('Convirtiendo preguntas a formato de URL');
         // Convertir las preguntas a formato que pueda usar from_scratch_screen
+        // Formato: pregunta|tipo|tiempo|puntos|texto1~true;texto2~false;texto3~false;texto4~false
+        // Se usa ~ como separador entre texto e isCorrect para evitar conflicto con | usado en las partes de la pregunta
         final questionsParam = quiz.questions.map((q) {
           final answersParam = q.answers.map((a) {
-            return '${a.text ?? ""}|${a.isCorrect}';
+            return '${a.text ?? ""}~${a.isCorrect}';
           }).join(';');
           return '${q.text}|${q.type}|${q.timeLimit}|${q.points}|$answersParam';
         }).join('|||');

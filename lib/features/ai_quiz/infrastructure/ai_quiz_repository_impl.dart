@@ -316,7 +316,7 @@ Genera el quiz ahora:
     String description,
     String category,
   ) {
-    print('Iniciando parsing de respuesta...');
+    print('Iniciando parsing de respuesta');
     
     try {
       // Limpiar la respuesta para extraer solo el JSON
