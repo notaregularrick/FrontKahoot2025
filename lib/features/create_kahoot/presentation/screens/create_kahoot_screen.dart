@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,17 +21,20 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
   bool _isGenerating = false;
 
   Future<void> _showAIPromptDialog() async {
+    print('Inició generación con IA');
     // Verificar si la API key está configurada
     final apiKeyAsync = ref.read(aiApiKeyProvider);
     await apiKeyAsync.when(
       data: (apiKey) async {
         if (apiKey == null || apiKey.isEmpty) {
+          print('API Key no configurada. Mostrando diálogo de configuración');
           // Mostrar diálogo para configurar API key
           if (mounted) {
             _showApiKeyDialog();
           }
           return;
         }
+        print('API Key configurada. Mostrando diálogo de prompt');
         // Continuar con el diálogo de prompt
         if (mounted) {
           final result = await showDialog<Map<String, dynamic>>(
@@ -40,10 +44,13 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
 
           if (result != null && mounted) {
             await _generateQuizWithAI(result);
+          } else {
+            print('Canceló el diálogo de prompt');
           }
         }
       },
       loading: () {
+        print('Verificando estado de API Key');
         // Mostrar loading mientras se verifica la API key
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -54,6 +61,8 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
         }
       },
       error: (error, stack) {
+        print('ERROR al verificar API Key: ${error.toString()}');
+        print('tack trace: $stack');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -160,21 +169,27 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
   }
 
   Future<void> _generateQuizWithAI(Map<String, dynamic> data) async {
+    print('Iniciando generación de quiz con IA');
+    
     setState(() {
       _isGenerating = true;
     });
 
     try {
       // Verificar que el repositorio esté disponible
+      print('Verificando repositorio');
       final repository = ref.read(aiQuizRepositoryProvider);
       if (repository == null) {
+        print('ERROR Repositorio no disponible o API key no configurada');
         throw AppException(
           message: 'API key no configurada. Por favor configura tu API key de Gemini.',
           statusCode: 401,
         );
       }
+      print('Repositorio disponible');
       
       final aiService = AIQuizService(repository);
+      print('Servicio creado, llamando a generateQuiz');
       
       final quiz = await aiService.generateQuiz(
         prompt: data['prompt'] as String,
@@ -184,7 +199,10 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
         numberOfQuestions: data['numberOfQuestions'] as int,
       );
 
+      print('Quiz generado exitosamente');
+      
       if (mounted) {
+        print('Convirtiendo preguntas a formato de URL');
         // Convertir las preguntas a formato que pueda usar from_scratch_screen
         final questionsParam = quiz.questions.map((q) {
           final answersParam = q.answers.map((a) {
@@ -193,17 +211,44 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
           return '${q.text}|${q.type}|${q.timeLimit}|${q.points}|$answersParam';
         }).join('|||');
 
-        context.go(
-          '/create-kahoot/from-scratch?'
-          'title=${Uri.encodeComponent(quiz.title)}&'
-          'description=${Uri.encodeComponent(quiz.description)}&'
-          'category=${Uri.encodeComponent(quiz.category)}&'
+        // Codificar en base64 para evitar problemas con caracteres especiales
+        print('Codificando preguntas en base64...');
+        final questionsBase64 = base64Encode(utf8.encode(questionsParam));
+        print('Codificación base64 completada (${questionsBase64.length} caracteres)');
+
+        // Construir parámetros de URL
+        final encodedTitle = Uri.encodeComponent(quiz.title);
+        final encodedDescription = Uri.encodeComponent(quiz.description);
+        final encodedCategory = Uri.encodeComponent(quiz.category);
+        final encodedQuestions = Uri.encodeComponent(questionsBase64);
+        
+        print('Parámetros de URL a enviar:');
+        print('  - title: "${quiz.title}" (codificado: ${encodedTitle.length} caracteres)');
+        print('  - description: "${quiz.description}" (codificado: ${encodedDescription.length} caracteres)');
+        print('  - category: "${quiz.category}" (codificado: ${encodedCategory.length} caracteres)');
+        print('  - visibility: "${quiz.visibility}"');
+        print('  - ai_generated: true');
+        print('  - questions (base64): ${questionsBase64.length} caracteres (codificado: ${encodedQuestions.length} caracteres)');
+        
+        final url = '/create-kahoot/from-scratch?'
+          'title=$encodedTitle&'
+          'description=$encodedDescription&'
+          'category=$encodedCategory&'
           'visibility=${quiz.visibility}&'
           'ai_generated=true&'
-          'questions=${Uri.encodeComponent(questionsParam)}',
-        );
+          'questions=$encodedQuestions';
+        
+        print('URL completa construida: $url');
+        print('Navegando a pantalla de edición');
+        context.go(url);
+        print('Navegación completada');
       }
     } on AppException catch (e) {
+      print('ERROR: ${e.message}');
+      print('Status Code: ${e.statusCode}');
+      if (e.error != null) {
+        print('Detalles: ${e.error}');
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -213,7 +258,10 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
           ),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('ERROR INESPERADO: ${e.toString()}');
+      print('Tipo de error: ${e.runtimeType}');
+      print('Stack trace: $stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -228,6 +276,7 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
         setState(() {
           _isGenerating = false;
         });
+        print('Proceso de generación finalizado');
       }
     }
   }

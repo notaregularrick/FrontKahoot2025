@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -76,15 +77,36 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     final route = GoRouterState.of(context);
     final uri = route.uri;
     final queryParams = uri.queryParameters;
+    
     if (quizTitle.isEmpty && queryParams.isNotEmpty) {
+      print('Parámetros de URL recibidos:');
+      print('  - title: "${queryParams['title']}" (${queryParams['title']?.length ?? 0} caracteres)');
+      print('  - description: "${queryParams['description']}" (${queryParams['description']?.length ?? 0} caracteres)');
+      print('  - category: "${queryParams['category']}" (${queryParams['category']?.length ?? 0} caracteres)');
+      print('  - visibility: "${queryParams['visibility']}"');
+      print('  - ai_generated: "${queryParams['ai_generated']}"');
+      print('  - questions: ${queryParams['questions']?.length ?? 0} caracteres');
+      if (queryParams['questions'] != null && queryParams['questions']!.length > 0) {
+        final questionsPreview = queryParams['questions']!.substring(0, queryParams['questions']!.length > 100 ? 100 : queryParams['questions']!.length);
+        print('  - questions (preview): $questionsPreview${queryParams['questions']!.length > 100 ? '...' : ''}');
+      }
+      print('URI completa: ${uri.toString()}');
+      
       setState(() {
         quizTitle = Uri.decodeComponent(queryParams['title'] ?? '');
         quizDescription = Uri.decodeComponent(queryParams['description'] ?? '');
         quizCategory = Uri.decodeComponent(queryParams['category'] ?? 'Estudio');
         quizVisibility = queryParams['visibility'] ?? 'private';
         
+        print('Parámetros decodificados:');
+        print('  - title decodificado: "$quizTitle"');
+        print('  - description decodificada: "$quizDescription"');
+        print('  - category decodificada: "$quizCategory"');
+        print('  - visibility: "$quizVisibility"');
+        
         // Si viene de IA, cargar las preguntas generadas
         if (queryParams['ai_generated'] == 'true' && queryParams['questions'] != null) {
+          print('Detectado quiz generado por IA - Cargando preguntas...');
           _loadAIGeneratedQuestions(queryParams['questions']!);
         }
       });
@@ -92,59 +114,195 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
   }
 
   void _loadAIGeneratedQuestions(String questionsParam) {
+    print('[FROM SCRATCH] Cargando preguntas generadas por IA...');
+    print('[FROM SCRATCH] Parámetro questions recibido:');
+    print('[FROM SCRATCH]   - Tamaño: ${questionsParam.length} caracteres');
+    if (questionsParam.length > 0) {
+      final preview = questionsParam.substring(0, questionsParam.length > 150 ? 150 : questionsParam.length);
+      print('[FROM SCRATCH]   - Preview (primeros 150 caracteres): $preview${questionsParam.length > 150 ? '...' : ''}');
+    }
+    
     try {
-      final decodedQuestions = Uri.decodeComponent(questionsParam);
+      print('[FROM SCRATCH] Paso 1: Decodificando parámetro de URL...');
+      final urlDecoded = Uri.decodeComponent(questionsParam);
+      print('[FROM SCRATCH]   - Tamaño después de URL decode: ${urlDecoded.length} caracteres');
+      if (urlDecoded.length > 0) {
+        final urlPreview = urlDecoded.substring(0, urlDecoded.length > 100 ? 100 : urlDecoded.length);
+        print('[FROM SCRATCH]   - Preview URL decoded: $urlPreview${urlDecoded.length > 100 ? '...' : ''}');
+      }
+      
+      print('[FROM SCRATCH] Paso 2: Decodificando desde base64...');
+      final base64Decoded = base64Decode(urlDecoded);
+      print('[FROM SCRATCH]   - Tamaño después de base64 decode: ${base64Decoded.length} bytes');
+      
+      print('[FROM SCRATCH] Paso 3: Convirtiendo bytes a string UTF-8...');
+      final decodedQuestions = utf8.decode(base64Decoded);
+      print('[FROM SCRATCH]   - Tamaño final del string: ${decodedQuestions.length} caracteres');
+      if (decodedQuestions.length > 0) {
+        final finalPreview = decodedQuestions.substring(0, decodedQuestions.length > 200 ? 200 : decodedQuestions.length);
+        print('[FROM SCRATCH]   - Preview final: $finalPreview${decodedQuestions.length > 200 ? '...' : ''}');
+      }
+      
+      print('[FROM SCRATCH] Separando preguntas...');
       final questionsList = decodedQuestions.split('|||');
+      print('[FROM SCRATCH] Preguntas recibidas: ${questionsList.length}');
       
       questions.clear(); // Limpiar preguntas iniciales
+      print('[FROM SCRATCH] Preguntas anteriores limpiadas');
       
       for (int i = 0; i < questionsList.length; i++) {
+        print('[FROM SCRATCH] Procesando pregunta ${i + 1}/${questionsList.length}...');
+        
         final questionParts = questionsList[i].split('|');
+        print('[FROM SCRATCH] Partes encontradas: ${questionParts.length}');
+        
         if (questionParts.length >= 4) {
           final questionText = questionParts[0];
           final questionType = questionParts[1];
           final timeLimit = int.tryParse(questionParts[2]) ?? 20;
           final points = int.tryParse(questionParts[3]) ?? 1000;
           
+          print('[FROM SCRATCH] Texto: "${questionText.substring(0, questionText.length > 30 ? 30 : questionText.length)}${questionText.length > 30 ? '...' : ''}"');
+          print('[FROM SCRATCH] Tipo: $questionType');
+          print('[FROM SCRATCH] Tiempo límite: $timeLimit segundos');
+          print('[FROM SCRATCH] Puntos: $points');
+          
           final answers = <AnswerData>[];
           if (questionParts.length > 4) {
+            print('[FROM SCRATCH] Procesando respuestas...');
             final answersList = questionParts[4].split(';');
+            print('[FROM SCRATCH] Respuestas encontradas: ${answersList.length}');
+            
             for (int j = 0; j < answersList.length; j++) {
+              // Validar que la respuesta no esté vacía
+              if (answersList[j].trim().isEmpty) {
+                print('[FROM SCRATCH] Respuesta $j ignorada (vacía)');
+                continue;
+              }
+              
               final answerParts = answersList[j].split('|');
               if (answerParts.length >= 2) {
+                final answerText = answerParts[0].isEmpty ? null : answerParts[0].trim();
+                final isCorrect = answerParts[1].trim() == 'true';
+                
+                // Validar que la respuesta tenga al menos texto (mediaId se maneja después)
+                // Para true/false, permitir respuestas sin texto ya que se completarán después
+                if (answerText == null || answerText.isEmpty) {
+                  if (questionType != 'true_false') {
+                    print('[FROM SCRATCH] Respuesta $j ignorada (sin texto ni mediaId)');
+                    continue;
+                  }
+                }
+                
+                final answerPreview = answerText != null 
+                    ? answerText.substring(0, answerText.length > 20 ? 20 : answerText.length) + (answerText.length > 20 ? '...' : '')
+                    : 'null';
+                print('[FROM SCRATCH]          Respuesta $j: "$answerPreview" (Correcta: $isCorrect)');
+              
                 answers.add(AnswerData(
                   id: 'answer_${i}_$j',
-                  text: answerParts[0].isEmpty ? null : answerParts[0],
-                  isCorrect: answerParts[1] == 'true',
+                  text: answerText,
+                  isCorrect: isCorrect,
                   mediaId: null,
                 ));
+              } else {
+                print('[FROM SCRATCH] Respuesta $j ignorada (formato inválido - se requieren al menos 2 partes, encontradas: ${answerParts.length})');
               }
+            }
+          } else {
+            print('[FROM SCRATCH] No se encontraron respuestas para esta pregunta');
+          }
+          
+          // Validar y completar respuestas según el tipo de pregunta
+          final requiredAnswers = questionType == 'true_false' ? 2 : 4;
+          final minRequiredAnswers = questionType == 'true_false' ? 2 : 2;
+          
+          print('[FROM SCRATCH] Validando respuestas: ${answers.length} encontradas, ${requiredAnswers} requeridas');
+          
+          // Completar respuestas faltantes
+          while (answers.length < requiredAnswers) {
+            if (questionType == 'true_false') {
+              // Para true/false, agregar "Verdadero" o "Falso"
+              answers.add(AnswerData(
+                id: 'answer_${i}_${answers.length}',
+                text: answers.length == 0 ? 'Verdadero' : 'Falso',
+                isCorrect: false,
+                mediaId: null,
+              ));
+              print('[FROM SCRATCH] Respuesta ${answers.length} agregada automáticamente (true/false)');
+            } else {
+              // Para quiz, agregar respuestas vacías
+              answers.add(AnswerData(
+                id: 'answer_${i}_${answers.length}',
+                text: null,
+                isCorrect: false,
+                mediaId: null,
+              ));
+              print('[FROM SCRATCH] Respuesta ${answers.length} agregada automáticamente (quiz vacía)');
             }
           }
           
-          questions.add(QuestionData(
-            id: 'question_$i',
-            text: questionText,
-            type: questionType,
-            timeLimit: timeLimit,
-            points: points,
-            mediaId: null,
-            answers: answers,
-          ));
+          // Solo agregar la pregunta si tiene al menos el mínimo requerido
+          if (answers.length >= minRequiredAnswers) {
+            questions.add(QuestionData(
+              id: 'question_$i',
+              text: questionText,
+              type: questionType,
+              timeLimit: timeLimit,
+              points: points,
+              mediaId: null,
+              answers: answers,
+            ));
+            
+            print('[FROM SCRATCH] Pregunta ${i + 1} cargada exitosamente (${answers.length} respuestas)');
+          } else {
+            print('[FROM SCRATCH] Pregunta ${i + 1} ignorada (no tiene suficientes respuestas: ${answers.length} < $minRequiredAnswers)');
+          }
+        } else {
+          print('[FROM SCRATCH] Pregunta ${i + 1} ignorada (formato inválido - se requieren al menos 4 partes)');
         }
       }
       
+      print('[FROM SCRATCH] Total preguntas cargadas: ${questions.length}');
+      
       if (questions.isNotEmpty) {
         currentQuestionIndex = 0;
+        print('[FROM SCRATCH] Índice de pregunta actual establecido en 0');
       } else {
+        print('[FROM SCRATCH] No se pudieron cargar preguntas - Creando pregunta por defecto');
         // Si no se pudieron cargar preguntas, mantener las por defecto
         if (questions.isEmpty) {
           _addNewQuestion();
         }
       }
-    } catch (e) {
+    } on FormatException catch (e) {
+      print('[FROM SCRATCH] ERROR: Error al decodificar base64: ${e.toString()}');
+      print('[FROM SCRATCH] CAUSA: El formato base64 es inválido o está corrupto');
+      print('[FROM SCRATCH] Parámetro recibido (primeros 100 caracteres): ${questionsParam.substring(0, questionsParam.length > 100 ? 100 : questionsParam.length)}');
+      
       // Si hay error al parsear, mantener las preguntas por defecto
       if (questions.isEmpty) {
+        print('[FROM SCRATCH] Creando pregunta por defecto debido al error de base64');
+        _addNewQuestion();
+      }
+    } on ArgumentError catch (e) {
+      print('[FROM SCRATCH] ERROR: Error de codificación URI: ${e.toString()}');
+      print('[FROM SCRATCH] CAUSA: El parámetro de URL tiene codificación inválida');
+      print('[FROM SCRATCH] Parámetro recibido (primeros 100 caracteres): ${questionsParam.substring(0, questionsParam.length > 100 ? 100 : questionsParam.length)}');
+      
+      // Si hay error al parsear, mantener las preguntas por defecto
+      if (questions.isEmpty) {
+        print('[FROM SCRATCH] Creando pregunta por defecto debido al error de URI');
+        _addNewQuestion();
+      }
+    } catch (e, stackTrace) {
+      print('[FROM SCRATCH] ERROR al cargar preguntas: ${e.toString()}');
+      print('[FROM SCRATCH] Tipo de error: ${e.runtimeType}');
+      print('[FROM SCRATCH] Stack trace: $stackTrace');
+      
+      // Si hay error al parsear, mantener las preguntas por defecto
+      if (questions.isEmpty) {
+        print('[FROM SCRATCH] Creando pregunta por defecto debido al error');
         _addNewQuestion();
       }
     }
@@ -603,7 +761,17 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
               children: List.generate(
                 currentQ.type == 'true_false' ? 2 : 4,
                 (index) {
-                  final answer = currentQ.answers[index];
+                  // Proteger acceso a respuestas
+                  final answer = index < currentQ.answers.length 
+                      ? currentQ.answers[index]
+                      : AnswerData(
+                          id: 'temp_${currentQ.id}_$index',
+                          text: currentQ.type == 'true_false' 
+                              ? (index == 0 ? 'Verdadero' : 'Falso')
+                              : null,
+                          isCorrect: false,
+                          mediaId: null,
+                        );
                   final hasText = answer.text != null && answer.text!.trim().isNotEmpty;
                   final hasImage = answer.mediaId != null && answer.mediaId!.isNotEmpty;
                   String label;
@@ -704,6 +872,20 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     required bool hasImage,
   }) {
     final currentQ = currentQuestion;
+    // Proteger acceso a respuestas
+    if (index >= currentQ.answers.length) {
+      // Si no existe la respuesta, crear una temporal
+      final tempAnswer = AnswerData(
+        id: 'temp_${currentQ.id}_$index',
+        text: currentQ.type == 'true_false' 
+            ? (index == 0 ? 'Verdadero' : 'Falso')
+            : null,
+        isCorrect: false,
+        mediaId: null,
+      );
+      // Agregar la respuesta temporal a la pregunta
+      currentQ.answers.add(tempAnswer);
+    }
     final answer = currentQ.answers[index];
     final mediaService = ref.read(mediaServiceProvider);
     
@@ -873,6 +1055,19 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
   String? currentMediaId;
   void _showAnswerDialog(BuildContext context, int index, Color color) {
     final currentQ = currentQuestion;
+    // Proteger acceso a respuestas
+    if (index >= currentQ.answers.length) {
+      // Si no existe la respuesta, crear una temporal y agregarla
+      final tempAnswer = AnswerData(
+        id: 'temp_${currentQ.id}_$index',
+        text: currentQ.type == 'true_false' 
+            ? (index == 0 ? 'Verdadero' : 'Falso')
+            : null,
+        isCorrect: false,
+        mediaId: null,
+      );
+      currentQ.answers.add(tempAnswer);
+    }
     final answer = currentQ.answers[index];
     // En modo Verdadero/Falso, establecer el texto automáticamente
     if (currentQ.type == 'true_false' && index < 2) {

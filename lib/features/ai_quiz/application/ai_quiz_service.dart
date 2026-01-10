@@ -13,6 +13,7 @@ class AIQuizService {
     required String category,
     int numberOfQuestions = 5,
   }) {
+    print('Generando quiz: "$title"');
     return repository.generateQuiz(
       prompt: prompt,
       title: title,
