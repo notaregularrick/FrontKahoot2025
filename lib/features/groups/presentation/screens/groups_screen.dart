@@ -30,32 +30,46 @@ class GroupsScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('Error cargando grupos: $e')),
         data: (groups) {
-          if (groups.isEmpty) return const Center(child: Text('No tienes grupos aún.'));
-          return ListView.separated(
-            padding: const EdgeInsets.all(12),
-            itemCount: groups.length,
-            separatorBuilder: (_,__) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final g = groups[index];
-              return Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  title: Text(g.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(g.description ?? ''),
-                  trailing: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text('${g.memberCount} miembros'),
-                      const SizedBox(height: 6),
-                      Text(g.role, style: const TextStyle(fontSize: 12)),
-                    ],
-                  ),
-                  onTap: () => context.go('/groups/${g.id}'),
-                ),
-              );
+          return RefreshIndicator(
+            onRefresh: () async {
+              await ref.read(groupsListProvider.notifier).load();
             },
+            child: groups.isEmpty
+                ? ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+                    children: [
+                      const Icon(Icons.groups, size: 64, color: Colors.black26),
+                      const SizedBox(height: 12),
+                      const Center(
+                        child: Text(
+                          'Aún no tienes grupos',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Center(
+                        child: Text(
+                          'Crea tu primer grupo con el botón +',
+                          style: TextStyle(color: Colors.black54),
+                        ),
+                      ),
+                    ],
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: groups.length,
+                    separatorBuilder: (_,__) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final g = groups[index];
+                      return _GroupCard(
+                        name: g.name,
+                        description: g.description ?? '',
+                        memberCount: g.memberCount,
+                        role: g.role,
+                        onTap: () => context.go('/groups/${g.id}'),
+                      );
+                    },
+                  ),
           );
         },
       ),
@@ -89,6 +103,95 @@ class GroupsScreen extends ConsumerWidget {
         },
         backgroundColor: AppColors.primaryRed,
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class _GroupCard extends StatelessWidget {
+  final String name;
+  final String description;
+  final int memberCount;
+  final String role;
+  final VoidCallback onTap;
+
+  const _GroupCard({
+    required this.name,
+    required this.description,
+    required this.memberCount,
+    required this.role,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Color bg = Colors.red.shade50;
+    final Color border = Colors.red.shade100;
+    final bool isAdmin = role.toLowerCase().contains('admin');
+    final Chip roleChip = Chip(
+      label: Text(role),
+      labelStyle: TextStyle(
+        color: isAdmin ? Colors.red.shade900 : Colors.blueGrey.shade700,
+        fontWeight: FontWeight.w600,
+      ),
+      backgroundColor: isAdmin ? Colors.red.shade100 : Colors.blueGrey.shade100,
+      visualDensity: VisualDensity.compact,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+    );
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: border),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Left content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description.isEmpty ? 'Sin descripción' : description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.black87),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Right info
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.groups, size: 16, color: Colors.black54),
+                    const SizedBox(width: 4),
+                    Text('$memberCount miembros', style: const TextStyle(color: Colors.black87)),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                roleChip,
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

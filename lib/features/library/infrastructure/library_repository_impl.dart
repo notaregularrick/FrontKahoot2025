@@ -190,6 +190,8 @@ class LibraryRepositoryImpl implements ILibraryRepository {
       final List<dynamic> data = responseBody['data'];
       List<LibraryQuiz> quizzes = [];
       for (var quiz in data) {
+        // ignore: avoid_print
+        print('[library][in-progress][item] $quiz');
         String id = quiz['id'] as String;
         String? title = quiz['title'] as String?;
         String? description = quiz['description'] as String?;
@@ -203,8 +205,14 @@ class LibraryRepositoryImpl implements ILibraryRepository {
         int playCount = (quiz['playCount'] as num?)?.toInt() ?? 0;
         String category = quiz['category'] as String;
         String status = quiz['status'] as String;
-        String? gameId = quiz['gameId'] as String?;
-        String? gameType = quiz['gameType'] as String?;
+        // Robust extraction for in-progress identifiers and type
+        String? gameId = (quiz['gameId'] ?? quiz['attemptId'] ?? quiz['attemptID'] ?? quiz['sessionId'] ?? quiz['sessionID']) as String?;
+        String? gameType = (quiz['gameType'] ?? quiz['type'])?.toString();
+        if (gameType == null) {
+          if (quiz['attemptId'] != null || quiz['attemptID'] != null) gameType = 'singleplayer';
+          else if (quiz['sessionId'] != null || quiz['sessionID'] != null) gameType = 'multiplayer';
+          else gameType = 'singleplayer'; // default fallback
+        }
 
         LibraryQuiz newQuiz = LibraryQuiz(
           id: id,
@@ -282,8 +290,14 @@ class LibraryRepositoryImpl implements ILibraryRepository {
         int playCount = (quiz['playCount'] as num?)?.toInt() ?? 0;
         String category = quiz['category'] as String;
         String status = quiz['status'] as String;
-        String? gameId = quiz['gameId'] as String?;
-        String? gameType = quiz['gameType'] as String?;
+        // Robust extraction for completed identifiers and type
+        String? gameId = (quiz['gameId'] ?? quiz['attemptId'] ?? quiz['attemptID'] ?? quiz['sessionId'] ?? quiz['sessionID']) as String?;
+        String? gameType = (quiz['gameType'] ?? quiz['type'])?.toString();
+        if (gameType == null) {
+          if (quiz['attemptId'] != null || quiz['attemptID'] != null) gameType = 'singleplayer';
+          else if (quiz['sessionId'] != null || quiz['sessionID'] != null) gameType = 'multiplayer';
+          else gameType = 'singleplayer'; // default fallback
+        }
 
         LibraryQuiz newQuiz = LibraryQuiz(
           id: id,

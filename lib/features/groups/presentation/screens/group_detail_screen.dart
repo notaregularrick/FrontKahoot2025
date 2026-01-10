@@ -266,7 +266,10 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
                 if (!popped) context.go('/groups');
               },
             ),
-            title: Text(detail.name),
+            title: Text(
+              detail.name,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            ),
             backgroundColor: AppColors.primaryRed,
             centerTitle: true,
             bottom: TabBar(
@@ -274,26 +277,33 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
               indicatorColor: AppColors.mustardYellow,
               labelColor: Colors.white,
               unselectedLabelColor: Colors.white70,
-              tabs: const [Tab(text: 'Info'), Tab(text: 'Miembros'), Tab(text: 'Quices'), Tab(text: 'Ranking')],
+              labelStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              unselectedLabelStyle: const TextStyle(fontSize: 14),
+              tabs: const [
+                Tab(icon: Icon(Icons.info_outline), text: 'Info'),
+                Tab(icon: Icon(Icons.group_outlined), text: 'Miembros'),
+                Tab(icon: Icon(Icons.quiz_outlined), text: 'Quices'),
+                Tab(icon: Icon(Icons.emoji_events_outlined), text: 'Ranking'),
+              ],
             ),
             actions: [
               if (detail.myRole == 'admin') ...[
-                  IconButton(
-                    icon: const Icon(Icons.person_add),
-                    tooltip: 'Invitar miembros',
-                    onPressed: () => _showInviteDialog(context),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    tooltip: 'Editar grupo',
-                    onPressed: () => _showEditDialog(context, detail),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete),
-                    tooltip: 'Borrar grupo',
-                    onPressed: () => _confirmDelete(context),
-                  ),
-                ]
+                IconButton(
+                  icon: const Icon(Icons.person_add),
+                  tooltip: 'Invitar miembros',
+                  onPressed: () => _showInviteDialog(context),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  tooltip: 'Editar grupo',
+                  onPressed: () => _showEditDialog(context, detail),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  tooltip: 'Borrar grupo',
+                  onPressed: () => _confirmDelete(context),
+                ),
+              ]
             ],
           ),
           body: TabBarView(
@@ -302,15 +312,65 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
               // Info
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(detail.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text(detail.description ?? ''),
-                  const SizedBox(height: 12),
-                  Text('Mi rol: ${detail.myRole}'),
-                  const SizedBox(height: 8),
-                  Text('Miembros: ${detail.totalMembers}  •  Quices asignados: ${detail.totalAssignedQuizzes}'),
-                ]),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      detail.name,
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          detail.myRole.toLowerCase().contains('admin')
+                              ? Icons.shield_moon
+                              : Icons.person_outline,
+                          size: 18,
+                          color: Colors.black54,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Mi rol: ${detail.myRole}',
+                          style: const TextStyle(fontSize: 15, color: Colors.black87),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      detail.description?.isNotEmpty == true
+                          ? detail.description!
+                          : 'Sin descripción',
+                      style: const TextStyle(fontSize: 15, color: Colors.black87, height: 1.35),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.red.shade100),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.groups, size: 18, color: Colors.black54),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Miembros: ${detail.totalMembers}',
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(width: 12),
+                          const Icon(Icons.assignment_turned_in_outlined, size: 18, color: Colors.black54),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Quices asignados: ${detail.totalAssignedQuizzes}',
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
               // Miembros

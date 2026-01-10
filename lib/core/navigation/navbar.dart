@@ -3,8 +3,6 @@ import 'package:go_router/go_router.dart';
 // import go_router to access StatefulNavigationShell and navigation helpers
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../features/auth/presentation/providers/auth_providers.dart';
-
 class ScaffoldWithNavBar extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -18,18 +16,19 @@ class ScaffoldWithNavBar extends ConsumerWidget {
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: (index) async {
           // Map bottom nav indices to shell branches or direct routes:
-          // 0: Inicio -> branch 0
-          // 1: Unirse -> branch 1
-          // 2: Crear Kahoot -> branch 2
-          // 3: Biblioteca -> branch 3
-          // 4: Perfil -> push '/profile' (full-screen)
-          // 5: Cerrar Sesión -> logout and go '/inicio'
+          // 0: Inicio        -> branch 0
+          // 1: Crear Kahoot  -> branch 2
+          // 2: Unirse        -> branch 1 (center, highlighted)
+          // 3: Biblioteca    -> branch 3
+          // 4: Perfil        -> push '/profile' (full-screen)
 
           if (index >= 0 && index <= 3) {
-            // Navigate to the corresponding shell branch
+            // Reordered mapping to match new destination order
+            final List<int> branchMap = [0, 2, 1, 3];
+            final int branchIndex = branchMap[index];
             navigationShell.goBranch(
-              index,
-              initialLocation: index == navigationShell.currentIndex,
+              branchIndex,
+              initialLocation: branchIndex == navigationShell.currentIndex,
             );
             return;
           }
@@ -39,26 +38,22 @@ class ScaffoldWithNavBar extends ConsumerWidget {
             if (context.mounted) context.push('/profile');
             return;
           }
-
-          if (index == 5) {
-            // Cerrar sesión
-            final notifier = ref.read(authNotifierProvider.notifier);
-            await notifier.logout();
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (context.mounted) {
-                context.go('/inicio');
-              }
-            });
-            return;
-          }
         },
         destinations: const [
+          // 0: Inicio
           NavigationDestination(icon: Icon(Icons.home), label: 'Inicio'),
-          NavigationDestination(icon: Icon(Icons.videogame_asset), label: 'Unirse'),
+          // 1: Crear Kahoot
           NavigationDestination(icon: Icon(Icons.add_circle), label: 'Crear\nKahoot'),
+          // 2: Unirse (center, slightly larger icon)
+          NavigationDestination(
+            icon: Icon(Icons.videogame_asset, size: 30),
+            selectedIcon: Icon(Icons.videogame_asset, size: 34),
+            label: 'Unirse',
+          ),
+          // 3: Biblioteca
           NavigationDestination(icon: Icon(Icons.library_books), label: 'Biblioteca'),
+          // 4: Perfil
           NavigationDestination(icon: Icon(Icons.person_2), label: 'Perfil'),
-          NavigationDestination(icon: Icon(Icons.arrow_circle_left), label: 'Cerrar Sesión'),
         ],
       ),
     );

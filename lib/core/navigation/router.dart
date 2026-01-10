@@ -142,7 +142,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/library/singleplayer/:kahootId',
         builder: (context, state) {
           final id = state.pathParameters['kahootId']!;
-          return SingleplayerOrchestratorScreen(kahootId: id);
+          final attemptId = state.uri.queryParameters['attemptId'];
+          return SingleplayerOrchestratorScreen(kahootId: id, attemptId: attemptId);
         },
       ),
 

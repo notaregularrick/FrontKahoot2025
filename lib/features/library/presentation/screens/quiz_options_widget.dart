@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/quiz_model.dart';
 import 'package:frontkahoot2526/features/library/presentation/providers/library_notifier.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum QuizContextType { myCreations, favorites, inProgress, completed }
 
@@ -99,7 +100,7 @@ class QuizOptionsSheet extends ConsumerWidget {
 
             if (type == QuizContextType.inProgress) ...[
               //3 puntos para descomponer el array
-              createContinueButton(),
+              createContinueButton(context),
               createPlayMultiplayerButton(),
               createPlaySoloButton(context, ref),
             ],
@@ -206,7 +207,7 @@ class QuizOptionsSheet extends ConsumerWidget {
     );
   }
 
-  Widget createContinueButton() {
+  Widget createContinueButton(BuildContext context) {
     return ListTile(
       leading: quiz.gameType == 'multiplayer' ? Icon(Icons.group) : Icon(Icons.gamepad),
       title: Text(
@@ -217,8 +218,29 @@ class QuizOptionsSheet extends ConsumerWidget {
           fontSize: 20,
         ),
       ),
-      onTap: () {
-        //Llama para continuar un juego en progreso
+      onTap: () async {
+        // Continuar según el tipo y el id de juego (gameId)
+        final type = (quiz.gameType ?? '').toLowerCase();
+        // Intento almacenado localmente (por kahootId)
+        final prefs = await SharedPreferences.getInstance();
+        final storedAttemptId = prefs.getString('singleplayer_attempt_${quiz.id}') ?? '';
+        final attemptId = quiz.gameId?.isNotEmpty == true ? quiz.gameId! : storedAttemptId;
+        // Debug rápido para ver qué llega desde el backend en la UI
+        // ignore: avoid_print
+        print('[in-progress][continue] type=${quiz.gameType} attemptId=$attemptId stored=$storedAttemptId quizId=${quiz.id}');
+        if (type == 'multiplayer') {
+          Navigator.pop(context);
+          context.go('/join');
+          return;
+        }
+        // Default y singleplayer: si hay attemptId reanuda, si no, inicia uno nuevo
+        final title = Uri.encodeComponent(quiz.title);
+        Navigator.pop(context);
+        if (attemptId.isNotEmpty) {
+          context.go('/library/singleplayer/${quiz.id}?attemptId=$attemptId&title=$title');
+        } else {
+          context.go('/library/singleplayer/${quiz.id}?title=$title');
+        }
       },
     );
   }
