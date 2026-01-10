@@ -9,7 +9,7 @@
 
 ---
 
-[Descripción](#-descripción) • [Estado](#-estado-del-proyecto) • [Demo](#-demostración) • [Instalación](#-acceso-al-proyecto) • [Tecnologías](#-tecnologías-utilizadas) • [Equipo](#-personas-contribuyentes)
+[Descripción](#-descripción) • [Estado](#-estado-del-proyecto) • [Instalación](#-acceso-al-proyecto) • [Tecnologías](#-tecnologías-utilizadas) • [Equipo](#-personas-contribuyentes)
 
 </div>
 
