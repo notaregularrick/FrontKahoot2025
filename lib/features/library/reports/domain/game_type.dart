@@ -1,0 +1,4 @@
+enum GameType{
+  multiplayer,
+  singleplayer
+}
