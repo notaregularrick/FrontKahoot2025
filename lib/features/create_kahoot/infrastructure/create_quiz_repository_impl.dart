@@ -76,11 +76,13 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
       return url; // Pasar la URL directamente sin transformar
     }
 
-    // Mapear tipo de pregunta: "quiz" -> "single", "true_false" -> "true_false"
+    // Mapear tipo de pregunta: "quiz" -> "single", "multiple" -> "multiple", "true_false" -> "true_false"
     String _mapQuestionTypeToApi(String type) {
       switch (type) {
         case 'quiz':
           return 'single';
+        case 'multiple':
+          return 'multiple';
         case 'true_false':
           return 'true_false';
         default:
@@ -208,12 +210,13 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
       }
     }
 
-    // Mapear tipo de pregunta de API a dominio: "single" -> "quiz", "true_false" -> "true_false"
+    // Mapear tipo de pregunta de API a dominio: "single" -> "quiz", "multiple" -> "multiple", "true_false" -> "true_false"
     String _mapQuestionTypeFromApi(String type) {
       switch (type) {
         case 'single':
+          return 'quiz';
         case 'multiple':
-          return 'quiz'; // Mapear ambos a "quiz" en el dominio
+          return 'multiple';
         case 'true_false':
           return 'true_false';
         default:

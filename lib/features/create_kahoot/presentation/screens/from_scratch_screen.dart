@@ -370,6 +370,8 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     switch (quizType) {
       case 'Verdadero/Falso':
         return 'true_false';
+      case 'Selección Múltiple':
+        return 'multiple';
       default:
         return 'quiz';
     }
@@ -416,6 +418,17 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         if (!hasCorrectAnswer) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Cada pregunta debe tener al menos una respuesta correcta')),
+          );
+          return;
+        }
+      }
+      
+      // Validar que para selección múltiple haya al menos 2 respuestas correctas
+      if (question.type == 'multiple') {
+        final correctAnswersCount = validAnswers.where((a) => a.isCorrect).length;
+        if (correctAnswersCount < 2) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Las preguntas de selección múltiple deben tener al menos 2 respuestas correctas')),
           );
           return;
         }
@@ -556,6 +569,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
           },
           itemBuilder: (context) => [
             const PopupMenuItem(value: 'Quiz', child: Text('Quiz')),
+            const PopupMenuItem(value: 'Selección Múltiple', child: Text('Selección Múltiple')),
             const PopupMenuItem(value: 'Verdadero/Falso', child: Text('Verdadero/Falso')),
           ],
         ),
@@ -1012,15 +1026,15 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         ),)
         ],),
         // Slide de respuesta correcta
-        if ((hasText || hasImage) && (currentQ.type == 'quiz' || currentQ.type == 'true_false'))
+        if ((hasText || hasImage) && (currentQ.type == 'quiz' || currentQ.type == 'multiple' || currentQ.type == 'true_false'))
           Positioned(
             top: 8,
             right: 8,
             child: GestureDetector(
               onTap: () {
                 setState(() {
-                  // Si se marca como correcta, desmarcar todas las demás
-                  if (!answer.isCorrect) {
+                  // Si se marca como correcta, desmarcar todas las demás (solo para quiz y true_false, no para multiple)
+                  if (!answer.isCorrect && currentQ.type != 'multiple') {
                     for (var otherAnswer in currentQ.answers) {
                       if (otherAnswer != answer) {
                         otherAnswer.isCorrect = false;
@@ -1213,7 +1227,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                     ),
                   ),
                 // Checkbox para marcar respuesta correcta
-                if (currentQ.type == 'quiz' || currentQ.type == 'true_false') ...[
+                if (currentQ.type == 'quiz' || currentQ.type == 'multiple' || currentQ.type == 'true_false') ...[
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -1256,7 +1270,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                     }
                   }
                   
-                  // Si se marca como correcta, desmarcar todas las demás
+                  // Si se marca como correcta, desmarcar todas las demás (solo para quiz y true_false, no para multiple)
                   if (isCorrect && (currentQ.type == 'quiz' || currentQ.type == 'true_false')) {
                     for (var otherAnswer in currentQ.answers) {
                       if (otherAnswer != answer) {
