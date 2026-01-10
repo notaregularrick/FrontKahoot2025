@@ -53,7 +53,7 @@
 | 📝 Creación de Quizzes | ✅ Completado |
 | 🤖 Generación con IA | ✅ Completado |
 | 🖼️ Gestión Multimedia | ✅ Completado |
-| 🎮 Modo Multijugador | 🔄 En desarrollo |
+| 🎮 Modo Multijugador | ✅ Completado |
 | 👤 Perfil de Usuario | ✅ Completado |
 
 </div>
@@ -62,19 +62,6 @@
 > 📅 **Última actualización:** Enero 2026
 
 ---
-
-## 🎬 Demostración
-
-### 📱 Pantallas principales
-
-<div align="center">
-
-| Inicio | Crear Quiz | Jugar |
-|:------:|:----------:|:-----:|
-| ![Home](docs/screenshots/home.png) | ![Create](docs/screenshots/create.png) | ![Play](docs/screenshots/play.png) |
-
-</div>
-
 
 ### 🔧 Funcionalidades
 
@@ -200,11 +187,6 @@ lib/
 
 ---
 
-<div align="center">
-
-### ⭐ ¡Si te gusta el proyecto, no olvides darle una estrella!
-
-<br>
 
 
 
