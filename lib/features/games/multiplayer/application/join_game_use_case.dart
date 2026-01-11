@@ -12,11 +12,11 @@ class JoinGameUseCase {
     if(nickname.isEmpty) {
       throw AppException(message: 'El nickname no puede estar vacío');
     }
-    if(pin.length != 6) {
-      throw AppException(message: 'El PIN debe tener 6 dígitos');
-    }
+    // if(pin.length != 6) {
+    //   throw AppException(message: 'El PIN debe tener 6 dígitos');
+    // }
 
-    final String jwt = 'jwt-prueba';//Aquí va lógica para obtener jwt
+    final String jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImEyNWMxMTg5LWQzYzAtNDk5MC04ZTMwLWU1ZjU2MDNjMjAyYyIsImVtYWlsIjoiYXJhdXN5dGFAY29ycmVvLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MTAzMjEyLCJleHAiOjE3NjgxMTA0MTJ9.71UCPTHQaphOdQml1BCSizsrlyyKGM_fSO0wrGO0qBE';//Aquí va lógica para obtener jwt
 
     return await gameRepository.connectToGame(pin, nickname, jwt, role);
   }

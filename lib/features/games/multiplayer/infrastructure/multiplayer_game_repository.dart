@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/current_question.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_enums.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_game_repository.dart';
@@ -16,6 +17,7 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
 
   late io.Socket _socket;
 
+  @override
   Future<void> connectToGame(
     String pin,
     String nickname,
@@ -40,22 +42,22 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
 
     // Eventos de conexión física
     _socket.onConnect((_) {
-      print('✅ Socket Conectado (ID: ${_socket.id})');
+      debugPrint('✅ Socket Conectado (ID: ${_socket.id})');
       // _socket.emit('client_ready');
       // _socket.emit('player_join', {"nickname": nickname});
       _socket.emit('client_ready');
-      _socket.emit('player_join', {"nickname": nickname});
     });
 
-    _socket.onConnectError((data) => print(' Error de conexión: $data'));
+    _socket.onConnectError((data) => debugPrint(' Error de conexión: $data'));
 
     _socket.onDisconnect((reason) {
-      print('🔌 Desconectado. Razón: $reason');
+      debugPrint('🔌 Desconectado. Razón: $reason');
     });
 
     //Listeners de eventos del juego:
     _socket.on('player_connected_to_server', (data) {
       _handleEvent('player_connected_to_server', data);
+      _socket.emit('player_join', {"nickname": nickname});
     });
 
     _socket.on('player_connected_to_session', (data) {
@@ -89,22 +91,22 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
   //   // Verificamos si _socket ha sido inicializada y si está conectada
   //   try {
   //     if (_socket.connected) {
-  //       print('📤 [MANUAL] Enviando: client_ready');
+  //       debugPrint('📤 [MANUAL] Enviando: client_ready');
   //       // _socket.emit('client_ready');
   //       // _socket.emit('player_join', {"nickname": "TestPlayer"});
   //     } else {
-  //       print(
+  //       debugPrint(
   //         '⚠️ No se pudo enviar client_ready: El socket no está conectado.',
   //       );
   //     }
   //   } catch (e) {
-  //     print('❌ Error al intentar emitir: $e');
+  //     debugPrint('❌ Error al intentar emitir: $e');
   //   }
   // }
 
   //EVENT HANDLER
   void _handleEvent(String eventName, dynamic payload) {
-    print('\n📥 [EVENTO] $eventName');
+    debugPrint('\n📥 [EVENTO] $eventName');
     MultiplayerGameSession updatedSession = _currentGameSession;
     // Validación básica
     if (payload is! Map) {
@@ -116,7 +118,7 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
     switch (eventName) {
       case 'player_connected_to_server':
         // {"status":"CONNECTED TO SERVER"}
-        print('   🔹 Status: ${data['status']}');
+        debugPrint('   🔹 Status: ${data['status']}');
         updatedSession = updatedSession.copyWith(
           connectionStatus: ConnectionStatus.connected,
         );
@@ -124,9 +126,9 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
 
       case 'player_connected_to_session':
         // {"state":"lobby","nickname":"Carlitos","score":0,"connectedBefore":false}
-        print('   🔹 Estado: ${data['state']}');
-        print('   🔹 Nickname: ${data['nickname']}');
-        print('   🔹 Score Inicial: ${data['score']}');
+        debugPrint('   🔹 Estado: ${data['state']}');
+        debugPrint('   🔹 Nickname: ${data['nickname']}');
+        debugPrint('   🔹 Score Inicial: ${data['score']}');
         updatedSession = updatedSession.copyWith(
           gameStatus: GameStatus.lobby,
           connectionStatus: ConnectionStatus.connected,
@@ -136,18 +138,18 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
       case 'question_started':
         // Data compleja con "currentSlideData"
         // final slide = data['currentSlideData'];
-        // print('   🔹 Estado: ${data['state']}');
+        // debugPrint('   🔹 Estado: ${data['state']}');
 
         // if (slide != null) {
-        //   print('   ❓ Pregunta: "${slide['questionText']}"');
-        //   print('   ⏱️ Tiempo: ${slide['timeLimitSeconds']}s');
-        //   print('   🖼️ Imagen: ${slide['slideImageURL'] ?? "Sin imagen"}');
+        //   debugPrint('   ❓ Pregunta: "${slide['questionText']}"');
+        //   debugPrint('   ⏱️ Tiempo: ${slide['timeLimitSeconds']}s');
+        //   debugPrint('   🖼️ Imagen: ${slide['slideImageURL'] ?? "Sin imagen"}');
 
         //   final options = slide['options'] as List?;
         //   if (options != null) {
-        //     print('   🔠 Opciones (${options.length}):');
+        //     debugPrint('   🔠 Opciones (${options.length}):');
         //     for (var opt in options) {
-        //       print('      - [${opt['index']}] ${opt['text'] ?? "Imagen: ${opt['mediaURL']}"}');
+        //       debugPrint('      - [${opt['index']}] ${opt['text'] ?? "Imagen: ${opt['mediaURL']}"}');
         //     }
         //   }
         // }
@@ -166,7 +168,7 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
 
       case 'player_answer_confirmation':
         // {"status":"ANSWER SUCCESFULLY SUBMITTED"}
-        print('   ✅ Status: ${data['status']}');
+        debugPrint('   ✅ Status: ${data['status']}');
         updatedSession = updatedSession.copyWith(
           gameStatus: GameStatus.answerSubmitted,
         );
@@ -175,15 +177,15 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
       case 'player_results':
         // {"state":"results","isCorrect":true,"pointsEarned":932...}
         // final isCorrect = data['isCorrect'] == true;
-        // print('   🔹 Resultado: ${isCorrect ? "¡CORRECTO! 🎉" : "Incorrecto ❌"}');
-        // print('   🔹 Puntos ganados: ${data['pointsEarned']}');
-        // print('   🔹 Racha: ${data['streak']} 🔥');
-        // print('   🔹 Ranking actual: #${data['rank']}');
-        // print('   🔹 Mensaje: "${data['message']}"');
+        // debugPrint('   🔹 Resultado: ${isCorrect ? "¡CORRECTO! 🎉" : "Incorrecto ❌"}');
+        // debugPrint('   🔹 Puntos ganados: ${data['pointsEarned']}');
+        // debugPrint('   🔹 Racha: ${data['streak']} 🔥');
+        // debugPrint('   🔹 Ranking actual: #${data['rank']}');
+        // debugPrint('   🔹 Mensaje: "${data['message']}"');
 
         // // Accediendo al objeto anidado "progress"
         // if (data['progress'] != null) {
-        //   print('   📊 Progreso: ${data['progress']['current']}/${data['progress']['total']}');
+        //   debugPrint('   📊 Progreso: ${data['progress']['current']}/${data['progress']['total']}');
         // }
         PlayerResults results = PlayerResults.fromJson(data);
         results.logDebugInfo();
@@ -196,11 +198,11 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
 
       case 'player_game_end':
         // {"state":"end","rank":1,"totalScore":1419,"isWinner":true...}
-        // print('   🏆 JUEGO TERMINADO');
-        // print('   🔹 Posición Final: #${data['rank']}');
-        // print('   🔹 Puntaje Total: ${data['totalScore']}');
+        // debugPrint('   🏆 JUEGO TERMINADO');
+        // debugPrint('   🔹 Posición Final: #${data['rank']}');
+        // debugPrint('   🔹 Puntaje Total: ${data['totalScore']}');
         // if (data['isWinner'] == true) {
-        //   print('   👑 ¡ERES EL GANADOR!');
+        //   debugPrint('   👑 ¡ERES EL GANADOR!');
         // }
 
         PlayerGameEnd gameEnd = PlayerGameEnd.fromJson(data);
@@ -214,9 +216,9 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
 
       case 'session_closed':
         // {"reason":"session_closed","message":"..."}
-        print('   ⛔ Sesión Cerrada');
-        print('   🔹 Motivo: ${data['reason']}');
-        print('   🔹 Mensaje: "${data['message']}"');
+        debugPrint('   ⛔ Sesión Cerrada');
+        debugPrint('   🔹 Motivo: ${data['reason']}');
+        debugPrint('   🔹 Mensaje: "${data['message']}"');
 
         updatedSession = updatedSession.copyWith(
           connectionStatus: ConnectionStatus.disconected,
@@ -225,7 +227,7 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
         break;
 
       default:
-        print('   ⚠️ Evento no manejado en el switch, data cruda: $data');
+        debugPrint('   ⚠️ Evento no manejado en el switch, data cruda: $data');
     }
     _currentGameSession = updatedSession;
     _sessionController.add(_currentGameSession);
@@ -241,7 +243,7 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
 
       _socket.dispose();
     } catch (e) {
-      print(e);
+      debugPrint('❌ Error al disponer el socket: $e');
     }
     _currentGameSession = const MultiplayerGameSession();
   }
@@ -295,10 +297,10 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
 //     // 2. LLAMAMOS AL MÉTODO MANUALMENTE
 //     //repo.notifyClientReady();
 
-//     print("⏳ Manteniendo script vivo...");
+//     debugPrint("⏳ Manteniendo script vivo...");
 //     await Future.delayed(const Duration(seconds: 60));
 //   } catch (e) {
-//     print('Error fatal: $e');
+//     debugPrint('Error fatal: $e');
 //   }
 
   

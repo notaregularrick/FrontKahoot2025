@@ -107,8 +107,8 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
                   decoration: _buildInputDecoration(hint: "Ej: 123456"),
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Ingresa el PIN';
-                    if (value.length != 6)
-                      return 'PIN inválido (deben ser 6 dígitos)';
+                    // if (value.length != 6)
+                    //   return 'PIN inválido (deben ser 6 dígitos)';
                     return null;
                   },
                 ),
