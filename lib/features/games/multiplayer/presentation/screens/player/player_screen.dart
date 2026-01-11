@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_enums.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/models/multiplayer_game_notifier_state.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/providers/multiplayer_game_notifier.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/player/player_end_game_view.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/player/player_lobby_view.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/player/player_question_view.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/player/player_results_view.dart';
 // import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/player/player_end_game_view.dart';
 // import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/player/player_lobby_view.dart';
 // import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/player/player_question_view.dart';
@@ -89,11 +93,11 @@ class _PlayerGameScreenState extends ConsumerState<PlayerGameScreen> {
     switch (state.session.gameStatus) {
       case GameStatus.none:
       case GameStatus.lobby:
-        // return PlayerLobbyView(
-        //   gamePin: state.session.pin,
-        //   myNickname: state.myPlayerId ?? state.session.nickname,
-        // );
-        return Text("Sala de espera - En desarrollo");
+        return PlayerLobbyView(
+          gamePin: state.session.pin,
+          myNickname: state.myPlayerId ?? state.session.nickname,
+        );
+      //return Text("Sala de espera - En desarrollo");
 
       case GameStatus.question:
         // Si no hay pregunta cargada, mostramos carga
@@ -109,7 +113,19 @@ class _PlayerGameScreenState extends ConsumerState<PlayerGameScreen> {
         //         .submitAnswer(index);
         //   },
         // );
-        return Text("Pregunta - En desarrollo");
+        return PlayerQuestionView(
+          question: state.session.currentQuestion!,
+          onAnswer: (List<int> selectedIndexes) {
+
+            if (selectedIndexes.isNotEmpty) {
+              final primaryAnswer = selectedIndexes.first;
+              ref
+                  .read(multiplayerGameNotifierProvider.notifier)
+                  .submitAnswer(primaryAnswer);
+            }
+          },
+        );
+      //return Text("Pregunta - En desarrollo");
 
       case GameStatus.answerSubmitted:
         return const PlayerWaitingView();
@@ -119,28 +135,27 @@ class _PlayerGameScreenState extends ConsumerState<PlayerGameScreen> {
         if (results == null)
           return const Center(child: CircularProgressIndicator());
 
-        // return PlayerResultsView(
-        //   results: results,
-        //   myNickname: state.myPlayerId ?? "Yo",
-        // );
-        return Text("Resultados - En desarrollo");
+        return PlayerResultsView(
+          results: results,
+          myNickname: state.myPlayerId ?? "Yo",
+        );
+      //return Text("Resultados - En desarrollo");
 
       case GameStatus.end:
         final endGame = state.session.playerGameEnd;
-        if (endGame == null){
+        if (endGame == null) {
           return const Center(child: CircularProgressIndicator());
         }
-          
 
-        // return PlayerGameEndView(
-        //   gameEnd: endGame,
-        //   myNickname: state.myPlayerId ?? "Yo",
-        //   onQuit: () {
-        //     ref.read(multiplayerGameNotifierProvider.notifier).leaveGame();
-        //     context.go('/join');
-        //   },
-        // );
-        return Text("Fin del juego - En desarrollo");
+        return PlayerGameEndView(
+          gameEnd: endGame,
+          myNickname: state.myPlayerId ?? "Yo",
+          onQuit: () {
+            ref.read(multiplayerGameNotifierProvider.notifier).leaveGame();
+            context.go('/join');
+          },
+        );
+      //return Text("Fin del juego - En desarrollo");
     }
   }
 
