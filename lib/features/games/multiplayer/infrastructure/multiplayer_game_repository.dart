@@ -2,12 +2,16 @@ import 'dart:async';
 
 // import 'package:frontkahoot2526/core/providers/backend_provider.dart';
 // import 'package:frontkahoot2526/features/games/multiplayer/domain/game_session.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/domain/current_question.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_enums.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_game_session.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/domain/player_game_end.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/domain/player_results.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 class MultiplayerGameRepository {
   //final _sessionController = StreamController<GameSession>.broadcast();
-  //GameSession _state = const GameSession();
+  MultiplayerGameSession _currentGameSession = MultiplayerGameSession();
 
   //@override
   //Stream<GameSession> get gameStream => _sessionController.stream;
@@ -36,11 +40,6 @@ class MultiplayerGameRepository {
           })
           .build(),
     );
-
-    // _socket.onAny((event, data) {
-    //   print('Llegó evento: "$event"');
-    //   print('Datos: $data');
-    // });
 
     // Eventos de conexión física
     _socket.onConnect((_) {
@@ -110,10 +109,9 @@ class MultiplayerGameRepository {
   //EVENT HANDLER
   void _handleEvent(String eventName, dynamic payload) {
     print('\n📥 [EVENTO] $eventName');
-
-    // Validación básica: casi siempre esperamos un Mapa (JSON Object)
+    MultiplayerGameSession updatedSession = _currentGameSession;
+    // Validación básica
     if (payload is! Map) {
-      print('   ⚠️ Data no es un Mapa: $payload');
       return;
     }
 
@@ -123,6 +121,9 @@ class MultiplayerGameRepository {
       case 'player_connected_to_server':
         // {"status":"CONNECTED TO SERVER"}
         print('   🔹 Status: ${data['status']}');
+        updatedSession = updatedSession.copyWith(
+          connectionStatus: ConnectionStatus.connected,
+        );
         break;
 
       case 'player_connected_to_session':
@@ -130,56 +131,89 @@ class MultiplayerGameRepository {
         print('   🔹 Estado: ${data['state']}');
         print('   🔹 Nickname: ${data['nickname']}');
         print('   🔹 Score Inicial: ${data['score']}');
+        updatedSession = updatedSession.copyWith(
+          gameStatus: GameStatus.lobby,
+          connectionStatus: ConnectionStatus.connected
+        );
         break;
 
       case 'question_started':
         // Data compleja con "currentSlideData"
-        final slide = data['currentSlideData'];
-        print('   🔹 Estado: ${data['state']}');
+        // final slide = data['currentSlideData'];
+        // print('   🔹 Estado: ${data['state']}');
         
-        if (slide != null) {
-          print('   ❓ Pregunta: "${slide['questionText']}"');
-          print('   ⏱️ Tiempo: ${slide['timeLimitSeconds']}s');
-          print('   🖼️ Imagen: ${slide['slideImageURL'] ?? "Sin imagen"}');
+        // if (slide != null) {
+        //   print('   ❓ Pregunta: "${slide['questionText']}"');
+        //   print('   ⏱️ Tiempo: ${slide['timeLimitSeconds']}s');
+        //   print('   🖼️ Imagen: ${slide['slideImageURL'] ?? "Sin imagen"}');
           
-          final options = slide['options'] as List?;
-          if (options != null) {
-            print('   🔠 Opciones (${options.length}):');
-            for (var opt in options) {
-              print('      - [${opt['index']}] ${opt['text'] ?? "Imagen: ${opt['mediaURL']}"}');
-            }
-          }
-        }
+        //   final options = slide['options'] as List?;
+        //   if (options != null) {
+        //     print('   🔠 Opciones (${options.length}):');
+        //     for (var opt in options) {
+        //       print('      - [${opt['index']}] ${opt['text'] ?? "Imagen: ${opt['mediaURL']}"}');
+        //     }
+        //   }
+        // }
+        CurrentQuestion question = CurrentQuestion.fromJson(
+          data['currentSlideData'] as Map<String, dynamic>,
+        );
+        question.logDebugInfo();
+
+        updatedSession = updatedSession.copyWith(
+          gameStatus: GameStatus.question,
+          currentQuestion: question,
+          playerResults: null,
+          playerGameEnd: null,
+        );
         break;
 
       case 'player_answer_confirmation':
         // {"status":"ANSWER SUCCESFULLY SUBMITTED"}
         print('   ✅ Status: ${data['status']}');
+        updatedSession = updatedSession.copyWith(
+          gameStatus: GameStatus.answerSubmitted,
+        );
         break;
 
       case 'player_results':
         // {"state":"results","isCorrect":true,"pointsEarned":932...}
-        final isCorrect = data['isCorrect'] == true;
-        print('   🔹 Resultado: ${isCorrect ? "¡CORRECTO! 🎉" : "Incorrecto ❌"}');
-        print('   🔹 Puntos ganados: ${data['pointsEarned']}');
-        print('   🔹 Racha: ${data['streak']} 🔥');
-        print('   🔹 Ranking actual: #${data['rank']}');
-        print('   🔹 Mensaje: "${data['message']}"');
+        // final isCorrect = data['isCorrect'] == true;
+        // print('   🔹 Resultado: ${isCorrect ? "¡CORRECTO! 🎉" : "Incorrecto ❌"}');
+        // print('   🔹 Puntos ganados: ${data['pointsEarned']}');
+        // print('   🔹 Racha: ${data['streak']} 🔥');
+        // print('   🔹 Ranking actual: #${data['rank']}');
+        // print('   🔹 Mensaje: "${data['message']}"');
         
-        // Accediendo al objeto anidado "progress"
-        if (data['progress'] != null) {
-          print('   📊 Progreso: ${data['progress']['current']}/${data['progress']['total']}');
-        }
+        // // Accediendo al objeto anidado "progress"
+        // if (data['progress'] != null) {
+        //   print('   📊 Progreso: ${data['progress']['current']}/${data['progress']['total']}');
+        // }
+        PlayerResults results = PlayerResults.fromJson(data);
+        results.logDebugInfo();
+
+        updatedSession = updatedSession.copyWith(
+          gameStatus: GameStatus.results,
+          playerResults: results,
+        );
         break;
 
       case 'player_game_end':
         // {"state":"end","rank":1,"totalScore":1419,"isWinner":true...}
-        print('   🏆 JUEGO TERMINADO');
-        print('   🔹 Posición Final: #${data['rank']}');
-        print('   🔹 Puntaje Total: ${data['totalScore']}');
-        if (data['isWinner'] == true) {
-          print('   👑 ¡ERES EL GANADOR!');
-        }
+        // print('   🏆 JUEGO TERMINADO');
+        // print('   🔹 Posición Final: #${data['rank']}');
+        // print('   🔹 Puntaje Total: ${data['totalScore']}');
+        // if (data['isWinner'] == true) {
+        //   print('   👑 ¡ERES EL GANADOR!');
+        // }
+
+        PlayerGameEnd gameEnd = PlayerGameEnd.fromJson(data);
+        gameEnd.logDebugInfo();
+
+        updatedSession = updatedSession.copyWith(
+          gameStatus: GameStatus.end,
+          playerGameEnd: gameEnd,
+        );
         break;
 
       case 'session_closed':
@@ -187,37 +221,47 @@ class MultiplayerGameRepository {
         print('   ⛔ Sesión Cerrada');
         print('   🔹 Motivo: ${data['reason']}');
         print('   🔹 Mensaje: "${data['message']}"');
+
+        updatedSession = updatedSession.copyWith(
+          connectionStatus: ConnectionStatus.disconected,
+          gameStatus: GameStatus.none,
+        );
         break;
 
       default:
         print('   ⚠️ Evento no manejado en el switch, data cruda: $data');
     }
+    _currentGameSession = updatedSession;
+
   }
-}
-
-void main() async {
-  try {
-    MultiplayerGameRepository repo = MultiplayerGameRepository();
-
-    // JWT Hardcodeado del ejemplo
-    final jwtPrueba =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImEyNWMxMTg5LWQzYzAtNDk5MC04ZTMwLWU1ZjU2MDNjMjAyYyIsImVtYWlsIjoiYXJhdXN5dGFAY29ycmVvLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MDg2NjM4LCJleHAiOjE3NjgwOTM4Mzh9.t8q1mc1zwpmE6LcpJc5G0jhmUcm5lGFC-AJ82DEkC2I';
-
-    await repo.connectToGame(
-      '24644552',
-      'TestPlayer',
-      jwtPrueba,
-      GameRole.player,
-    );
-
-    // 2. LLAMAMOS AL MÉTODO MANUALMENTE
-    //repo.notifyClientReady();
-
-    print("⏳ Manteniendo script vivo...");
-    await Future.delayed(const Duration(seconds: 60));
-  } catch (e) {
-    print('Error fatal: $e');
-  }
-
   
 }
+
+
+
+// void main() async {
+//   try {
+//     MultiplayerGameRepository repo = MultiplayerGameRepository();
+
+//     // JWT Hardcodeado del ejemplo
+//     final jwtPrueba =
+//         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImEyNWMxMTg5LWQzYzAtNDk5MC04ZTMwLWU1ZjU2MDNjMjAyYyIsImVtYWlsIjoiYXJhdXN5dGFAY29ycmVvLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MDk0MTkwLCJleHAiOjE3NjgxMDEzOTB9.44UREdgx-VTmlrDnLjzYotYGMLUdrq4e23Ed2bDpL-c';
+
+//     await repo.connectToGame(
+//       '7161508',
+//       'TestPlayer',
+//       jwtPrueba,
+//       GameRole.player,
+//     );
+
+//     // 2. LLAMAMOS AL MÉTODO MANUALMENTE
+//     //repo.notifyClientReady();
+
+//     print("⏳ Manteniendo script vivo...");
+//     await Future.delayed(const Duration(seconds: 60));
+//   } catch (e) {
+//     print('Error fatal: $e');
+//   }
+
+  
+// }
