@@ -23,55 +23,45 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
 
   Future<void> _showAIPromptDialog() async {
     print('Inició generación con IA');
-    // Verificar si la API key está configurada
-    final apiKeyAsync = ref.read(aiApiKeyProvider);
-    await apiKeyAsync.when(
-      data: (apiKey) async {
-        if (apiKey == null || apiKey.isEmpty) {
-          print('API Key no configurada. Mostrando diálogo de configuración');
-          // Mostrar diálogo para configurar API key
-          if (mounted) {
-            _showApiKeyDialog();
-          }
-          return;
-        }
-        print('API Key configurada. Mostrando diálogo de prompt');
-        // Continuar con el diálogo de prompt
-        if (mounted) {
-          final result = await showDialog<Map<String, dynamic>>(
-            context: context,
-            builder: (context) => const AIPromptDialog(),
-          );
+    try {
+      // Esperar a que se cargue la API key usando .future para obtener el Future real
+      final apiKey = await ref.read(aiApiKeyProvider.future);
 
-          if (result != null && mounted) {
-            await _generateQuizWithAI(result);
-          } else {
-            print('Canceló el diálogo de prompt');
-          }
-        }
-      },
-      loading: () {
-        print('Verificando estado de API Key');
-        // Mostrar loading mientras se verifica la API key
+      if (apiKey == null || apiKey.isEmpty) {
+        print('API Key no configurada. Mostrando diálogo de configuración');
+        // Mostrar diálogo para configurar API key
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Verificando configuración...')),
-          );
+          _showApiKeyDialog();
         }
-      },
-      error: (error, stack) {
-        print('ERROR al verificar API Key: ${error.toString()}');
-        print('tack trace: $stack');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${error.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
+        return;
+      }
+
+      print('API Key configurada. Mostrando diálogo de prompt');
+      // Continuar con el diálogo de prompt
+      if (mounted) {
+        final result = await showDialog<Map<String, dynamic>>(
+          context: context,
+          builder: (context) => const AIPromptDialog(),
+        );
+
+        if (result != null && mounted) {
+          await _generateQuizWithAI(result);
+        } else {
+          print('Canceló el diálogo de prompt');
         }
-      },
-    );
+      }
+    } catch (error, stack) {
+      print('ERROR al verificar API Key: ${error.toString()}');
+      print('Stack trace: $stack');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${error.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _showApiKeyDialog() {
