@@ -1,20 +1,18 @@
 import 'dart:async';
-
-// import 'package:frontkahoot2526/core/providers/backend_provider.dart';
-// import 'package:frontkahoot2526/features/games/multiplayer/domain/game_session.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/current_question.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_enums.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_game_repository.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_game_session.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/player_game_end.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/player_results.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
-class MultiplayerGameRepository {
-  //final _sessionController = StreamController<GameSession>.broadcast();
+class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
+  final _sessionController = StreamController<MultiplayerGameSession>.broadcast();
   MultiplayerGameSession _currentGameSession = MultiplayerGameSession();
 
-  //@override
-  //Stream<GameSession> get gameStream => _sessionController.stream;
+  @override
+  Stream<MultiplayerGameSession> get gameStream => _sessionController.stream;
 
   late io.Socket _socket;
 
@@ -33,8 +31,7 @@ class MultiplayerGameRepository {
           .setTransports(['websocket'])
           .disableAutoConnect()
           .setExtraHeaders({
-            'jwt':
-                jwt,
+            'jwt': jwt,
             'pin': pin,
             'role': role == GameRole.host ? 'HOST' : 'PLAYER',
           })
@@ -105,7 +102,6 @@ class MultiplayerGameRepository {
   //   }
   // }
 
-
   //EVENT HANDLER
   void _handleEvent(String eventName, dynamic payload) {
     print('\n📥 [EVENTO] $eventName');
@@ -133,7 +129,7 @@ class MultiplayerGameRepository {
         print('   🔹 Score Inicial: ${data['score']}');
         updatedSession = updatedSession.copyWith(
           gameStatus: GameStatus.lobby,
-          connectionStatus: ConnectionStatus.connected
+          connectionStatus: ConnectionStatus.connected,
         );
         break;
 
@@ -141,12 +137,12 @@ class MultiplayerGameRepository {
         // Data compleja con "currentSlideData"
         // final slide = data['currentSlideData'];
         // print('   🔹 Estado: ${data['state']}');
-        
+
         // if (slide != null) {
         //   print('   ❓ Pregunta: "${slide['questionText']}"');
         //   print('   ⏱️ Tiempo: ${slide['timeLimitSeconds']}s');
         //   print('   🖼️ Imagen: ${slide['slideImageURL'] ?? "Sin imagen"}');
-          
+
         //   final options = slide['options'] as List?;
         //   if (options != null) {
         //     print('   🔠 Opciones (${options.length}):');
@@ -184,7 +180,7 @@ class MultiplayerGameRepository {
         // print('   🔹 Racha: ${data['streak']} 🔥');
         // print('   🔹 Ranking actual: #${data['rank']}');
         // print('   🔹 Mensaje: "${data['message']}"');
-        
+
         // // Accediendo al objeto anidado "progress"
         // if (data['progress'] != null) {
         //   print('   📊 Progreso: ${data['progress']['current']}/${data['progress']['total']}');
@@ -232,9 +228,51 @@ class MultiplayerGameRepository {
         print('   ⚠️ Evento no manejado en el switch, data cruda: $data');
     }
     _currentGameSession = updatedSession;
-
+    _sessionController.add(_currentGameSession);
   }
-  
+
+  void dispose() {
+    try {
+      if (_socket.connected) {
+        _socket.disconnect();
+      }
+
+      _socket.clearListeners();
+
+      _socket.dispose();
+    } catch (e) {
+      print(e);
+    }
+    _currentGameSession = const MultiplayerGameSession();
+  }
+
+  @override
+  Future<String> createGame(String quizId){
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> startGame() {
+    // Host
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> nextPhase() {
+    // Host
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> submitAnswer(
+    String questionIndex,
+    int answerIndex,
+    int timeElapsedMs,
+    String jwt,
+  ) {
+    // Jugador
+    throw UnimplementedError();
+  }
 }
 
 

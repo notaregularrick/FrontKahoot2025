@@ -1,12 +1,13 @@
-import 'package:frontkahoot2526/features/games/multiplayer/domain/game_session.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_enums.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_game_session.dart';
 
 abstract class IMultiplayerGameRepository {
-  Stream<GameSession> get gameStream;
+  Stream<MultiplayerGameSession> get gameStream;
 
   //Conexiones
   Future<String> createGame(String quizId);
-  Future<void> joinGame(String pin, String nickname);
+  //Future<void> joinGame(String pin, String nickname);
+
   Future<void> connectToGame(
     String pin,
     String nickname,
