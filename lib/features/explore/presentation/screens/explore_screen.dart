@@ -159,7 +159,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                                 ),
                               ),
                               SizedBox(
-                                height: 260,
+                                height: 300,
                                 child: ListView.builder(
                                   scrollDirection: Axis.horizontal,
                                   padding: const EdgeInsets.symmetric(horizontal: 16),

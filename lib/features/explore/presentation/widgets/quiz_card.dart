@@ -16,7 +16,7 @@ class QuizCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: isFeatured ? EdgeInsets.zero : const EdgeInsets.only(bottom: 16),
       elevation: isFeatured ? 4 : 2, 
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
