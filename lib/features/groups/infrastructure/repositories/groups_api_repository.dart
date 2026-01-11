@@ -168,9 +168,22 @@ class GroupsApiRepository implements GroupsRepository {
 
   @override
   Future<void> changeMemberRole(String groupId, String memberId, String newRole) async {
-    await _dio.patch('/groups/$groupId/members/$memberId', data: {
-      'role': newRole,
-    });
+    // Backend expects transfer-admin endpoint when promoting
+    final role = newRole.toLowerCase();
+    if (role == 'admin') {
+      // ignore: avoid_print
+      print('[groups][role] PATCH /groups/$groupId/transfer-admin body={newAdminId: $memberId}');
+      await _dio.patch('/groups/$groupId/transfer-admin', data: {
+        'newAdminId': memberId,
+      });
+    } else {
+      // Fallback for other roles (if supported by backend)
+      // ignore: avoid_print
+      print('[groups][role] PATCH /groups/$groupId/members/$memberId role=$role');
+      await _dio.patch('/groups/$groupId/members/$memberId', data: {
+        'role': newRole,
+      });
+    }
   }
 
   @override
@@ -187,9 +200,61 @@ class GroupsApiRepository implements GroupsRepository {
   }
 
   @override
-  Future<GroupSummary> joinGroupWithToken(String token, {required String name, String? email}) {
-    // Not documented in API spec; keep unimplemented to avoid fake data.
-    throw UnimplementedError('Join by token is not supported by the documented API');
+  Future<GroupSummary> joinGroupWithToken(String token, {required String name, String? email}) async {
+    // Some backends require name/email; include when provided.
+    final basePayload = <String, dynamic>{
+      if (name.isNotEmpty) 'name': name,
+      if (email != null && email.isNotEmpty) 'email': email,
+    };
+
+    // Try common variants sequentially for robustness
+    final attempts = <({String path, Map<String, dynamic> data, String note})>[
+      (path: '/groups/join', data: {...basePayload, 'invitationToken': token}, note: 'join(invitationToken)'),
+      (path: '/groups/join', data: {...basePayload, 'token': token}, note: 'join(token)'),
+      (path: '/groups/invitations/$token/join', data: basePayload, note: 'invitations/{token}/join'),
+      (path: '/groups/invitations/accept', data: {...basePayload, 'invitationToken': token}, note: 'invitations/accept'),
+    ];
+
+    DioException? lastErr;
+    for (final att in attempts) {
+      try {
+        // ignore: avoid_print
+        print('[groups][join] TRY ${att.note} POST ${att.path} payload=${att.data}');
+        final res = await _dio.post(att.path, data: att.data);
+        // ignore: avoid_print
+        print('[groups][join] OK ${att.note} status=${res.statusCode}');
+        final map = _unwrapMap(res.data);
+        return _mapJoinSummary(map);
+      } on DioException catch (e) {
+        lastErr = e;
+        final sc = e.response?.statusCode ?? 0;
+        // ignore: avoid_print
+        print('[groups][join] FAIL ${att.note} status=$sc body=${e.response?.data}');
+        // For 4xx/5xx, try next shape; otherwise, rethrow immediately
+        if (sc == 401) rethrow;
+        continue;
+      }
+    }
+    // If we get here, all attempts failed
+    if (lastErr != null) throw lastErr;
+    throw DioException(requestOptions: RequestOptions(path: '/groups/join'), error: 'Unknown join error');
+  }
+
+  GroupSummary _mapJoinSummary(Map<String, dynamic> map) {
+    // Accept both flat and nested shapes
+    final id = map['groupId']?.toString() ?? map['id']?.toString() ?? '';
+    final name = map['groupName']?.toString() ?? map['name']?.toString() ?? '';
+    final role = (map['role']?.toString() ?? map['myRole']?.toString() ?? '').toLowerCase();
+    final joinedAt = _parseDate(map['joinedAt'] ?? map['createdAt']);
+    return GroupSummary(
+      id: id,
+      name: name,
+      description: null,
+      createdAt: joinedAt,
+      memberCount: _toInt(map['memberCount']),
+      role: role,
+      assignedQuizzesCount: _toInt(map['assignedQuizzesCount']),
+    );
   }
 
   // ---------- mappers ----------
@@ -239,12 +304,35 @@ class GroupsApiRepository implements GroupsRepository {
 
   Member _mapMember(dynamic raw) {
     final map = Map<String, dynamic>.from(raw as Map);
+    final user = (map['user'] is Map) ? Map<String, dynamic>.from(map['user'] as Map) : <String, dynamic>{};
+
+    String? pickStr(Map<String, dynamic> m, List<String> keys) {
+      for (final k in keys) {
+        final v = m[k];
+        if (v is String && v.trim().isNotEmpty) return v;
+      }
+      return null;
+    }
+
+    final id = pickStr(map, ['id','memberId','userId']) ?? pickStr(user, ['id']) ?? '';
+    String? name = pickStr(map, ['name','username','userName','fullName','displayName'])
+        ?? pickStr(user, ['name','username','userName','fullName','displayName']);
+    String? email = pickStr(map, ['email','mail','userEmail'])
+        ?? pickStr(user, ['email','mail','userEmail']);
+    final role = (pickStr(map, ['role','memberRole']) ?? pickStr(user, ['role']) ?? '').toLowerCase();
+    final joinedAt = _parseDate(map['joinedAt'] ?? map['createdAt'] ?? map['addedAt']);
+
+    // Fallbacks to ensure UI doesn't show blanks
+    name = (name == null || name.isEmpty)
+        ? (email != null && email.contains('@') ? email.split('@').first : (id.isNotEmpty ? 'Usuario $id' : 'Usuario'))
+        : name;
+
     return Member(
-      id: map['id']?.toString() ?? '',
-      name: map['name']?.toString() ?? '',
-      email: map['email'] as String?,
-      role: (map['role']?.toString() ?? '').toLowerCase(),
-      joinedAt: _parseDate(map['joinedAt']),
+      id: id,
+      name: name,
+      email: email,
+      role: role,
+      joinedAt: joinedAt,
     );
   }
 

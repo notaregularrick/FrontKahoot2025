@@ -54,6 +54,12 @@ class GroupsListNotifier extends StateNotifier<AsyncValue<List<GroupSummary>>> {
     return created;
   }
 
+  Future<GroupSummary> joinWithInvite(String invitationToken) async {
+    final joined = await repo.joinGroupWithToken(invitationToken, name: '');
+    await load();
+    return joined;
+  }
+
   Future<GroupSummary> getByIdOrFetch(String groupId, {bool forceRefresh = false}) async {
     final current = state.value;
     if (!forceRefresh && current != null) {

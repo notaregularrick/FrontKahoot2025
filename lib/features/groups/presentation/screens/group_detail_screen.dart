@@ -388,9 +388,10 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
                     itemBuilder: (context, i) {
                       final m = members[i];
                       final isAdmin = detail.myRole == 'admin';
+                      final roleLabel = (m.role.isEmpty ? 'member' : m.role);
                       return ListTile(
-                        title: Text(m.name),
-                        subtitle: Text(m.email ?? ''),
+                        title: Text(m.id),
+                        subtitle: Text('Rol: $roleLabel'),
                         trailing: isAdmin
                           ? PopupMenuButton<String>(
                               onSelected: (value) async {

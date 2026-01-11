@@ -3,12 +3,36 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/features/groups/presentation/providers/groups_notifier.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/library_colors.dart';
 import 'package:go_router/go_router.dart';
+import 'package:frontkahoot2526/features/auth/presentation/providers/auth_providers.dart';
 
-class GroupsScreen extends ConsumerWidget {
+class GroupsScreen extends ConsumerStatefulWidget {
   const GroupsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GroupsScreen> createState() => _GroupsScreenState();
+}
+
+class _GroupsScreenState extends ConsumerState<GroupsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Refresh list on entry and on token change (switch user).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(groupsListProvider);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Listen to auth token changes and refresh groups when it changes
+    ref.listen<String?>(
+      authNotifierProvider.select((s) => s.token),
+      (prev, next) {
+        if (prev != next) {
+          ref.invalidate(groupsListProvider);
+        }
+      },
+    );
     final groupsAsync = ref.watch(groupsListProvider);
 
     return Scaffold(
@@ -73,39 +97,129 @@ class GroupsScreen extends ConsumerWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await showDialog<Map<String,String>?>(
-            context: context,
-            builder: (ctx) {
-              final nameCtrl = TextEditingController();
-              final descCtrl = TextEditingController();
-              return AlertDialog(
-                title: const Text('Crear grupo'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Nombre')),
-                    TextField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Descripción')),
-                  ],
-                ),
-                actions: [
-                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
-                  ElevatedButton(onPressed: () => Navigator.pop(ctx, {'name': nameCtrl.text, 'desc': descCtrl.text}), child: const Text('Crear')),
-                ],
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'join-group',
+            onPressed: () async {
+              final token = await _showJoinDialog(context);
+              if (token == null || token.trim().isEmpty) return;
+              final cleanToken = _extractToken(token.trim());
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Uniendo al grupo...')),
               );
-            }
-          );
+              try {
+                await ref.read(groupsListProvider.notifier).joinWithInvite(cleanToken);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Te has unido al grupo')), 
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  final msg = _prettyError(e);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('No se pudo unir: $msg')),
+                  );
+                }
+              }
+            },
+            backgroundColor: Colors.white,
+            foregroundColor: AppColors.primaryRed,
+            icon: const Icon(Icons.link),
+            label: const Text('Unirse con enlace'),
+          ),
+          const SizedBox(height: 12),
+          FloatingActionButton(
+            heroTag: 'create-group',
+            onPressed: () async {
+              final result = await showDialog<Map<String,String>?>(
+                context: context,
+                builder: (ctx) {
+                  final nameCtrl = TextEditingController();
+                  final descCtrl = TextEditingController();
+                  return AlertDialog(
+                    title: const Text('Crear grupo'),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Nombre')),
+                        TextField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Descripción')),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+                      ElevatedButton(onPressed: () => Navigator.pop(ctx, {'name': nameCtrl.text, 'desc': descCtrl.text}), child: const Text('Crear')),
+                    ],
+                  );
+                }
+              );
 
-          if (result != null && (result['name']?.trim().isNotEmpty ?? false)) {
-            await ref.read(groupsListProvider.notifier).createGroup(result['name']!.trim(), result['desc']?.trim());
-          }
-        },
-        backgroundColor: AppColors.primaryRed,
-        child: const Icon(Icons.add),
+              if (result != null && (result['name']?.trim().isNotEmpty ?? false)) {
+                await ref.read(groupsListProvider.notifier).createGroup(result['name']!.trim(), result['desc']?.trim());
+              }
+            },
+            backgroundColor: AppColors.primaryRed,
+            child: const Icon(Icons.add),
+          ),
+        ],
       ),
     );
   }
+}
+
+Future<String?> _showJoinDialog(BuildContext context) async {
+  final linkCtrl = TextEditingController();
+  return showDialog<String?>(
+    context: context,
+    builder: (ctx) {
+      return AlertDialog(
+        title: const Text('Unirse a un grupo'),
+        content: TextField(
+          controller: linkCtrl,
+          decoration: const InputDecoration(
+            labelText: 'Pega el enlace o token',
+            hintText: 'https://.../join?invitationToken=abc',
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, linkCtrl.text), child: const Text('Unirse')),
+        ],
+      );
+    },
+  );
+}
+
+String _extractToken(String raw) {
+  // Try query param invitationToken
+  try {
+    final uri = Uri.parse(raw);
+    final qp = uri.queryParameters['invitationToken'] ?? uri.queryParameters['token'] ?? uri.queryParameters['t'];
+    if (qp != null && qp.isNotEmpty) return qp;
+    if (uri.pathSegments.isNotEmpty) return uri.pathSegments.last;
+  } catch (_) {}
+  // Fallback: return raw
+  return raw;
+}
+
+String _prettyError(Object e) {
+  try {
+    if (e is Exception) {
+      final dynamic de = e;
+      // Try to access DioException fields without import coupling
+      final res = (de as dynamic).response;
+      if (res != null) {
+        final data = res.data;
+        if (data is Map && data['message'] is String) return data['message'];
+        if (data is String && data.isNotEmpty) return data;
+        final sc = res.statusCode;
+        if (sc != null) return 'HTTP $sc';
+      }
+    }
+  } catch (_) {}
+  return e.toString();
 }
 
 class _GroupCard extends StatelessWidget {

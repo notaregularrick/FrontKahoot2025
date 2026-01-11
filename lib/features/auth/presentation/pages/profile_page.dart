@@ -11,6 +11,13 @@ class ProfilePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // 1. Escuchamos cambios en el estado
     final state = ref.watch(profileNotifierProvider);
+    final auth = ref.watch(authNotifierProvider);
+
+    // Prefer data returned by login (auth.user) for name/email/userType
+    final loginUser = auth.user;
+    final displayName = loginUser?.name ?? state.profile?.name ?? '';
+    final displayEmail = loginUser?.email ?? state.profile?.email ?? '';
+    final displayUserType = loginUser?.userType ?? state.profile?.userType ?? '';
 
     // 2. LÓGICA AUTOMÁTICA DE CARGA (El "Trigger")
     // Si no hay perfil, no está cargando y no hay error, forzamos la petición de datos.
@@ -85,15 +92,15 @@ class ProfilePage extends ConsumerWidget {
 
                     // --- ITEMS DE INFORMACIÓN ---
                     // Usamos state.profile! con seguridad porque ya validamos que no es null arriba
-                    _InfoItem(label: 'Nombre', value: state.profile!.name),
-                    _InfoItem(label: 'Email', value: state.profile!.email),
+                    _InfoItem(label: 'Nombre', value: displayName),
+                    _InfoItem(label: 'Email', value: displayEmail),
                     _InfoItem(
                       label: 'Descripción',
                       value: state.profile!.description,
                     ),
                     _InfoItem(
                       label: 'Tipo de Usuario',
-                      value: state.profile!.userType,
+                      value: displayUserType,
                     ),
                     _InfoItem(
                       label: 'Racha',

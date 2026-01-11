@@ -88,7 +88,7 @@ class AuthRepositoryImpl implements AuthRepository {
     await storage.saveToken(response.token);
     return response;
   }
-
+  
   @override
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
