@@ -9,12 +9,15 @@ class SubmitAnswerUseCase {
 
   SubmitAnswerUseCase(this.repository);
 
-  Future<void> execute(CurrentQuestion question, int answerIndex, int timeElapsedMs) {
-    final String jwt = 'jwt-prueba'; //Aquí va lógica para obtener jwt
+  Future<void> execute(CurrentQuestion question, List<String> answerIds, int timeElapsedMs) {
 
-    if(answerIndex < 0 || answerIndex >= question.options.length) {
+    if(answerIds.isEmpty || answerIds.any((id) => !question.options.any((option) => option.answerIndex == id))) {
       throw AppException(message: 'Índice de respuesta inválido');
     }
-    return repository.submitAnswer(question.questionId, answerIndex, timeElapsedMs, jwt);
+    return repository.submitAnswer(
+      answerIds,
+      question.questionId,
+      timeElapsedMs,
+    );
   }
 }

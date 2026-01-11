@@ -115,17 +115,18 @@ class _PlayerGameScreenState extends ConsumerState<PlayerGameScreen> {
         // );
         return PlayerQuestionView(
           question: state.session.currentQuestion!,
-          onAnswer: (List<int> selectedIndexes) {
-
-            if (selectedIndexes.isNotEmpty) {
-              final primaryAnswer = selectedIndexes.first;
+          onAnswer: (List<String> answerIds) {
+            debugPrint(answerIds.toString());
+            // Si tu Notifier.submitAnswer solo acepta una respuesta (String), toma la primera:
+            if (answerIds.isNotEmpty) {
+              // OJO: Si es multiple, deberías actualizar tu Notifier para recibir List<String>
               ref
                   .read(multiplayerGameNotifierProvider.notifier)
-                  .submitAnswer(primaryAnswer);
+                  .submitAnswer(answerIds);
             }
           },
         );
-      //return Text("Pregunta - En desarrollo");
+        //return Text("Pregunta - En desarrollo");
 
       case GameStatus.answerSubmitted:
         return const PlayerWaitingView();

@@ -19,10 +19,9 @@ abstract class IMultiplayerGameRepository {
   Future<void> startGame(); // Host
   Future<void> nextPhase(); // Host
   Future<void> submitAnswer(
-    String questionIndex,
-    int answerIndex,
+    List<String> answersId,
+    String questionId,
     int timeElapsedMs,
-    String jwt,
   ); // Jugador
 
   void dispose();

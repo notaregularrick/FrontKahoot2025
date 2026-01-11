@@ -7,7 +7,8 @@ import 'package:frontkahoot2526/features/library/presentation/models/library_col
 
 class PlayerQuestionView extends StatefulWidget {
   final CurrentQuestion question;
-  final Function(List<int>) onAnswer;
+  // ✅ CAMBIO 1: Ahora devolvemos una lista de Strings (IDs)
+  final Function(List<String>) onAnswer; 
   final bool isLoading;
 
   const PlayerQuestionView({
@@ -24,6 +25,7 @@ class PlayerQuestionView extends StatefulWidget {
 class _PlayerQuestionViewState extends State<PlayerQuestionView> {
   bool _isTimeUp = false;
   Timer? _localTimer;
+  // Mantenemos índices internamente para controlar la UI (bordes, selección)
   final Set<int> _selectedIndexes = {};
 
   @override
@@ -39,12 +41,9 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
   }
 
   void _startLocalTimer() {
-    _localTimer = Timer(
-      Duration(seconds: widget.question.timeLimitSeconds),
-      () {
-        if (mounted) setState(() => _isTimeUp = true);
-      },
-    );
+    _localTimer = Timer(Duration(seconds: widget.question.timeLimitSeconds), () {
+      if (mounted) setState(() => _isTimeUp = true);
+    });
   }
 
   void _handleOptionTap(int index) {
@@ -59,64 +58,69 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
         }
       });
     } else {
-      widget.onAnswer([index]);
+      // ✅ CAMBIO 2: Selección Única (Single / TrueFalse)
+      // Buscamos el ID real de la respuesta usando el índice
+      final String answerId = widget.question.options[index].answerIndex;
+      widget.onAnswer([answerId]);
+    }
+  }
+
+  void _submitMultipleAnswers() {
+    if (_isTimeUp || widget.isLoading) return;
+    
+    if (_selectedIndexes.isNotEmpty) {
+      // ✅ CAMBIO 3: Selección Múltiple
+      // Convertimos los índices visuales (0, 1...) a los IDs reales del backend
+      final List<String> selectedIds = _selectedIndexes.map((index) {
+        return widget.question.options[index].answerIndex;
+      }).toList();
+
+      widget.onAnswer(selectedIds);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final isMultiple = widget.question.type == QuestionType.multipleChoice;
-    // Padding extra al fondo si hay botón flotante para que no tape las respuestas
     final bottomContentPadding = isMultiple ? 100.0 : 30.0;
 
     return Stack(
       children: [
         Column(
           children: [
-            // --- 1. HEADER FIJO (Pregunta # y Reloj) ---
+            // --- HEADER ---
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black12, blurRadius: 4),
-                      ],
+                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
                     ),
                     child: Text(
                       "Pregunta ${widget.question.questionIndex + 1}",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.darkBlueText,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.darkBlueText),
                     ),
                   ),
-                  GameTimerWidget(
-                    totalSeconds: widget.question.timeLimitSeconds,
-                  ),
+                  GameTimerWidget(totalSeconds: widget.question.timeLimitSeconds),
                 ],
               ),
             ),
 
-            // --- 2. CUERPO UNIFICADO (Pregunta + Respuestas Juntas) ---
+            // --- CUERPO UNIFICADO ---
             Expanded(
               child: Center(
-                // Centra todo el bloque verticalmente
                 child: SingleChildScrollView(
                   padding: EdgeInsets.fromLTRB(20, 0, 20, bottomContentPadding),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min, // Ocupa solo lo necesario
+                    mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // A. IMAGEN (Opcional)
+                      // IMAGEN
                       if (widget.question.questionImageUrl.isNotEmpty)
                         Container(
                           height: 180,
@@ -124,9 +128,7 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
                           margin: const EdgeInsets.only(bottom: 24),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(color: Colors.black12, blurRadius: 8),
-                            ],
+                            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8)],
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(16),
@@ -138,7 +140,7 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
                           ),
                         ),
 
-                      // B. TEXTO DE PREGUNTA
+                      // TEXTO
                       Text(
                         widget.question.questionText,
                         textAlign: TextAlign.center,
@@ -150,7 +152,7 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
                         ),
                       ),
 
-                      // Indicador de Múltiple
+                      // CHIP MULTIPLE
                       if (isMultiple)
                         Padding(
                           padding: const EdgeInsets.only(top: 8.0),
@@ -160,17 +162,15 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
                             labelStyle: TextStyle(
                               color: Colors.orange[800],
                               fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                              fontSize: 12
                             ),
                             side: BorderSide.none,
                           ),
                         ),
 
-                      // C. ESPACIO CONTROLADO (Aquí está la magia)
-                      // Este SizedBox define la distancia exacta entre el texto y las respuestas.
                       const SizedBox(height: 32),
 
-                      // D. RESPUESTAS (Dentro del mismo scroll)
+                      // RESPUESTAS
                       widget.isLoading
                           ? const CircularProgressIndicator()
                           : _buildAnswerLayout(),
@@ -182,15 +182,15 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
           ],
         ),
 
-        // --- 3. BOTÓN FLOTANTE (Solo Múltiple) ---
+        // --- BOTÓN FLOTANTE (Solo Multiple) ---
         if (isMultiple && !widget.isLoading && !_isTimeUp)
           Positioned(
             bottom: 20,
             left: 20,
             right: 20,
             child: ElevatedButton(
-              onPressed: _selectedIndexes.isNotEmpty
-                  ? () => widget.onAnswer(_selectedIndexes.toList())
+              onPressed: _selectedIndexes.isNotEmpty 
+                  ? _submitMultipleAnswers // Llama a la función que mapea IDs
                   : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryRed,
@@ -198,41 +198,27 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 elevation: 6,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              child: const Text(
-                "ENVIAR RESPUESTA",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              child: const Text("ENVIAR RESPUESTA", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
           ),
 
-        // --- 4. OVERLAY TIEMPO AGOTADO ---
+        // --- OVERLAY TIEMPO AGOTADO ---
         if (_isTimeUp)
           Positioned.fill(
             child: Container(
               color: Colors.black.withOpacity(0.85),
               child: Center(
                 child: SingleChildScrollView(
-                  // Evita overflow si la pantalla es muy chica
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.timer_off_outlined,
-                        color: Colors.white,
-                        size: 80,
-                      ),
+                      const Icon(Icons.timer_off_outlined, color: Colors.white, size: 80),
                       const SizedBox(height: 24),
                       const Text(
                         "¡Se acabó el tiempo!",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),
                       const Text(
@@ -251,7 +237,7 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
     );
   }
 
-  // --- MÉTODOS DE LAYOUT DE RESPUESTAS (Idénticos al anterior, solo optimizados) ---
+  // --- MÉTODOS DE LAYOUT ---
 
   Widget _buildAnswerLayout() {
     if (widget.question.type == QuestionType.trueFalse) {
@@ -263,15 +249,13 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
 
   Widget _buildTrueFalseLayout() {
     return Column(
-      mainAxisSize: MainAxisSize.min, // Importante para que no estire de más
+      mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          height: 120, // Altura fija y cómoda
+          height: 120,
           width: double.infinity,
           child: _AnswerCard(
-            option: widget.question.options.isNotEmpty
-                ? widget.question.options[0]
-                : null,
+            option: widget.question.options.isNotEmpty ? widget.question.options[0] : null,
             index: 0,
             color: Colors.blue,
             icon: Icons.check_rounded,
@@ -285,9 +269,7 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
           height: 120,
           width: double.infinity,
           child: _AnswerCard(
-            option: widget.question.options.length > 1
-                ? widget.question.options[1]
-                : null,
+            option: widget.question.options.length > 1 ? widget.question.options[1] : null,
             index: 1,
             color: Colors.red,
             icon: Icons.close_rounded,
@@ -301,20 +283,9 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
   }
 
   Widget _buildStandardGrid() {
-    final List<Color> colors = [
-      Colors.red,
-      Colors.blue,
-      const Color(0xFFD69E00),
-      Colors.green,
-    ];
-    final List<IconData> icons = [
-      Icons.change_history,
-      Icons.crop_square_outlined,
-      Icons.circle,
-      Icons.square,
-    ];
+    final List<Color> colors = [Colors.red, Colors.blue, const Color(0xFFD69E00), Colors.green];
+    final List<IconData> icons = [Icons.change_history, Icons.crop_square_outlined, Icons.circle, Icons.square];
 
-    // GridView dentro de Column necesita shrinkWrap: true y NoScroll
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -339,7 +310,7 @@ class _PlayerQuestionViewState extends State<PlayerQuestionView> {
   }
 }
 
-// --- CLASE _AnswerCard (Sin cambios, solo copia la del paso anterior) ---
+// --- CLASE _AnswerCard (IGUAL QUE ANTES) ---
 class _AnswerCard extends StatelessWidget {
   final QuestionAnswers? option;
   final int index;
@@ -361,17 +332,14 @@ class _AnswerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasImage =
-        option?.answerImageUrl != null && option!.answerImageUrl!.isNotEmpty;
+    final hasImage = option?.answerImageUrl != null && option!.answerImageUrl!.isNotEmpty;
     final textToShow = labelOverride ?? option?.answerText ?? "";
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 150),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: isSelected
-            ? Border.all(color: AppColors.darkBlueText, width: 5)
-            : null,
+        border: isSelected ? Border.all(color: AppColors.darkBlueText, width: 5) : null,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(isSelected ? 0.3 : 0.1),
@@ -397,13 +365,7 @@ class _AnswerCard extends StatelessWidget {
               if (isSelected)
                 Container(
                   color: Colors.black26,
-                  child: const Center(
-                    child: Icon(
-                      Icons.check_circle,
-                      color: Colors.white,
-                      size: 40,
-                    ),
-                  ),
+                  child: const Center(child: Icon(Icons.check_circle, color: Colors.white, size: 40)),
                 ),
             ],
           ),
@@ -429,13 +391,7 @@ class _AnswerCard extends StatelessWidget {
                 color: Colors.white,
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
-                shadows: [
-                  Shadow(
-                    color: Colors.black26,
-                    offset: Offset(1, 1),
-                    blurRadius: 2,
-                  ),
-                ],
+                shadows: [Shadow(color: Colors.black26, offset: Offset(1, 1), blurRadius: 2)],
               ),
               maxLines: 4,
               overflow: TextOverflow.ellipsis,
@@ -453,8 +409,7 @@ class _AnswerCard extends StatelessWidget {
         Image.network(
           url,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) =>
-              const Center(child: Icon(Icons.error, color: Colors.white)),
+          errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.error, color: Colors.white)),
         ),
         Container(
           decoration: BoxDecoration(
@@ -466,12 +421,10 @@ class _AnswerCard extends StatelessWidget {
           ),
         ),
         Positioned(
-          top: 4,
-          left: 4,
+          top: 4, left: 4,
           child: Icon(icon, color: Colors.white, size: 24),
         ),
       ],
     );
   }
 }
-

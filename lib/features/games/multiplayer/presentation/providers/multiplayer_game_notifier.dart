@@ -113,7 +113,7 @@ class MultiplayerGameNotifier
     }
   }
 
-  Future<void> submitAnswer(int answerIndex) async {
+  Future<void> submitAnswer(List<String> answerIds) async {
     final currentState = state.value;
     if (currentState == null) return;
 
@@ -140,7 +140,7 @@ class MultiplayerGameNotifier
       // O los parámetros primitivos (ID, Index, Tiempo)
       await useCase.execute(
         currentState.session.currentQuestion!,
-        answerIndex,
+        answerIds,
         timeElapsed,
       );
 

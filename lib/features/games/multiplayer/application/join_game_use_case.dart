@@ -16,7 +16,7 @@ class JoinGameUseCase {
     //   throw AppException(message: 'El PIN debe tener 6 dígitos');
     // }
 
-    final String jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImEyNWMxMTg5LWQzYzAtNDk5MC04ZTMwLWU1ZjU2MDNjMjAyYyIsImVtYWlsIjoiYXJhdXN5dGFAY29ycmVvLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MTAzMjEyLCJleHAiOjE3NjgxMTA0MTJ9.71UCPTHQaphOdQml1BCSizsrlyyKGM_fSO0wrGO0qBE';//Aquí va lógica para obtener jwt
+    final String jwt = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImEyNWMxMTg5LWQzYzAtNDk5MC04ZTMwLWU1ZjU2MDNjMjAyYyIsImVtYWlsIjoiYXJhdXN5dGFAY29ycmVvLmNvbSIsInJvbGVzIjpbInVzZXIiXSwiaWF0IjoxNzY4MTEwMzY2LCJleHAiOjE3NjgxMTc1NjZ9.sy9BkbqK40YccRxD7iKSR67cdcQJB9R2ioeoqUndKb0';//Aquí va lógica para obtener jwt
 
     return await gameRepository.connectToGame(pin, nickname, jwt, role);
   }

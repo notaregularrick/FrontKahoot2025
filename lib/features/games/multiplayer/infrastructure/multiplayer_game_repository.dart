@@ -9,7 +9,8 @@ import 'package:frontkahoot2526/features/games/multiplayer/domain/player_results
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
-  final _sessionController = StreamController<MultiplayerGameSession>.broadcast();
+  final _sessionController =
+      StreamController<MultiplayerGameSession>.broadcast();
   MultiplayerGameSession _currentGameSession = MultiplayerGameSession();
 
   @override
@@ -233,6 +234,7 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
     _sessionController.add(_currentGameSession);
   }
 
+  @override
   void dispose() {
     try {
       if (_socket.connected) {
@@ -249,7 +251,7 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
   }
 
   @override
-  Future<String> createGame(String quizId){
+  Future<String> createGame(String quizId) {
     throw UnimplementedError();
   }
 
@@ -267,13 +269,17 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
 
   @override
   Future<void> submitAnswer(
-    String questionIndex,
-    int answerIndex,
+    List<String> answersId,
+    String questionId,
     int timeElapsedMs,
-    String jwt,
-  ) {
+  ) async {
     // Jugador
-    throw UnimplementedError();
+    debugPrint('📤 Enviando respuesta(s): $answersId');
+    _socket.emit('player_submit_answer', {
+      "questionId": questionId,
+      "answerId": answersId,
+      "timeElapsedMs": timeElapsedMs,
+    });
   }
 }
 
