@@ -9,6 +9,7 @@ import 'package:frontkahoot2526/features/ai_quiz/presentation/providers/ai_api_k
 import 'package:frontkahoot2526/features/ai_quiz/application/ai_quiz_service.dart';
 import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
 import 'package:frontkahoot2526/core/providers/secure_storage_provider.dart';
+import 'package:frontkahoot2526/features/categories/presentation/providers/categories_provider.dart';
 
 class CreateKahootScreen extends ConsumerStatefulWidget {
   const CreateKahootScreen({super.key});
@@ -22,62 +23,50 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
 
   Future<void> _showAIPromptDialog() async {
     print('Inició generación con IA');
-    // Verificar si la API key está configurada
-    final apiKeyAsync = ref.read(aiApiKeyProvider);
-    await apiKeyAsync.when(
-      data: (apiKey) async {
-        if (apiKey == null || apiKey.isEmpty) {
-          print('API Key no configurada. Mostrando diálogo de configuración');
-          // Mostrar diálogo para configurar API key
-          if (mounted) {
-            _showApiKeyDialog();
-          }
-          return;
-        }
-        print('API Key configurada. Mostrando diálogo de prompt');
-        // Continuar con el diálogo de prompt
-        if (mounted) {
-          final result = await showDialog<Map<String, dynamic>>(
-            context: context,
-            builder: (context) => const AIPromptDialog(),
-          );
+    try {
+      // Esperar a que se cargue la API key usando .future para obtener el Future real
+      final apiKey = await ref.read(aiApiKeyProvider.future);
 
-          if (result != null && mounted) {
-            await _generateQuizWithAI(result);
-          } else {
-            print('Canceló el diálogo de prompt');
-          }
-        }
-      },
-      loading: () {
-        print('Verificando estado de API Key');
-        // Mostrar loading mientras se verifica la API key
+      if (apiKey == null || apiKey.isEmpty) {
+        print('API Key no configurada. Mostrando diálogo de configuración');
+        // Mostrar diálogo para configurar API key
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Verificando configuración...'),
-            ),
-          );
+          _showApiKeyDialog();
         }
-      },
-      error: (error, stack) {
-        print('ERROR al verificar API Key: ${error.toString()}');
-        print('tack trace: $stack');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${error.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
+        return;
+      }
+
+      print('API Key configurada. Mostrando diálogo de prompt');
+      // Continuar con el diálogo de prompt
+      if (mounted) {
+        final result = await showDialog<Map<String, dynamic>>(
+          context: context,
+          builder: (context) => const AIPromptDialog(),
+        );
+
+        if (result != null && mounted) {
+          await _generateQuizWithAI(result);
+        } else {
+          print('Canceló el diálogo de prompt');
         }
-      },
-    );
+      }
+    } catch (error, stack) {
+      print('ERROR al verificar API Key: ${error.toString()}');
+      print('Stack trace: $stack');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${error.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _showApiKeyDialog() {
     final apiKeyController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -108,7 +97,9 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
             const SizedBox(height: 8),
             TextButton.icon(
               onPressed: () async {
-                final url = Uri.parse('https://makersuite.google.com/app/apikey');
+                final url = Uri.parse(
+                  'https://makersuite.google.com/app/apikey',
+                );
                 try {
                   if (await canLaunchUrl(url)) {
                     await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -116,7 +107,9 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('No se pudo abrir el enlace. Visita: https://makersuite.google.com/app/apikey'),
+                          content: Text(
+                            'No se pudo abrir el enlace. Visita: https://makersuite.google.com/app/apikey',
+                          ),
                           duration: Duration(seconds: 5),
                         ),
                       );
@@ -170,7 +163,7 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
 
   Future<void> _generateQuizWithAI(Map<String, dynamic> data) async {
     print('Iniciando generación de quiz con IA');
-    
+
     setState(() {
       _isGenerating = true;
     });
@@ -182,15 +175,16 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
       if (repository == null) {
         print('ERROR Repositorio no disponible o API key no configurada');
         throw AppException(
-          message: 'API key no configurada. Por favor configura tu API key de Gemini.',
+          message:
+              'API key no configurada. Por favor configura tu API key de Gemini.',
           statusCode: 401,
         );
       }
       print('Repositorio disponible');
-      
+
       final aiService = AIQuizService(repository);
       print('Servicio creado, llamando a generateQuiz');
-      
+
       final quiz = await aiService.generateQuiz(
         prompt: data['prompt'] as String,
         title: data['title'] as String,
@@ -200,46 +194,61 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
       );
 
       print('Quiz generado exitosamente');
-      
+
       if (mounted) {
         print('Convirtiendo preguntas a formato de URL');
         // Convertir las preguntas a formato que pueda usar from_scratch_screen
         // Formato: pregunta|tipo|tiempo|puntos|texto1~true;texto2~false;texto3~false;texto4~false
         // Se usa ~ como separador entre texto e isCorrect para evitar conflicto con | usado en las partes de la pregunta
-        final questionsParam = quiz.questions.map((q) {
-          final answersParam = q.answers.map((a) {
-            return '${a.text ?? ""}~${a.isCorrect}';
-          }).join(';');
-          return '${q.text}|${q.type}|${q.timeLimit}|${q.points}|$answersParam';
-        }).join('|||');
+        final questionsParam = quiz.questions
+            .map((q) {
+              final answersParam = q.answers
+                  .map((a) {
+                    return '${a.text ?? ""}~${a.isCorrect}';
+                  })
+                  .join(';');
+              return '${q.text}|${q.type}|${q.timeLimit}|${q.points}|$answersParam';
+            })
+            .join('|||');
 
         // Codificar en base64 para evitar problemas con caracteres especiales
         print('Codificando preguntas en base64...');
         final questionsBase64 = base64Encode(utf8.encode(questionsParam));
-        print('Codificación base64 completada (${questionsBase64.length} caracteres)');
+        print(
+          'Codificación base64 completada (${questionsBase64.length} caracteres)',
+        );
 
         // Construir parámetros de URL
         final encodedTitle = Uri.encodeComponent(quiz.title);
         final encodedDescription = Uri.encodeComponent(quiz.description);
         final encodedCategory = Uri.encodeComponent(quiz.category);
         final encodedQuestions = Uri.encodeComponent(questionsBase64);
-        
+
         print('Parámetros de URL a enviar:');
-        print('  - title: "${quiz.title}" (codificado: ${encodedTitle.length} caracteres)');
-        print('  - description: "${quiz.description}" (codificado: ${encodedDescription.length} caracteres)');
-        print('  - category: "${quiz.category}" (codificado: ${encodedCategory.length} caracteres)');
+        print(
+          '  - title: "${quiz.title}" (codificado: ${encodedTitle.length} caracteres)',
+        );
+        print(
+          '  - description: "${quiz.description}" (codificado: ${encodedDescription.length} caracteres)',
+        );
+        print(
+          '  - category: "${quiz.category}" (codificado: ${encodedCategory.length} caracteres)',
+        );
         print('  - visibility: "${quiz.visibility}"');
         print('  - ai_generated: true');
-        print('  - questions (base64): ${questionsBase64.length} caracteres (codificado: ${encodedQuestions.length} caracteres)');
-        
-        final url = '/create-kahoot/from-scratch?'
-          'title=$encodedTitle&'
-          'description=$encodedDescription&'
-          'category=$encodedCategory&'
-          'visibility=${quiz.visibility}&'
-          'ai_generated=true&'
-          'questions=$encodedQuestions';
-        
+        print(
+          '  - questions (base64): ${questionsBase64.length} caracteres (codificado: ${encodedQuestions.length} caracteres)',
+        );
+
+        final url =
+            '/create-kahoot/from-scratch?'
+            'title=$encodedTitle&'
+            'description=$encodedDescription&'
+            'category=$encodedCategory&'
+            'visibility=${quiz.visibility}&'
+            'ai_generated=true&'
+            'questions=$encodedQuestions';
+
         print('URL completa construida: $url');
         print('Navegando a pantalla de edición');
         context.go(url);
@@ -288,17 +297,8 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
     final Color redBackground = const Color(0xFFF44336);
     final Color lightGray = Colors.grey[200]!;
 
-    final List<Map<String, dynamic>> categories = [
-      {'name': 'Estudio', 'icon': Icons.school},
-      {'name': 'Familia', 'icon': Icons.family_restroom},
-      {'name': 'Noche de juegos', 'icon': Icons.sports_esports},
-      {'name': 'Celebración', 'icon': Icons.celebration},
-      {'name': 'Proyectos', 'icon': Icons.work},
-      {'name': 'Calentamiento', 'icon': Icons.local_fire_department},
-      {'name': 'Trivia', 'icon': Icons.quiz},
-      {'name': 'De temporada', 'icon': Icons.calendar_today},
-      {'name': 'Social', 'icon': Icons.people},
-    ];
+    // Obtener categorías del backend
+    final categoriesAsync = ref.watch(categoryNamesProvider);
 
     return Scaffold(
       backgroundColor: redBackground,
@@ -364,7 +364,8 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
                                             height: 20,
                                             decoration: BoxDecoration(
                                               color: Colors.purple[400],
-                                              borderRadius: BorderRadius.circular(4),
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
                                             ),
                                           ),
                                         ),
@@ -383,7 +384,8 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         const Text(
                                           'Lienzos en blanco',
@@ -441,9 +443,10 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
                                             padding: EdgeInsets.all(12),
                                             child: CircularProgressIndicator(
                                               strokeWidth: 2,
-                                              valueColor: AlwaysStoppedAnimation<Color>(
-                                                Colors.white,
-                                              ),
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                    Colors.white,
+                                                  ),
                                             ),
                                           )
                                         : const Icon(
@@ -455,7 +458,8 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         const Text(
                                           'Generar con IA',
@@ -525,52 +529,65 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
                           ),
                           const SizedBox(height: 12),
                           // Carrusel de categorías
-                          SizedBox(
-                            height: 50,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: categories.length,
-                              itemBuilder: (context, index) {
-                                final category = categories[index];
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: ElevatedButton.icon(
-                                    onPressed: () {
-                                      // Filtrar por categoría
-                                    },
-                                    icon: Icon(
-                                      category['icon'] as IconData,
-                                      size: 20,
-                                    ),
-                                    label: Text(category['name'] as String),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: lightGray,
-                                      foregroundColor: Colors.black,
-                                      elevation: 0,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 8,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
+                          // proxima entrega
+                          // SizedBox(
+                          //   height: 50,
+                          //   child: categoriesAsync.when(
+                          //     data: (categories) => ListView.builder(
+                          //       scrollDirection: Axis.horizontal,
+                          //       itemCount: categories.length,
+                          //       itemBuilder: (context, index) {
+                          //         final categoryName = categories[index];
+                          //         return Padding(
+                          //           padding: const EdgeInsets.only(right: 8),
+                          //           child: ElevatedButton.icon(
+                          //             onPressed: () {
+                          //               // Filtrar por categoría
+                          //             },
+                          //             icon: const Icon(
+                          //               Icons.category,
+                          //               size: 20,
+                          //             ),
+                          //             label: Text(categoryName),
+                          //             style: ElevatedButton.styleFrom(
+                          //               backgroundColor: lightGray,
+                          //               foregroundColor: Colors.black,
+                          //               elevation: 0,
+                          //               padding: const EdgeInsets.symmetric(
+                          //                 horizontal: 16,
+                          //                 vertical: 8,
+                          //               ),
+                          //               shape: RoundedRectangleBorder(
+                          //                 borderRadius: BorderRadius.circular(20),
+                          //               ),
+                          //             ),
+                          //           ),
+                          //         );
+                          //       },
+                          //     ),
+                          //     loading: () => const Center(
+                          //       child: CircularProgressIndicator(),
+                          //     ),
+                          //     error: (error, _) => Center(
+                          //       child: Text(
+                          //         'Error al cargar categorías',
+                          //         style: TextStyle(color: Colors.grey[600]),
+                          //       ),
+                          //     ),
+                          //   ),
+                          // ),
                           const SizedBox(height: 16),
                           // Grid de plantillas
                           GridView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                              childAspectRatio: 0.75,
-                            ),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 12,
+                                  mainAxisSpacing: 12,
+                                  childAspectRatio: 0.75,
+                                ),
                             itemCount: 4,
                             itemBuilder: (context, index) {
                               return Container(
@@ -608,7 +625,9 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
                                         margin: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
                                           color: Colors.white,
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                       ),
                                     ),
