@@ -1,23 +1,24 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontkahoot2526/features/games/multiplayer/domain/game_session.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_enums.dart';
-import 'package:frontkahoot2526/features/games/multiplayer/presentation/models/multiplayer_game_notifier_state.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_game_session.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/presentation/models/multiplayer_game_notifier_state.dart'; // Asegura ruta correcta
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/providers/use_cases_providers.dart';
 
 class MultiplayerGameNotifier
     extends AutoDisposeAsyncNotifier<GameNotifierState> {
-  StreamSubscription<GameSession>? _gameSubscription;
+  StreamSubscription<MultiplayerGameSession>? _gameSubscription;
   DateTime? _questionStartTime;
 
   @override
   FutureOr<GameNotifierState> build() {
+    // Limpieza automática al salir de la pantalla
     ref.onDispose(() {
       _gameSubscription?.cancel();
     });
 
     return GameNotifierState(
-      session: GameSession.initial(),
+      session: const MultiplayerGameSession(), // Estado inicial limpio
       role: GameRole.none,
       myPlayerId: null,
     );
@@ -25,26 +26,35 @@ class MultiplayerGameNotifier
 
   void _subscribeToGameStream() {
     final listenUseCase = ref.read(listenGameSessionUseCaseProvider);
+
     _gameSubscription?.cancel();
+
+    // Escuchamos el stream del Repositorio
     _gameSubscription = listenUseCase.execute().listen(
       (newSessionData) {
         final currentState = state.value;
         if (currentState == null) return;
 
-        bool resetAnswered = true;
+        bool resetAnswered = currentState.hasAnsweredCurrentQuestion;
 
-        if (newSessionData.status == GameStatus.question) {
+        // LÓGICA DE DETECCIÓN DE NUEVA PREGUNTA
+        if (newSessionData.gameStatus == GameStatus.question) {
           final String? oldQId =
               currentState.session.currentQuestion?.questionId;
           final String? newQId = newSessionData.currentQuestion?.questionId;
 
+          // Si el ID de la pregunta cambió, es una nueva ronda
           if (newQId != null && newQId != oldQId) {
-            _questionStartTime = DateTime.now(); // Iniciamos cronómetro
-            resetAnswered = false; // Desbloqueamos botones
+            _questionStartTime = DateTime.now(); // Reset cronómetro
+            resetAnswered = false; // Desbloquear botones
           }
         }
-        newSessionData.orderScoreboardByRank();
-        //Actualizar estado
+        // Si el estado cambia a AnswerSubmitted, bloqueamos
+        else if (newSessionData.gameStatus == GameStatus.answerSubmitted) {
+          resetAnswered = true;
+        }
+
+        // Actualizamos el estado de la UI
         state = AsyncValue.data(
           currentState.copyWith(
             session: newSessionData,
@@ -62,15 +72,18 @@ class MultiplayerGameNotifier
   Future<void> joinGame(String pin, String nickname) async {
     state = const AsyncValue.loading();
     try {
+      // 1. Configuramos estado inicial optimista
       final initialState = GameNotifierState(
-        session: GameSession.initial().copyWith(pin: pin),
+        session: MultiplayerGameSession(pin: pin, nickname: nickname),
         role: GameRole.player,
         myPlayerId: nickname,
       );
       state = AsyncValue.data(initialState);
 
+      // 2. Nos suscribimos ANTES de conectar para no perder eventos inmediatos
       _subscribeToGameStream();
 
+      // 3. Ejecutamos conexión física
       final useCase = ref.read(joinGameUseCaseProvider);
       await useCase.execute(pin, nickname, GameRole.player);
     } catch (e, st) {
@@ -81,24 +94,20 @@ class MultiplayerGameNotifier
 
   Future<void> createGame(String quizId) async {
     state = const AsyncValue.loading();
-
     try {
-      final useCase = ref.read(
-        createGameUseCaseProvider,
-      );
+      final useCase = ref.read(createGameUseCaseProvider);
       String pin = await useCase.execute(quizId);
 
-      //Actualizo estado para el host
+      // Configurar Host
       state = AsyncValue.data(
         GameNotifierState(
-          session: GameSession.initial().copyWith(pin: pin),
+          session: MultiplayerGameSession(pin: pin),
           role: GameRole.host,
-          myPlayerId: "HOST", //Temporal
+          myPlayerId: "HOST",
         ),
       );
 
-      //Ahora sí escucha eventos
-      _subscribeToGameStream(); //OJO creo que deberia ir al comienzo?
+      _subscribeToGameStream();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -109,14 +118,17 @@ class MultiplayerGameNotifier
     if (currentState == null) return;
 
     // Validamos que haya una pregunta activa
-    if (currentState.isQuestionActive == false) return;
+    if (!currentState.isQuestionActive ||
+        currentState.session.currentQuestion == null)
+      return;
 
-    // Calculamos tiempo transcurrido
+    // Calculamos tiempo
     final questionFinishTime = DateTime.now();
-    final timeElapsed = questionFinishTime
-        .difference(_questionStartTime!)
-        .inMilliseconds;
+    final timeElapsed = _questionStartTime != null
+        ? questionFinishTime.difference(_questionStartTime!).inMilliseconds
+        : 0;
 
+    // Bloqueo optimista de UI
     state = AsyncValue.data(
       currentState.copyWith(hasAnsweredCurrentQuestion: true, isLoading: true),
     );
@@ -124,16 +136,23 @@ class MultiplayerGameNotifier
     try {
       final useCase = ref.read(submitAnswerUseCaseProvider);
 
+      // Asumo que tu UseCase ahora acepta el objeto CurrentQuestion nuevo
+      // O los parámetros primitivos (ID, Index, Tiempo)
       await useCase.execute(
         currentState.session.currentQuestion!,
         answerIndex,
         timeElapsed,
       );
+
+      // Nota: No quitamos el isLoading aquí, esperamos al evento 'player_answer_confirmation'
+      // que llegará por el socket para confirmar.
     } catch (e) {
+      // Si falla el envío (ej. sin internet), desbloqueamos
       state = AsyncValue.data(
         currentState.copyWith(
-          hasAnsweredCurrentQuestion: false, //si algo falla que vuelva a enviar
+          hasAnsweredCurrentQuestion: false,
           isLoading: false,
+          errorMessage: "Error al enviar respuesta",
         ),
       );
     }
@@ -144,7 +163,7 @@ class MultiplayerGameNotifier
       final useCase = ref.read(startGameUseCaseProvider);
       await useCase.execute();
     } catch (e) {
-      //Posible snackbar del error
+      // Manejo de errores silencioso o snackbar via listener en UI
     }
   }
 
@@ -153,29 +172,210 @@ class MultiplayerGameNotifier
       final useCase = ref.read(changeNextPhaseUseCaseProvider);
       await useCase.execute();
     } catch (e) {
-      //Posible snackbar del error
+      // Manejo de errores
     }
   }
 
   void leaveGame() {
     _gameSubscription?.cancel();
     _gameSubscription = null;
-
     _questionStartTime = null;
 
+    // Reset total
     state = AsyncValue.data(
-      GameNotifierState(
-        session: GameSession.initial(),
+      const GameNotifierState(
+        session: MultiplayerGameSession(),
         role: GameRole.none,
-        myPlayerId: null,
       ),
     );
   }
 }
 
-//revisar
+// Provider Final
 final multiplayerGameNotifierProvider =
     AsyncNotifierProvider.autoDispose<
       MultiplayerGameNotifier,
       GameNotifierState
     >(() => MultiplayerGameNotifier());
+
+// import 'dart:async';
+// import 'package:flutter_riverpod/flutter_riverpod.dart';
+// import 'package:frontkahoot2526/features/games/multiplayer/domain/game_session.dart';
+// import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_enums.dart';
+// import 'package:frontkahoot2526/features/games/multiplayer/presentation/models/multiplayer_game_notifier_state.dart';
+// import 'package:frontkahoot2526/features/games/multiplayer/presentation/providers/use_cases_providers.dart';
+
+// class MultiplayerGameNotifier
+//     extends AutoDisposeAsyncNotifier<GameNotifierState> {
+//   StreamSubscription<GameSession>? _gameSubscription;
+//   DateTime? _questionStartTime;
+
+//   @override
+//   FutureOr<GameNotifierState> build() {
+//     ref.onDispose(() {
+//       _gameSubscription?.cancel();
+//     });
+
+//     return GameNotifierState(
+//       session: GameSession.initial(),
+//       role: GameRole.none,
+//       myPlayerId: null,
+//     );
+//   }
+
+//   void _subscribeToGameStream() {
+//     final listenUseCase = ref.read(listenGameSessionUseCaseProvider);
+//     _gameSubscription?.cancel();
+//     _gameSubscription = listenUseCase.execute().listen(
+//       (newSessionData) {
+//         final currentState = state.value;
+//         if (currentState == null) return;
+
+//         bool resetAnswered = true;
+
+//         if (newSessionData.status == GameStatus.question) {
+//           final String? oldQId =
+//               currentState.session.currentQuestion?.questionId;
+//           final String? newQId = newSessionData.currentQuestion?.questionId;
+
+//           if (newQId != null && newQId != oldQId) {
+//             _questionStartTime = DateTime.now(); // Iniciamos cronómetro
+//             resetAnswered = false; // Desbloqueamos botones
+//           }
+//         }
+//         newSessionData.orderScoreboardByRank();
+//         //Actualizar estado
+//         state = AsyncValue.data(
+//           currentState.copyWith(
+//             session: newSessionData,
+//             hasAnsweredCurrentQuestion: resetAnswered,
+//             isLoading: false,
+//           ),
+//         );
+//       },
+//       onError: (e, st) {
+//         state = AsyncValue.error(e, st);
+//       },
+//     );
+//   }
+
+//   Future<void> joinGame(String pin, String nickname) async {
+//     state = const AsyncValue.loading();
+//     try {
+//       final initialState = GameNotifierState(
+//         session: GameSession.initial().copyWith(pin: pin),
+//         role: GameRole.player,
+//         myPlayerId: nickname,
+//       );
+//       state = AsyncValue.data(initialState);
+
+//       _subscribeToGameStream();
+
+//       final useCase = ref.read(joinGameUseCaseProvider);
+//       await useCase.execute(pin, nickname, GameRole.player);
+//     } catch (e, st) {
+//       _gameSubscription?.cancel();
+//       state = AsyncValue.error(e, st);
+//     }
+//   }
+
+//   Future<void> createGame(String quizId) async {
+//     state = const AsyncValue.loading();
+
+//     try {
+//       final useCase = ref.read(
+//         createGameUseCaseProvider,
+//       );
+//       String pin = await useCase.execute(quizId);
+
+//       //Actualizo estado para el host
+//       state = AsyncValue.data(
+//         GameNotifierState(
+//           session: GameSession.initial().copyWith(pin: pin),
+//           role: GameRole.host,
+//           myPlayerId: "HOST", //Temporal
+//         ),
+//       );
+
+//       //Ahora sí escucha eventos
+//       _subscribeToGameStream(); //OJO creo que deberia ir al comienzo?
+//     } catch (e, st) {
+//       state = AsyncValue.error(e, st);
+//     }
+//   }
+
+//   Future<void> submitAnswer(int answerIndex) async {
+//     final currentState = state.value;
+//     if (currentState == null) return;
+
+//     // Validamos que haya una pregunta activa
+//     if (currentState.isQuestionActive == false) return;
+
+//     // Calculamos tiempo transcurrido
+//     final questionFinishTime = DateTime.now();
+//     final timeElapsed = questionFinishTime
+//         .difference(_questionStartTime!)
+//         .inMilliseconds;
+
+//     state = AsyncValue.data(
+//       currentState.copyWith(hasAnsweredCurrentQuestion: true, isLoading: true),
+//     );
+
+//     try {
+//       final useCase = ref.read(submitAnswerUseCaseProvider);
+
+//       await useCase.execute(
+//         currentState.session.currentQuestion!,
+//         answerIndex,
+//         timeElapsed,
+//       );
+//     } catch (e) {
+//       state = AsyncValue.data(
+//         currentState.copyWith(
+//           hasAnsweredCurrentQuestion: false, //si algo falla que vuelva a enviar
+//           isLoading: false,
+//         ),
+//       );
+//     }
+//   }
+
+//   Future<void> startGame() async {
+//     try {
+//       final useCase = ref.read(startGameUseCaseProvider);
+//       await useCase.execute();
+//     } catch (e) {
+//       //Posible snackbar del error
+//     }
+//   }
+
+//   Future<void> nextPhase() async {
+//     try {
+//       final useCase = ref.read(changeNextPhaseUseCaseProvider);
+//       await useCase.execute();
+//     } catch (e) {
+//       //Posible snackbar del error
+//     }
+//   }
+
+//   void leaveGame() {
+//     _gameSubscription?.cancel();
+//     _gameSubscription = null;
+
+//     _questionStartTime = null;
+
+//     state = AsyncValue.data(
+//       GameNotifierState(
+//         session: GameSession.initial(),
+//         role: GameRole.none,
+//         myPlayerId: null,
+//       ),
+//     );
+//   }
+// }
+
+// //revisar
+// final multiplayerGameNotifierProvider =
+//     AsyncNotifierProvider.autoDispose<
+//       MultiplayerGameNotifier,
+//       GameNotifierState
+//     >(() => MultiplayerGameNotifier());
