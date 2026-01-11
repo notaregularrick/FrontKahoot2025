@@ -135,19 +135,32 @@ class _SingleplayerQuestionScreenState extends State<SingleplayerQuestionScreen>
             padding: const EdgeInsets.all(16),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final bool singleColumn = padded.length <= 2;
-                final double aspect = singleColumn ? 3.0 : 1.0;
+                final int optionsCount = padded.length;
+                final bool singleColumn = optionsCount <= 2;
+                final bool forceNoScroll = optionsCount <= 4; // 4 opciones deben caber sin scroll
+                final int crossAxisCount = singleColumn ? 1 : 2;
+                final int rows = (optionsCount / crossAxisCount).ceil();
+
+                // Ajusta el aspect ratio para que 4 opciones ocupen exactamente el alto disponible
+                double aspect = singleColumn ? 3.0 : 1.0;
+                if (forceNoScroll && !singleColumn && rows > 0) {
+                  final double availableHeight = constraints.maxHeight - ((rows - 1) * 12);
+                  final double itemHeight = availableHeight > 0 ? availableHeight / rows : constraints.maxHeight;
+                  final double itemWidth = (constraints.maxWidth - ((crossAxisCount - 1) * 12)) / crossAxisCount;
+                  aspect = itemWidth / itemHeight;
+                }
 
                 return GridView.builder(
                   primary: false,
-                  shrinkWrap: true,
+                  shrinkWrap: false,
+                  physics: forceNoScroll ? const NeverScrollableScrollPhysics() : null,
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: singleColumn ? 1 : 2,
+                    crossAxisCount: crossAxisCount,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                     childAspectRatio: aspect,
                   ),
-                  itemCount: padded.length,
+                  itemCount: optionsCount,
                   itemBuilder: (context, index) {
                     final opt = padded[index];
                     final color = optionColors[index % optionColors.length];

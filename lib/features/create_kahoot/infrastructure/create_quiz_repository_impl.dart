@@ -11,6 +11,22 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
 
   CreateQuizRepositoryImpl(this._dio);
 
+  String? _extractMediaId(String? urlOrId) {
+    if (urlOrId == null || urlOrId.isEmpty) return null;
+    if (!urlOrId.contains('/')) return urlOrId;
+    try {
+      final uri = Uri.parse(urlOrId);
+      final segments = uri.pathSegments;
+      final mediaIndex = segments.indexOf('media');
+      if (mediaIndex != -1 && mediaIndex < segments.length - 1) {
+        return segments[mediaIndex + 1];
+      }
+      return segments.isNotEmpty ? segments.last : urlOrId;
+    } catch (_) {
+      return urlOrId;
+    }
+  }
+
   @override
   Future<Quiz> createQuiz(Quiz quiz) async {
     try {
@@ -101,12 +117,109 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
     }
   }
 
+  @override
+  Future<Quiz> getQuiz(String quizId) async {
+    try {
+      print('║ [GET QUIZ] URL base: ${_dio.options.baseUrl}');
+      print('║ [GET QUIZ] Endpoint: GET /kahoots/$quizId');
+      final response = await _dio.get('/kahoots/$quizId');
+      if (response.statusCode == 200) {
+        return _quizFromJson(response.data);
+      }
+      throw AppException(
+        message: 'Error al obtener el quiz',
+        statusCode: response.statusCode ?? 500,
+      );
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw AppException(
+          message: 'No se pudo obtener el quiz',
+          statusCode: e.response?.statusCode ?? 500,
+          error: e.response?.data?.toString(),
+        );
+      }
+      throw AppException(
+        message: 'Error de conexión al obtener el quiz',
+        statusCode: 500,
+        error: e.message,
+      );
+    }
+  }
+
+  @override
+  Future<Quiz> updateQuiz(String quizId, Quiz quiz) async {
+    try {
+      print('╔══════════════════════════════════════════════════════════════');
+      print('║ [UPDATE QUIZ] Iniciando actualización de quiz...');
+      print('╠══════════════════════════════════════════════════════════════');
+      final jsonData = _quizToJson(quiz);
+      final jsonPretty = const JsonEncoder.withIndent('  ').convert(jsonData);
+      print('║ [UPDATE QUIZ] JSON a enviar:');
+      print('║ $jsonPretty');
+      print('╠══════════════════════════════════════════════════════════════');
+      print('║ [UPDATE QUIZ] URL base: ${_dio.options.baseUrl}');
+      print('║ [UPDATE QUIZ] Endpoint: PUT /kahoots/$quizId');
+      print('╠══════════════════════════════════════════════════════════════');
+
+      final response = await _dio.put(
+        '/kahoots/$quizId',
+        data: jsonData,
+      );
+
+      print('║ [UPDATE QUIZ] Respuesta recibida - Status: ${response.statusCode}');
+      print('║ [UPDATE QUIZ] Response data: ${response.data}');
+      print('╚══════════════════════════════════════════════════════════════');
+
+      if (response.statusCode == 200) {
+        return _quizFromJson(response.data);
+      } else {
+        throw AppException(
+          message: 'Error al actualizar el quiz',
+          statusCode: response.statusCode ?? 500,
+        );
+      }
+    } on DioException catch (e) {
+      print('║ [UPDATE QUIZ] ❌ DioException capturada');
+      print('║ [UPDATE QUIZ] Tipo: ${e.type}');
+      print('║ [UPDATE QUIZ] Mensaje: ${e.message}');
+      if (e.response != null) {
+        final statusCode = e.response!.statusCode;
+        final responseData = e.response?.data;
+        print('║ [UPDATE QUIZ] Status code: $statusCode');
+        print('║ [UPDATE QUIZ] Response data: $responseData');
+        print('╚══════════════════════════════════════════════════════════════');
+        String message = 'Datos del quiz inválidos';
+        if (statusCode == 401) message = 'No autorizado';
+        if (statusCode == 404) message = 'El quiz no existe';
+        throw AppException(
+          message: message,
+          statusCode: statusCode,
+          error: e.response?.data?.toString(),
+        );
+      } else {
+        throw AppException(
+          message: 'Error de conexión al actualizar el quiz',
+          statusCode: 500,
+          error: e.message,
+        );
+      }
+    } catch (e) {
+      if (e is AppException) rethrow;
+      throw AppException(
+        message: 'Error inesperado al actualizar el quiz',
+        statusCode: 500,
+        error: e.toString(),
+      );
+    }
+  }
+
   /// Convierte entidad Quiz a JSON camelCase 
   Map<String, dynamic> _quizToJson(Quiz quiz) {
     // Helper para pasar ID o null si está vacío
     String? _idOrNull(String? id) {
       if (id == null || id.isEmpty) return null;
-      return id; // Pasar el ID directamente
+      final extracted = _extractMediaId(id);
+      return extracted ?? id; // Preferir ID limpio, fallback al valor original
     }
 
     // Mapear tipo de pregunta: "quiz" -> "single", "multiple" -> "multiple", "true_false" -> "true_false"
@@ -223,26 +336,6 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
   /// Convierte respuesta JSON a entidad Quiz
   Quiz _quizFromJson(Map<String, dynamic> json) {
     // Helper para extraer mediaId de una URL completa
-    String? _urlToMediaId(String? url) {
-      if (url == null || url.isEmpty) return null;
-      // Si ya es solo un ID (sin /), retornarlo tal cual
-      if (!url.contains('/')) return url;
-      // Extraer el ID de la URL (último segmento después de /media/)
-      try {
-        final uri = Uri.parse(url);
-        final pathSegments = uri.pathSegments;
-        final mediaIndex = pathSegments.indexOf('media');
-        if (mediaIndex != -1 && mediaIndex < pathSegments.length - 1) {
-          return pathSegments[mediaIndex + 1];
-        }
-        // Si no encuentra /media/, tomar el último segmento
-        return pathSegments.isNotEmpty ? pathSegments.last : null;
-      } catch (e) {
-        // Si falla el parsing, retornar null
-        return null;
-      }
-    }
-
     // Mapear tipo de pregunta de API a dominio: "single" -> "quiz", "multiple" -> "multiple", "true_false" -> "true_false"
     String _mapQuestionTypeFromApi(String type) {
       switch (type) {
@@ -293,7 +386,7 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
               id: aJson['id']?.toString() ?? '',
               text: aJson['text']?.toString(),
               isCorrect: aJson['isCorrect'] ?? false,
-              mediaId: _urlToMediaId(aJson['mediaId']?.toString()),
+              mediaId: _extractMediaId(aJson['mediaId']?.toString()),
             );
           }).toList();
         }
@@ -304,7 +397,7 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
           type: _mapQuestionTypeFromApi(qJson['type']?.toString() ?? 'quiz'),
           timeLimit: qJson['timeLimit'] ?? 0,
           points: qJson['points'] ?? 0,
-          mediaId: _urlToMediaId(qJson['mediaId']?.toString()),
+          mediaId: _extractMediaId(qJson['mediaId']?.toString()),
           answers: answers,
         );
       }).toList();
@@ -314,7 +407,7 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
       id: json['id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
-      coverImageId: _urlToMediaId(json['coverImageId']?.toString()),
+      coverImageId: json['coverImageId']?.toString(),
       visibility: _mapVisibilityFromApi(json['visibility']?.toString() ?? 'private'),
       status: _mapStatusFromApi(json['status']?.toString() ?? 'draft'),
       category: json['category']?.toString() ?? '',

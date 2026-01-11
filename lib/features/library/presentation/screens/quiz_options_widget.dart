@@ -86,7 +86,7 @@ class QuizOptionsSheet extends ConsumerWidget {
             // 3. Botones Dinámicos según la Sección
             if (type == QuizContextType.myCreations) ...[
               //3 puntos para descomponer el array
-              createEditButton(),
+              createEditButton(context),
               createPlayMultiplayerButton(),
               createPlaySoloButton(context, ref),
             ],
@@ -117,7 +117,7 @@ class QuizOptionsSheet extends ConsumerWidget {
     );
   }
 
-  Widget createEditButton() {
+  Widget createEditButton(BuildContext context) {
     return ListTile(
       leading: Icon(Icons.edit),
       title: Text(
@@ -129,7 +129,8 @@ class QuizOptionsSheet extends ConsumerWidget {
         ),
       ),
       onTap: () {
-        //Lleva a la pestaña de editar
+        Navigator.pop(context);
+        context.go('/create-kahoot/from-scratch?kid=${quiz.id}');
       },
     );
   }

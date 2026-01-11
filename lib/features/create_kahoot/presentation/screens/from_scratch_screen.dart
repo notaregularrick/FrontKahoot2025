@@ -10,6 +10,8 @@ import 'package:frontkahoot2526/core/domain/entities/quiz.dart';
 import 'package:frontkahoot2526/features/create_kahoot/presentation/providers/create_quiz_service_provider.dart';
 import 'package:frontkahoot2526/features/media/presentation/providers/media_service_provider.dart';
 import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
+import 'package:frontkahoot2526/features/library/presentation/providers/library_notifier.dart';
+import 'package:frontkahoot2526/core/providers/backend_provider.dart';
 
 // Modelos de datos para gestionar el estado de preguntas y respuestas
 class QuestionData {
@@ -65,6 +67,10 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
   String? quizCoverImageId; // ID para enviar al backend
   String? quizCoverImageUrl; // URL para mostrar preview
   String? _defaultThemeId;
+  bool _isEditMode = false;
+  String? _editingKahootId;
+  bool _isLoadingExisting = false;
+  String quizStatus = 'draft';
 
   @override
   void initState() {
@@ -73,6 +79,70 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     _addNewQuestion();
     // Cargar themeId del backend
     _loadDefaultTheme();
+  }
+
+  Future<void> _loadExistingQuiz(String kahootId) async {
+    setState(() {
+      _isLoadingExisting = true;
+    });
+    try {
+      final service = ref.read(createQuizServiceProvider);
+      final quiz = await service.getQuiz(kahootId);
+
+      setState(() {
+        quizTitle = quiz.title;
+        quizDescription = quiz.description;
+        quizCategory = quiz.category.isNotEmpty ? quiz.category : 'Estudio';
+        quizVisibility = quiz.visibility.isNotEmpty ? quiz.visibility : 'private';
+        quizStatus = quiz.status.isNotEmpty ? quiz.status : 'draft';
+        quizCoverImageId = quiz.coverImageId;
+        quizCoverImageUrl = _resolveMediaUrl(quiz.coverImageId);
+        questions = quiz.questions.map((q) {
+          return QuestionData(
+            id: q.id,
+            text: _truncate(q.text, 120),
+            type: q.type,
+            timeLimit: q.timeLimit,
+            points: q.points,
+            mediaId: q.mediaId,
+            answers: q.answers.map((a) => AnswerData(
+              id: a.id,
+              text: a.text,
+              isCorrect: a.isCorrect,
+              mediaId: a.mediaId,
+            )).toList(),
+          );
+        }).toList();
+        if (questions.isEmpty) {
+          _addNewQuestion();
+        }
+        currentQuestionIndex = 0;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar el kahoot: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingExisting = false;
+        });
+      }
+    }
+  }
+
+  String _truncate(String text, int max) {
+    if (text.length <= max) return text;
+    return text.substring(0, max);
+  }
+
+  String? _resolveMediaUrl(String? idOrUrl) {
+    if (idOrUrl == null || idOrUrl.isEmpty) return null;
+    if (idOrUrl.startsWith('http')) return idOrUrl;
+
+    final base = ref.read(backendProvider).url;
+    final normalizedBase = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
+    return '$normalizedBase/media/$idOrUrl';
   }
 
   Future<void> _loadDefaultTheme() async {
@@ -97,6 +167,14 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     final route = GoRouterState.of(context);
     final uri = route.uri;
     final queryParams = uri.queryParameters;
+    
+    // Modo edición: si viene kid en query y aún no lo hemos cargado
+    final kid = queryParams['kid'];
+    if (!_isEditMode && kid != null && kid.isNotEmpty) {
+      _isEditMode = true;
+      _editingKahootId = kid;
+      _loadExistingQuiz(kid);
+    }
     
     if (quizTitle.isEmpty && queryParams.isNotEmpty) {
       print('Parámetros de URL recibidos:');
@@ -453,7 +531,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
 
       return Question(
         id: q.id,
-        text: q.text,
+        text: _truncate(q.text, 120),
         type: q.type,
         timeLimit: q.timeLimit,
         points: q.points,
@@ -503,6 +581,11 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoadingExisting) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     if (questions.isEmpty) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -588,9 +671,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
               },
             ),
           TextButton(
-            onPressed: _createQuiz,
+            onPressed: _isEditMode ? _saveEditedQuiz : _createQuiz,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.black87),
                 borderRadius: BorderRadius.circular(8),
@@ -644,52 +727,58 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Botón Añadir multimedia y tiempo
+            // Fila de multimedia y estado (sin scroll horizontal)
             Row(
               children: [
-                Flexible(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(minWidth: 200),
-                    child: ElevatedButton.icon(
-                      onPressed: () => _uploadQuizCoverImage(),
-                      icon: const Icon(Icons.add_photo_alternate, color: Colors.black87),
-                      label: const Text(
-                        'Añadir multimedia',
-                        style: TextStyle(color: Colors.black87),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[200],
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                SizedBox(
-                  width: 92,
+                Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      _showTimePicker(context);
-                    },
-                    icon: const Icon(Icons.access_time, color: Colors.white),
-                    label: Text(
-                      '${currentQ.timeLimit} s',
-                      style: const TextStyle(color: Colors.white),
+                    onPressed: () => _uploadQuizCoverImage(),
+                    icon: const Icon(Icons.add_photo_alternate, color: Colors.black87),
+                    label: const Text(
+                      'Añadir multimedia',
+                      style: TextStyle(color: Colors.black87),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple[600],
+                      backgroundColor: Colors.grey[200],
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
                 ),
+                if (_isEditMode) ...[
+                  const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.flag, color: Colors.black87, size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          quizStatus == 'published' ? 'Publicado' : 'Borrador',
+                          style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(width: 8),
+                        Switch(
+                          value: quizStatus == 'published',
+                          activeColor: Colors.green,
+                          onChanged: (value) {
+                            setState(() {
+                              quizStatus = value ? 'published' : 'draft';
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
             // Mostrar imagen de portada si existe
@@ -795,7 +884,33 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                       ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
+            // Tiempo debajo de la pregunta
+            Align(
+              alignment: Alignment.centerLeft,
+              child: SizedBox(
+                width: 110,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    _showTimePicker(context);
+                  },
+                  icon: const Icon(Icons.access_time, color: Colors.white),
+                  label: Text(
+                    '${currentQ.timeLimit} s',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple[600],
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
             // Grid de respuestas 
             GridView.count(
               crossAxisCount: 2,
@@ -906,6 +1021,121 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _saveEditedQuiz() async {
+    if (_editingKahootId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: ID de kahoot no válido')),
+      );
+      return;
+    }
+
+    final validQuestions = questions.where((q) => q.text.trim().isNotEmpty).toList();
+    if (validQuestions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Debes agregar al menos una pregunta')),
+      );
+      return;
+    }
+
+    for (var question in validQuestions) {
+      final validAnswers = question.answers.where((a) =>
+        (a.text != null && a.text!.trim().isNotEmpty) ||
+        (a.mediaId != null && a.mediaId!.trim().isNotEmpty)
+      ).toList();
+      if (validAnswers.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cada pregunta debe tener al menos una respuesta')),
+        );
+        return;
+      }
+      if (question.type == 'quiz' || question.type == 'true_false') {
+        final hasCorrectAnswer = validAnswers.any((a) => a.isCorrect);
+        if (!hasCorrectAnswer) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Cada pregunta debe tener al menos una respuesta correcta')),
+          );
+          return;
+        }
+      }
+      if (question.type == 'multiple') {
+        final correctAnswersCount = validAnswers.where((a) => a.isCorrect).length;
+        if (correctAnswersCount < 2) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Las preguntas de selección múltiple deben tener al menos 2 respuestas correctas')),
+          );
+          return;
+        }
+      }
+    }
+
+    final questionEntities = validQuestions.map((q) {
+      final validAnswers = q.answers
+          .where((a) =>
+            (a.text != null && a.text!.trim().isNotEmpty) ||
+            (a.mediaId != null && a.mediaId!.trim().isNotEmpty)
+          )
+          .map((a) => Answer(
+                id: a.id,
+                text: a.text,
+                isCorrect: a.isCorrect,
+                mediaId: a.mediaId,
+              ))
+          .toList();
+
+      return Question(
+        id: q.id,
+        text: _truncate(q.text, 120),
+        type: q.type,
+        timeLimit: q.timeLimit,
+        points: q.points,
+        mediaId: q.mediaId,
+        answers: validAnswers,
+      );
+    }).toList();
+
+    final quiz = Quiz(
+      id: _editingKahootId ?? '',
+      title: quizTitle,
+      description: quizDescription,
+      coverImageId: quizCoverImageId,
+      visibility: quizVisibility,
+      status: quizStatus,
+      category: quizCategory,
+      themeId: _defaultThemeId ?? '',
+      authorId: '',
+      authorName: '',
+      questions: questionEntities,
+      createdAt: DateTime.now(),
+      playCount: 0,
+    );
+
+    try {
+      final service = ref.read(createQuizServiceProvider);
+      final updatedQuiz = await service.updateQuiz(_editingKahootId!, quiz);
+      if (mounted) {
+        try {
+          ref.invalidate(asyncLibraryProvider);
+        } catch (_) {}
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Quiz "${updatedQuiz.title}" actualizado')),
+        );
+        context.go('/library');
+      }
+    } on AppException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al actualizar el quiz: ${e.message}')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error inesperado: $e')),
+        );
+      }
+    }
   }
 
   Widget _buildAnswerButton({
