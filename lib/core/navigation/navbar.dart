@@ -40,9 +40,8 @@ class ScaffoldWithNavBar extends ConsumerWidget {
           }
         },
         destinations: const [
-          // 0: Inicio
-          NavigationDestination(icon: Icon(Icons.home), label: 'Inicio'),
-          // 1: Crear Kahoot
+          NavigationDestination(icon: Icon(Icons.home), label: 'Descubrir'),
+          NavigationDestination(icon: Icon(Icons.videogame_asset), label: 'Unirse'),
           NavigationDestination(icon: Icon(Icons.add_circle), label: 'Crear\nKahoot'),
           // 2: Unirse (center, slightly larger icon)
           NavigationDestination(

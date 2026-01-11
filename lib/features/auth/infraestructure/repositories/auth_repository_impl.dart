@@ -9,7 +9,7 @@ import '../models/user_model.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../../core/simulated_data.dart';
+//import '../../../../core/simulated_data.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthDatasource datasource;
