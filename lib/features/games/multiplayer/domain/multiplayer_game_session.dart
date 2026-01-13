@@ -7,6 +7,7 @@ class MultiplayerGameSession {
   final String pin;
   final String id;
   final String nickname;
+  final String? message;
   final CurrentQuestion? currentQuestion;
 
   final GameStatus gameStatus;
@@ -24,6 +25,7 @@ class MultiplayerGameSession {
     this.connectionStatus = ConnectionStatus.connecting,
     this.playerGameEnd,
     this.playerResults,
+    this.message,
   });
   
   MultiplayerGameSession copyWith({
@@ -35,6 +37,7 @@ class MultiplayerGameSession {
     ConnectionStatus? connectionStatus,
     PlayerGameEnd? playerGameEnd,
     PlayerResults? playerResults,
+    String? message,
   }) {
     return MultiplayerGameSession(
       pin: pin ?? this.pin,
@@ -45,6 +48,7 @@ class MultiplayerGameSession {
       connectionStatus: connectionStatus ?? this.connectionStatus,
       playerGameEnd: playerGameEnd ?? this.playerGameEnd,
       playerResults: playerResults ?? this.playerResults,
+      message: message ?? this.message,
     );
   }
 

@@ -85,6 +85,11 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
       _handleEvent('session_closed', data);
     });
 
+    //HOST
+    _socket.on('host_results', (data) {
+      _handleEvent('host_results', data);
+    });
+
     _socket.connect();
   }
 
@@ -133,7 +138,7 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
         updatedSession = updatedSession.copyWith(
           gameStatus: GameStatus.lobby,
           connectionStatus: ConnectionStatus.connected,
-        );
+        ); //pantalla de espera
         break;
 
       case 'question_started':
@@ -224,7 +229,14 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
         updatedSession = updatedSession.copyWith(
           connectionStatus: ConnectionStatus.disconected,
           gameStatus: GameStatus.none,
+          message: data['message'] as String?,
         );
+        break;
+
+      case 'host_results':
+        break;
+
+      case 'host_game_end':
         break;
 
       default:

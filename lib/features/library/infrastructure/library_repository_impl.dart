@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:frontkahoot2526/core/domain/entities/paginated_result.dart';
 import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
 import 'package:frontkahoot2526/features/library/domain/library_filter_params.dart';
@@ -350,8 +351,7 @@ class LibraryRepositoryImpl implements ILibraryRepository {
   @override
   Future<void> addQuizToFavorite(String quizId) async {
     try {
-      final Dio dio = Dio();
-      await dio.post(
+      await _dio.post(
         '/library/favorites/$quizId',
         data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
@@ -379,10 +379,10 @@ class LibraryRepositoryImpl implements ILibraryRepository {
   @override
   Future<void> removeQuizFromFavorite(String quizId) async {
     try {
-      final Dio dio = Dio();
-      await dio.delete(
+      debugPrint(quizId);
+      await _dio.delete(
         '/library/favorites/$quizId',
-        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
+        //data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
     } on DioException catch (e) {
       if (e.response != null) {
