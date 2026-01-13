@@ -47,26 +47,26 @@ class HostEndGame {
 }
 
 void main(List<String> args) {
-  final mockedData = {
-    "state": "end",
-    "finalPodium": [
-      {
-        "playerId": "a25c1189-d3c0-4990-8e30-e5f5603c202c",
-        "nickname": "Carlitos",
-        "score": 1419,
-        "rank": 1,
-        "previousRank": 1,
-      },
-    ],
-    "winner": {
-      "playerId": "a25c1189-d3c0-4990-8e30-e5f5603c202c",
-      "nickname": "Carlitos",
-      "score": 1419,
-      "rank": 1,
-      "previousRank": 1,
-    },
-    "totalParticipants": 1,
-  };
+  // final mockedData = {
+  //   "state": "end",
+  //   "finalPodium": [
+  //     {
+  //       "playerId": "a25c1189-d3c0-4990-8e30-e5f5603c202c",
+  //       "nickname": "Carlitos",
+  //       "score": 1419,
+  //       "rank": 1,
+  //       "previousRank": 1,
+  //     },
+  //   ],
+  //   "winner": {
+  //     "playerId": "a25c1189-d3c0-4990-8e30-e5f5603c202c",
+  //     "nickname": "Carlitos",
+  //     "score": 1419,
+  //     "rank": 1,
+  //     "previousRank": 1,
+  //   },
+  //   "totalParticipants": 1,
+  // };
 
   final mockedData2 = {
     "state": "end",

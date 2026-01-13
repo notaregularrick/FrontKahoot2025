@@ -1,4 +1,7 @@
 import 'package:frontkahoot2526/features/games/multiplayer/domain/current_question.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/domain/host_end_game.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/domain/host_lobby.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/domain/host_results.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_enums.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/player_game_end.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/player_results.dart';
@@ -16,6 +19,10 @@ class MultiplayerGameSession {
   final PlayerGameEnd? playerGameEnd;
   final PlayerResults? playerResults;
 
+  final HostLobby? hostLobby;
+  final HostResults? hostResults;
+  final HostEndGame? hostEndGame;
+
   const MultiplayerGameSession({
     this.pin='',
     this.id = '',
@@ -25,6 +32,9 @@ class MultiplayerGameSession {
     this.connectionStatus = ConnectionStatus.connecting,
     this.playerGameEnd,
     this.playerResults,
+    this.hostLobby,
+    this.hostResults,
+    this.hostEndGame,
     this.message,
   });
   
@@ -37,6 +47,9 @@ class MultiplayerGameSession {
     ConnectionStatus? connectionStatus,
     PlayerGameEnd? playerGameEnd,
     PlayerResults? playerResults,
+    HostLobby? hostLobby,
+    HostResults? hostResults,
+    HostEndGame? hostEndGame,
     String? message,
   }) {
     return MultiplayerGameSession(
@@ -48,6 +61,9 @@ class MultiplayerGameSession {
       connectionStatus: connectionStatus ?? this.connectionStatus,
       playerGameEnd: playerGameEnd ?? this.playerGameEnd,
       playerResults: playerResults ?? this.playerResults,
+      hostLobby: hostLobby ?? this.hostLobby,
+      hostResults: hostResults ?? this.hostResults,
+      hostEndGame: hostEndGame ?? this.hostEndGame,
       message: message ?? this.message,
     );
   }

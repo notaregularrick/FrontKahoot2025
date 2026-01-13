@@ -1,6 +1,12 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/current_question.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/domain/host_end_game.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/domain/host_lobby.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/domain/host_results.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/domain/host_session_info.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_enums.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_game_repository.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_game_session.dart';
@@ -11,7 +17,10 @@ import 'package:socket_io_client/socket_io_client.dart' as io;
 class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
   final _sessionController =
       StreamController<MultiplayerGameSession>.broadcast();
+  String _pin = '';
   MultiplayerGameSession _currentGameSession = MultiplayerGameSession();
+  Dio _dio;
+  MultiplayerGameRepositoryImpl(this._dio);
 
   @override
   Stream<MultiplayerGameSession> get gameStream => _sessionController.stream;
@@ -47,6 +56,7 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
       // _socket.emit('client_ready');
       // _socket.emit('player_join', {"nickname": nickname});
       _socket.emit('client_ready');
+      _pin = pin;
     });
 
     _socket.onConnectError((data) => debugPrint(' Error de conexión: $data'));
@@ -88,6 +98,14 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
     //HOST
     _socket.on('host_results', (data) {
       _handleEvent('host_results', data);
+    });
+
+    _socket.on('host_game_end', (data) {
+      _handleEvent('host_game_end', data);
+    });
+
+    _socket.on('host_lobby_update', (data) {
+      _handleEvent('host_lobby_update', data);
     });
 
     _socket.connect();
@@ -138,6 +156,8 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
         updatedSession = updatedSession.copyWith(
           gameStatus: GameStatus.lobby,
           connectionStatus: ConnectionStatus.connected,
+          pin: _pin,
+          nickname: data['nickname'] as String? ?? 'player',
         ); //pantalla de espera
         break;
 
@@ -169,6 +189,8 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
           currentQuestion: question,
           playerResults: null,
           playerGameEnd: null,
+          hostResults: null,
+          hostEndGame: null,
         );
         break;
 
@@ -234,9 +256,30 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
         break;
 
       case 'host_results':
+        HostResults resultsHost = HostResults.fromJson(data);
+        resultsHost.logDebugInfo();
+        updatedSession = updatedSession.copyWith(
+          gameStatus: GameStatus.results,
+          hostResults: resultsHost,
+        );
         break;
 
       case 'host_game_end':
+        HostEndGame endGameHost = HostEndGame.fromJson(data);
+        endGameHost.logDebugInfo();
+        updatedSession = updatedSession.copyWith(
+          gameStatus: GameStatus.end,
+          hostEndGame: endGameHost,
+        );
+        break;
+
+      case 'host_lobby_update':
+        HostLobby hostLobby = HostLobby.fromJson(data);
+        hostLobby.logDebugInfo();
+        updatedSession = updatedSession.copyWith(
+          gameStatus: GameStatus.lobby,
+          hostLobby: hostLobby,
+        );
         break;
 
       default:
@@ -263,20 +306,49 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
   }
 
   @override
-  Future<String> createGame(String quizId) {
-    throw UnimplementedError();
+  Future<HostSessionInfo> createGame(String quizId) async {
+    try {
+      Response response = await _dio.post(
+        '/multiplayer-sessions',
+        data: {"kahootId": quizId}, //QUITAR
+      );
+      return HostSessionInfo.fromJson(response.data);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        final data = e.response!.data;
+        throw AppException(
+          message: data['message'] as String,
+          statusCode: data['statusCode'] as int?,
+          error: data['error'] as String?,
+        );
+      } else {
+        throw AppException(message: 'Error desconocido', statusCode: 500);
+      }
+    } catch (e) {
+      throw AppException(
+        message: "Ocurrió un error inesperado",
+        statusCode: 500,
+        error: e.toString(),
+      );
+    }
   }
 
   @override
-  Future<void> startGame() {
+  Future<void> startGame() async {
     // Host
-    throw UnimplementedError();
+    _socket.emit('host_start_game');
   }
 
   @override
-  Future<void> nextPhase() {
+  Future<void> nextPhase() async {
     // Host
-    throw UnimplementedError();
+    _socket.emit('host_next_phase');
+  }
+
+  @override
+  Future<void> endSession() async {
+    // Host
+    _socket.emit('host_end_session');
   }
 
   @override
