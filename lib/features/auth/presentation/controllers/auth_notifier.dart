@@ -16,12 +16,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final token = await repository.login(email: email, password: password);
 
       // Guardar token en el dispositivo
-      await storage.saveToken(token.accessToken);
+      await storage.saveToken(token.token);
 
       state = state.copyWith(
         isLoading: false,
-        token: token.accessToken,
-        user: token.user.toEntity(),
+        token: token.token,
+        user: token.user?.toEntity(),
       );
     } catch (e) {
       state = state.copyWith(

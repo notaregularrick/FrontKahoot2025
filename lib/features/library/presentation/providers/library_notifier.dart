@@ -161,7 +161,7 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
   }
 
   Future<void> searchQuizzes(String query) async {
-    _queryParams = _queryParams.copyWith(search: query);
+    _queryParams = _queryParams.copyWith(q: query);
     state = const AsyncLoading();
     await changePage(1);
   }

@@ -84,20 +84,59 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final shadow = BoxShadow(
+      color: Colors.black.withOpacity(0.05),
+      blurRadius: 16,
+      offset: const Offset(0, 10),
+    );
+
+    return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [shadow],
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const Text(
+            'Crea tu cuenta',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 16),
           TextField(
             controller: nameCtrl,
-            decoration: const InputDecoration(labelText: "Nombre"),
-            enabled: !_isLoading, // Deshabilitar mientras carga
+            decoration: InputDecoration(
+              labelText: 'Nombre',
+              prefixIcon: const Icon(Icons.person_outline),
+              filled: true,
+              fillColor: Colors.grey[100],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            enabled: !_isLoading,
           ),
           const SizedBox(height: 12),
           TextField(
             controller: emailCtrl,
-            decoration: const InputDecoration(labelText: "Email"),
+            decoration: InputDecoration(
+              labelText: 'Email',
+              prefixIcon: const Icon(Icons.mail_outline),
+              filled: true,
+              fillColor: Colors.grey[100],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
             keyboardType: TextInputType.emailAddress,
             enabled: !_isLoading,
           ),
@@ -105,29 +144,51 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
           TextField(
             controller: passCtrl,
             obscureText: true,
-            decoration: const InputDecoration(labelText: "Contraseña"),
+            decoration: InputDecoration(
+              labelText: 'Contraseña',
+              prefixIcon: const Icon(Icons.lock_outline),
+              filled: true,
+              fillColor: Colors.grey[100],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
             enabled: !_isLoading,
           ),
-          const SizedBox(height: 20),
-          
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _isLoading ? null : _submit, // Desactiva el botón si carga
-              child: _isLoading 
+          const SizedBox(height: 18),
+          ElevatedButton.icon(
+            onPressed: _isLoading ? null : _submit,
+            icon: _isLoading
                 ? const SizedBox(
-                    height: 20, 
-                    width: 20, 
-                    child: CircularProgressIndicator(strokeWidth: 2)
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : const Text("Crear Cuenta"),
+                : const Icon(Icons.check_circle_outline, color: Colors.white),
+            label: Text(
+              _isLoading ? 'Creando...' : 'Crear Cuenta',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF6A5F),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
             ),
           ),
-
-          TextButton(
+          const SizedBox(height: 12),
+          TextButton.icon(
             onPressed: _isLoading ? null : () => context.go('/login'),
-            child: const Text("Ya tengo cuenta"),
-          )
+            icon: const Icon(Icons.login),
+            label: const Text('Ya tengo cuenta'),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.brown.shade700,
+            ),
+          ),
         ],
       ),
     );

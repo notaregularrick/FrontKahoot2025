@@ -21,7 +21,6 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
   }
-
   @override
   void dispose() { _tabController.dispose(); super.dispose(); }
 
@@ -51,61 +50,45 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
             }
           }, child: const Text('Guardar')),
         ],
-      )
+      ),
     );
 
     if (result == true) {
-      // reload detail already done by notifier; optionally refresh tab view
+      // reload detail already done by notifier
     }
   }
 
   Future<void> _showInviteDialog(BuildContext context) async {
-    final emailCtrl = TextEditingController();
-    String role = 'student';
+    final expiresCtrl = TextEditingController(text: '7d');
     final notifier = ref.read(groupDetailProvider(widget.groupId).notifier);
 
     await showDialog<bool>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx2, setState) => AlertDialog(
-          title: const Text('Invitar a miembros'),
+          title: const Text('Generar link de invitación'),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
-            TextField(controller: emailCtrl, decoration: const InputDecoration(labelText: 'Email (opcional)')),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: role,
-              decoration: const InputDecoration(labelText: 'Rol'),
-              items: const [
-                DropdownMenuItem(value: 'admin', child: Text('admin')),
-                DropdownMenuItem(value: 'teacher', child: Text('teacher')),
-                DropdownMenuItem(value: 'student', child: Text('student')),
-              ],
-              onChanged: (v) {
-                if (v == null) return;
-                setState(() => role = v);
-              },
+            TextField(
+              controller: expiresCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Expira en',
+                hintText: 'Ej: 7d, 24h',
+              ),
             ),
           ]),
           actions: [
             TextButton(onPressed: () => Navigator.of(ctx2).pop(false), child: const Text('Cerrar')),
             ElevatedButton(onPressed: () async {
-              final email = emailCtrl.text.trim();
-              final selectedRole = role.trim().isEmpty ? 'student' : role.trim();
+              final expiresIn = expiresCtrl.text.trim().isEmpty ? '7d' : expiresCtrl.text.trim();
               try {
-                if (email.isNotEmpty) {
-                  await notifier.inviteMember(email, selectedRole);
-                  Navigator.of(ctx2).pop(true);
-                  if (mounted) _showSnack(context, 'Invitación enviada a $email');
-                } else {
-                  final link = await notifier.generateInviteLink(role: selectedRole);
-                  await Clipboard.setData(ClipboardData(text: link));
-                  Navigator.of(ctx2).pop(true);
-                  if (mounted) _showSnack(context, 'Link copiado al portapapeles');
-                }
+                final link = await notifier.generateInviteLink(expiresIn: expiresIn);
+                await Clipboard.setData(ClipboardData(text: link));
+                Navigator.of(ctx2).pop(true);
+                if (mounted) _showSnack(context, 'Link copiado al portapapeles');
               } catch (e) {
-                if (mounted) _showSnack(context, 'Error al invitar: $e');
+                if (mounted) _showSnack(context, 'Error al generar link: $e');
               }
-            }, child: const Text('Enviar / Generar link')),
+            }, child: const Text('Generar link')),
           ],
         ),
       ),
@@ -164,18 +147,104 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
 
   Future<void> _showAssignQuizDialog(BuildContext context) async {
     final notifier = ref.read(groupDetailProvider(widget.groupId).notifier);
-    final quizzes = List.generate(6, (i) => {'id': 'q$i', 'title': 'Quiz $i'});
-    final selected = await showDialog<String?>(context: context, builder: (ctx) => SimpleDialog(
-      title: const Text('Seleccionar quiz para asignar'),
-      children: quizzes.map((q) => SimpleDialogOption(onPressed: () => Navigator.of(ctx).pop(q['id'] as String), child: Text(q['title'] as String))).toList(),
-    ));
-    if (selected != null) {
-      try {
-        await notifier.assignQuiz(selected);
-        if (mounted) _showSnack(context, 'Quiz asignado');
-      } catch (e) {
-        if (mounted) _showSnack(context, 'Error asignando quiz: $e');
+    final creations = await notifier.loadMyCreations();
+    final visible = creations.length > 5 ? creations.sublist(0, 5) : creations;
+    String? selectedId;
+    final availableFromCtrl = TextEditingController();
+    final availableUntilCtrl = TextEditingController();
+
+    Future<void> _pickDate(TextEditingController ctrl) async {
+      final now = DateTime.now();
+      final picked = await showDatePicker(
+        context: context,
+        initialDate: now,
+        firstDate: DateTime(now.year - 5),
+        lastDate: DateTime(now.year + 5),
+      );
+      if (picked != null) {
+        final y = picked.year.toString().padLeft(4, '0');
+        final m = picked.month.toString().padLeft(2, '0');
+        final d = picked.day.toString().padLeft(2, '0');
+        ctrl.text = '$y-$m-$d';
       }
+    }
+
+    String? _toIsoMidnight(String? dayText) {
+      if (dayText == null || dayText.trim().isEmpty) return null;
+      final t = dayText.trim();
+      // Expect YYYY-MM-DD, convert to midnight UTC
+      return '${t}T00:00:00Z';
+    }
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx2, setState) => AlertDialog(
+          title: const Text('Asignar uno de tus quices'),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 420),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (visible.isEmpty)
+                    const Text('No tienes quices creados')
+                  else ...visible.map((q) => RadioListTile<String>(
+                        title: Text(q.title),
+                        value: q.id,
+                        groupValue: selectedId,
+                        onChanged: (val) => setState(() => selectedId = val),
+                      )),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: availableFromCtrl,
+                    readOnly: true,
+                    onTap: () => _pickDate(availableFromCtrl),
+                    decoration: const InputDecoration(
+                      labelText: 'Disponible desde (día)',
+                      hintText: 'Ej: 2026-01-17',
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: availableUntilCtrl,
+                    readOnly: true,
+                    onTap: () => _pickDate(availableUntilCtrl),
+                    decoration: const InputDecoration(
+                      labelText: 'Disponible hasta (día)',
+                      hintText: 'Ej: 2026-01-20',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx2).pop(false), child: const Text('Cancelar')),
+            ElevatedButton(
+              onPressed: selectedId == null
+                  ? null
+                  : () async {
+                      try {
+                        await notifier.assignQuiz(
+                          selectedId!,
+                          availableFrom: _toIsoMidnight(availableFromCtrl.text),
+                          availableUntil: _toIsoMidnight(availableUntilCtrl.text),
+                        );
+                        Navigator.of(ctx2).pop(true);
+                      } catch (e) {
+                        if (mounted) _showSnack(context, 'Error asignando quiz: $e');
+                      }
+                    },
+              child: const Text('Asignar'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (ok == true && mounted) {
+      _showSnack(context, 'Quiz asignado');
     }
   }
 
@@ -197,7 +266,10 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
                 if (!popped) context.go('/groups');
               },
             ),
-            title: Text(detail.name),
+            title: Text(
+              detail.name,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            ),
             backgroundColor: AppColors.primaryRed,
             centerTitle: true,
             bottom: TabBar(
@@ -205,26 +277,33 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
               indicatorColor: AppColors.mustardYellow,
               labelColor: Colors.white,
               unselectedLabelColor: Colors.white70,
-              tabs: const [Tab(text: 'Info'), Tab(text: 'Miembros'), Tab(text: 'Quices'), Tab(text: 'Ranking')],
+              labelStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              unselectedLabelStyle: const TextStyle(fontSize: 14),
+              tabs: const [
+                Tab(icon: Icon(Icons.info_outline), text: 'Info'),
+                Tab(icon: Icon(Icons.group_outlined), text: 'Miembros'),
+                Tab(icon: Icon(Icons.quiz_outlined), text: 'Quices'),
+                Tab(icon: Icon(Icons.emoji_events_outlined), text: 'Ranking'),
+              ],
             ),
             actions: [
               if (detail.myRole == 'admin') ...[
-                  IconButton(
-                    icon: const Icon(Icons.person_add),
-                    tooltip: 'Invitar miembros',
-                    onPressed: () => _showInviteDialog(context),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    tooltip: 'Editar grupo',
-                    onPressed: () => _showEditDialog(context, detail),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete),
-                    tooltip: 'Borrar grupo',
-                    onPressed: () => _confirmDelete(context),
-                  ),
-                ]
+                IconButton(
+                  icon: const Icon(Icons.person_add),
+                  tooltip: 'Invitar miembros',
+                  onPressed: () => _showInviteDialog(context),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  tooltip: 'Editar grupo',
+                  onPressed: () => _showEditDialog(context, detail),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  tooltip: 'Borrar grupo',
+                  onPressed: () => _confirmDelete(context),
+                ),
+              ]
             ],
           ),
           body: TabBarView(
@@ -233,15 +312,65 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
               // Info
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(detail.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text(detail.description ?? ''),
-                  const SizedBox(height: 12),
-                  Text('Mi rol: ${detail.myRole}'),
-                  const SizedBox(height: 8),
-                  Text('Miembros: ${detail.totalMembers}  •  Quices asignados: ${detail.totalAssignedQuizzes}'),
-                ]),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      detail.name,
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          detail.myRole.toLowerCase().contains('admin')
+                              ? Icons.shield_moon
+                              : Icons.person_outline,
+                          size: 18,
+                          color: Colors.black54,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Mi rol: ${detail.myRole}',
+                          style: const TextStyle(fontSize: 15, color: Colors.black87),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      detail.description?.isNotEmpty == true
+                          ? detail.description!
+                          : 'Sin descripción',
+                      style: const TextStyle(fontSize: 15, color: Colors.black87, height: 1.35),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.red.shade100),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.groups, size: 18, color: Colors.black54),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Miembros: ${detail.totalMembers}',
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(width: 12),
+                          const Icon(Icons.assignment_turned_in_outlined, size: 18, color: Colors.black54),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Quices asignados: ${detail.totalAssignedQuizzes}',
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
               // Miembros
@@ -259,9 +388,10 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
                     itemBuilder: (context, i) {
                       final m = members[i];
                       final isAdmin = detail.myRole == 'admin';
+                      final roleLabel = (m.role.isEmpty ? 'member' : m.role);
                       return ListTile(
-                        title: Text(m.name),
-                        subtitle: Text(m.email ?? ''),
+                        title: Text(m.id),
+                        subtitle: Text('Rol: $roleLabel'),
                         trailing: isAdmin
                           ? PopupMenuButton<String>(
                               onSelected: (value) async {
@@ -330,8 +460,44 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
                         title: Text(q.title),
                         subtitle: Text(q.description ?? ''),
                         trailing: Text(q.status),
-                        onTap: () {
-                          // TODO: open quiz detail (reuse kahoot inspect flow)
+                        onTap: () async {
+                          // Show per-quiz internal ranking
+                          try {
+                            final rows = await ref.read(groupDetailProvider(widget.groupId).notifier).loadQuizLeaderboard(q.quizId ?? q.id);
+                            if (!mounted) return;
+                            // Present as a dialog
+                            // ignore: use_build_context_synchronously
+                            await showDialog<void>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: Text('Ranking de "${q.title}"'),
+                                content: ConstrainedBox(
+                                  constraints: const BoxConstraints(maxHeight: 420, minWidth: 320),
+                                  child: rows.isEmpty
+                                      ? const Text('Aún no hay resultados para este quiz')
+                                      : ListView.separated(
+                                          shrinkWrap: true,
+                                          itemCount: rows.length,
+                                          separatorBuilder: (_, __) => const SizedBox(height: 8),
+                                          itemBuilder: (ctx2, i) {
+                                            final r = rows[i];
+                                            return ListTile(
+                                              leading: CircleAvatar(child: Text('${r.position}')),
+                                              title: Text(r.userName),
+                                              subtitle: Text('Completados: ${r.completedCount}'),
+                                              trailing: Text('${r.totalScore} pts'),
+                                            );
+                                          },
+                                        ),
+                                ),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cerrar')),
+                                ],
+                              ),
+                            );
+                          } catch (e) {
+                            if (mounted) _showSnack(context, 'Error cargando ranking: $e');
+                          }
                         },
                       );
                     }

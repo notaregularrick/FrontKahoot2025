@@ -53,7 +53,7 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
 
       if (next is AsyncData && !next.isLoading && !next.hasError) {
         if (next.value?.myPlayerId != null) {
-          context.push('/game');
+          context.go('/game');
         }
       }
     });
@@ -107,8 +107,8 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
                   decoration: _buildInputDecoration(hint: "Ej: 123456"),
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Ingresa el PIN';
-                    if (value.length != 6)
-                      return 'PIN inválido (deben ser 6 dígitos)';
+                    // if (value.length != 6)
+                    //   return 'PIN inválido (deben ser 6 dígitos)';
                     return null;
                   },
                 ),

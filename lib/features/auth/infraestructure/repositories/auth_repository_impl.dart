@@ -9,7 +9,7 @@ import '../models/user_model.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../../core/simulated_data.dart';
+//import '../../../../core/simulated_data.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthDatasource datasource;
@@ -80,38 +80,15 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
   }) async {
-    const simulate = true;
-    if (simulate) {
-      await Future.delayed(const Duration(milliseconds: 800));
-
-      final prefs = await SharedPreferences.getInstance();
-
-      // 1. VERIFICAMOS SI EXISTE LA CAJA DE ESE EMAIL
-      final userJson = prefs.getString('profile_$email');
-
-      if (userJson == null) {
-        throw Exception("Usuario no encontrado. Regístrate primero.");
-      }
-
-      // 2. SI EXISTE, LO MARCAMOS COMO ACTIVO
-      await prefs.setString('current_active_email', email);
-      await storage.saveToken("fake-token-$email");
-
-      // Reconstruimos el usuario para devolverlo
-      final profileMap = jsonDecode(userJson);
-      final user = UserModel.fromJson(
-        profileMap,
-      ); // Asegúrate que UserModel tenga fromJson o créalo manual
-
-      return AuthResponseModel(user: user, accessToken: "fake-token-$email");
-    }
-
-    // Lógica real...
+    // Lógica real (sin simulación)
     final response = await datasource.login(email: email, password: password);
-    await storage.saveToken(response.accessToken);
+    // Debug: log respuesta cruda
+    // ignore: avoid_print
+    print('[login] user=${response.user?.email} token=${response.token}');
+    await storage.saveToken(response.token);
     return response;
   }
-
+  
   @override
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();

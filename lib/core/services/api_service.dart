@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-//import 'package:frontkahoot2526/features/auth/presentation/providers/auth_providers.dart';
-//import 'package:frontkahoot2526/core/services/secure_storage_service.dart';
-
 import '../providers/secure_storage_provider.dart';
+// Asegúrate de que este import apunte a donde definiste SecureStorageService
+import '../services/secure_storage_service.dart'; 
+import '../providers/backend_provider.dart'; 
 
 class ApiService {
   final Dio _dio;
@@ -12,13 +12,14 @@ class ApiService {
 
   Dio get dio => _dio;
 
-  // Configuración global para Dio
-  void setUpInterceptors(Ref ref) {
+  // CORRECCIÓN: Recibimos SecureStorageService directamente, NO 'Ref'
+  void setUpInterceptors(SecureStorageService storage) {
+    _dio.interceptors.clear(); // Limpiamos previos
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        // Conseguimos el token desde SecureStorage
-        final storage = ref.read(secureStorageProvider); // Lee el servicio de storage
-        final token = await storage.getToken(); // Lee el token guardado
+        // Usamos la instancia de storage inyectada directamente
+        // Esto evita el error de "ref functions" porque no usamos ref aquí dentro
+        final token = await storage.getToken(); 
 
         if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
@@ -33,19 +34,25 @@ class ApiService {
         return handler.next(error);
       },
     ));
+
+    // Log para depuración
+    _dio.interceptors.add(LogInterceptor(
+      request: true,
+      requestBody: true,
+      responseBody: true,
+      error: true,
+    ));
   }
 
-  // Método GET como ejemplo
-  Future<Response> get(String path) async {
+  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
     try {
-      final response = await _dio.get(path);
+      final response = await _dio.get(path, queryParameters: queryParameters);
       return response;
     } catch (e) {
-      rethrow; // Aquí puedes agregar el manejo de errores
+      rethrow;
     }
   }
 
-  // Otros métodos para POST, PUT, DELETE, etc., siguiendo el mismo patrón
   Future<Response> post(String path, {Map<String, dynamic>? data}) async {
     try {
       final response = await _dio.post(path, data: data);
@@ -57,11 +64,28 @@ class ApiService {
 }
 
 final apiServiceProvider = Provider<ApiService>((ref) {
-  final dio = Dio(); // Crear instancia de Dio
-  //final storage = ref.read(secureStorageProvider); // Acceder a SecureStorage
-  final apiService = ApiService(dio);
+  // 1. Escuchamos cambios en la URL del backend
+  final backendType = ref.watch(backendProvider);
+  
+  // 2. Leemos el servicio de almacenamiento UNA VEZ durante la construcción
+  final storage = ref.read(secureStorageProvider);
 
-  apiService.setUpInterceptors(ref); // Configura el interceptor
+  final options = BaseOptions(
+    baseUrl: backendType.url,
+    connectTimeout: const Duration(seconds: 10),
+    receiveTimeout: const Duration(seconds: 10),
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+  );
+
+  final dio = Dio(options); 
+  
+  final apiService = ApiService(dio);
+  
+  // 3. Pasamos el servicio de storage ya resuelto
+  apiService.setUpInterceptors(storage); 
 
   return apiService;
 });

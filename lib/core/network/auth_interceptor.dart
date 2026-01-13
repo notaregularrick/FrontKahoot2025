@@ -17,6 +17,11 @@ class AuthInterceptor extends Interceptor {
 
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
+      // ignore: avoid_print
+      print('[auth_interceptor] bearerPresent=true ${options.method} ${options.path}');
+    } else {
+      // ignore: avoid_print
+      print('[auth_interceptor] bearerPresent=false ${options.method} ${options.path}');
     }
 
     return handler.next(options);

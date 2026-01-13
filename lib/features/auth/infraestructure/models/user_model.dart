@@ -32,13 +32,23 @@ class UserModel {
   }
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-        id: json['id'],
-        name: json['name'],
-        email: json['email'],
-        userType: json['userType'],
-        //createdAt: json['createdAt'],
-        createdAt: DateTime.parse(json['createdAt']),
+        id: json['id']?.toString() ?? '',
+        // Prefer profile.name, then username, then name
+        name: json['profile']?['name']?.toString() ?? json['username']?.toString() ?? json['name']?.toString() ?? '',
+        email: json['email']?.toString() ?? '',
+        // From roles array if present, else userType, fallback 'user'
+        userType: (json['roles'] is List && (json['roles'] as List).isNotEmpty)
+            ? (json['roles'] as List).first.toString()
+            : (json['userType']?.toString() ?? 'user'),
+        createdAt: _parseDate(json['createdAt']),
       );
+
+  static DateTime _parseDate(dynamic value) {
+    if (value is String && value.isNotEmpty) {
+      return DateTime.tryParse(value) ?? DateTime.now();
+    }
+    return DateTime.now();
+  }
 
   UserEntity toEntity() => UserEntity(
         id: id,

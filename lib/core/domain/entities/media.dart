@@ -1,36 +1,39 @@
 class Media {
-  final String id;
+  final String assetId;
+  final String url;
   final String mimeType;
   final int size;
-  final String originalName;
-  final DateTime createdAt;
+  final String format;
+  final String category;
 
   const Media({
-    required this.id,
+    required this.assetId,
+    required this.url,
     required this.mimeType,
     required this.size,
-    required this.originalName,
-    required this.createdAt,
+    required this.format,
+    required this.category,
   });
 
   factory Media.fromJson(Map<String, dynamic> json) {
     return Media(
-      id: json['id'] as String,
+      assetId: json['assetId'] as String,
+      url: json['url'] as String,
       mimeType: json['mimeType'] as String,
       size: json['size'] as int,
-      originalName: json['originalName'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      format: json['format'] as String,
+      category: json['category'] as String,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      'assetId': assetId,
+      'url': url,
       'mimeType': mimeType,
       'size': size,
-      'originalName': originalName,
-      'createdAt': createdAt.toIso8601String(),
+      'format': format,
+      'category': category,
     };
   }
 }
-

@@ -30,13 +30,22 @@ class Member {
 
 class AssignedQuiz {
   final String id;
+  final String? quizId; // original quiz id if different from assignment id
   final String title;
   final String? description;
   final String author;
   final String status; // draft|published
   final DateTime assignedAt;
 
-  AssignedQuiz({required this.id, required this.title, this.description, required this.author, required this.status, required this.assignedAt});
+  AssignedQuiz({required this.id, this.quizId, required this.title, this.description, required this.author, required this.status, required this.assignedAt});
+}
+
+// Minimal quiz summary for listing user creations
+class SimpleQuiz {
+  final String id;
+  final String title;
+
+  SimpleQuiz({required this.id, required this.title});
 }
 
 class RankingEntry {
