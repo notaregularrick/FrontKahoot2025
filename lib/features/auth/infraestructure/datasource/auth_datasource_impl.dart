@@ -9,19 +9,26 @@ class AuthDatasourceImpl implements AuthDatasource {
   AuthDatasourceImpl(this.dio);
 
   @override
-  Future<AuthResponseModel> login({required String email, required String password}) async {
+  Future<AuthResponseModel> login({required String username, required String password}) async {
     try {
       final response = await dio.post(
         '/auth/login',
         data: {
-          'email': email,
-          'password': password,
+          'username': username,
+          'password': password
         },
       );
-      
       return AuthResponseModel.fromJson(response.data);
     } catch (e) {
-      throw Exception('Error en login: $e');
+      if (e is DioException) {
+        // Manejo específico para Login
+        if (e.response?.statusCode == 401) {
+          throw Exception('Usuario o contraseña incorrectos.');
+        }
+        final msg = e.response?.data['message'];
+        if (msg != null) throw Exception(msg);
+      }
+      throw Exception('Error al iniciar sesión: $e');
     }
   }
 
@@ -31,37 +38,40 @@ class AuthDatasourceImpl implements AuthDatasource {
     required String email,
     required String password,
     required String username,
+    required String userType, 
   }) async {
     try {
+      final requestData = {
+        "email": email,
+        "username": username,
+        "password": password,
+        "name": name,
+        "type": userType,
+      };
+
+      print("📤 Enviando datos de registro: $requestData");
+
       final response = await dio.post(
         '/user/register',
-        data: {
-          "email": email,
-          "username": username,
-          "password": password,
-          "name": name,
-          "type": "user"
-        },
+        data: requestData,
       );
 
       final userData = response.data['user'];
-
       return UserModel.fromJson(userData);
+
     } catch (e) {
-      // 1. Capturamos excepciones de Dio (Respuestas 400, 500, etc.)
       if (e is DioException) {
-        // 2. Extraemos el mensaje amigable del backend
-        // Backend devuelve: { "message": "Invalid user name", ... }
-        final serverMessage = e.response?.data['message'];
-        
-        if (serverMessage != null) {
-          // 3. Lanzamos SOLO el mensaje del servidor
-          throw Exception(serverMessage); 
+        print("🔴 Error del servidor (${e.response?.statusCode}): ${e.response?.data}");
+
+        if (e.response?.statusCode == 400) {
+          final serverMsg = e.response?.data['message'];
+          if (serverMsg != null) {
+            throw Exception(serverMsg);
+          }
+          throw Exception('Datos inválidos. Verifica que el usuario/email no existan.');
         }
       }
-      
-      // Fallback para otros errores
-      throw Exception('Error al registrar usuario. Verifica tu conexión.');
+      throw Exception('No se pudo registrar: $e');
     }
   }
 

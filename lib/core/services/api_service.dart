@@ -66,8 +66,8 @@ final apiServiceProvider = Provider<ApiService>((ref) {
 
   final options = BaseOptions(
     baseUrl: backendType.url, // <--- AQUÍ ESTÁ LA MAGIA
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
+    connectTimeout: const Duration(seconds: 60),
+    receiveTimeout: const Duration(seconds: 60),
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',

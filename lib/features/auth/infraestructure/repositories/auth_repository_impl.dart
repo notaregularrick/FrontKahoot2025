@@ -17,7 +17,8 @@ class AuthRepositoryImpl implements AuthRepository {
     required String name,
     required String email,
     required String password,
-    required String username, // Agregado
+    required String username, 
+    required String userType,
   }) async {
     // Llamamos al datasource
     final userModel = await datasource.register(
@@ -25,20 +26,17 @@ class AuthRepositoryImpl implements AuthRepository {
       email: email,
       password: password,
       username: username,
+      userType: userType,
     );
     
     return userModel.toEntity();
   }
 
   @override
-  Future<AuthResponseModel> login({required String email, required String password}) async {
-    // 1. Llamada a la API Real
-    final response = await datasource.login(email: email, password: password);
-    
-    // 2. Guardar Token y Datos
+  Future<AuthResponseModel> login({required String username, required String password}) async {
+    // Pasamos username al datasource
+    final response = await datasource.login(username: username, password: password);
     await storage.saveToken(response.accessToken);
-    // Opcional: Guardar datos del usuario en SharedPreferences si lo necesitas offline
-    
     return response;
   }
 

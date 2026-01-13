@@ -9,10 +9,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   AuthNotifier(this.repository, this.storage) : super(AuthState.initial());
 
-  Future<void> login(String email, String password) async {
+  Future<void> login(String username, String password) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
-      final response = await repository.login(email: email, password: password);
+      final response = await repository.login(username: username, password: password);
       
       state = state.copyWith(
         isLoading: false,
@@ -50,7 +50,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String name,
     required String email,
     required String password,
-    required String username, // <--- Nuevo parámetro agregado
+    required String username,
+    required String userType,
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
@@ -61,6 +62,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         email: email,
         password: password,
         username: username,
+        userType: userType,
       );
 
       // ÉXITO:

@@ -17,6 +17,7 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
   final emailCtrl = TextEditingController();
   final passCtrl = TextEditingController();
   
+  String _selectedUserType = 'STUDENT'; 
   bool _isLoading = false;
 
   @override
@@ -51,6 +52,7 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
         username: usernameCtrl.text.trim(), // NUEVO
         email: emailCtrl.text.trim(),
         password: passCtrl.text.trim(),
+        userType: _selectedUserType,
       );
       
       if (mounted) {
@@ -133,6 +135,7 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
           ),
           const SizedBox(height: 12),
 
+           // --- CAMPO USUARIO ---
           TextField(
             controller: usernameCtrl,
             decoration: InputDecoration(
@@ -150,6 +153,39 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
               FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')), 
             ],
             enabled: !_isLoading,
+          ),
+          const SizedBox(height: 12),
+
+          // --- SELECTOR DE TIPO DE USUARIO (NUEVO) ---
+          DropdownButtonFormField<String>(
+            initialValue: _selectedUserType,
+            decoration: InputDecoration(
+              labelText: 'Soy...',
+              prefixIcon: const Icon(Icons.school_outlined),
+              filled: true,
+              fillColor: Colors.grey[100],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            items: const [
+              DropdownMenuItem(
+                value: 'STUDENT',
+                child: Text('Estudiante'),
+              ),
+              DropdownMenuItem(
+                value: 'TEACHER',
+                child: Text('Profesor'),
+              ),
+            ],
+            onChanged: _isLoading 
+              ? null 
+              : (value) {
+                  if (value != null) {
+                    setState(() => _selectedUserType = value);
+                  }
+                },
           ),
           const SizedBox(height: 12),
 
