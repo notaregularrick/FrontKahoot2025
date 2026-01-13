@@ -5,9 +5,9 @@ import '../../../../core/providers/secure_storage_provider.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../application/controllers/auth_notifier.dart';
 import '../../application/state/auth_state.dart';
-import '../../infraestructure/datasource/auth_datasource.dart';
-import '../../infraestructure/datasource/auth_datasource_impl.dart';
-import '../../infraestructure/repositories/auth_repository_impl.dart';
+import '../../infrastructure/datasource/auth_datasource.dart';
+import '../../infrastructure/datasource/auth_datasource_impl.dart';
+import '../../infrastructure/repositories/auth_repository_impl.dart';
 
 // 1. Provider del Datasource
 final authDatasourceProvider = Provider<AuthDatasource>((ref) {

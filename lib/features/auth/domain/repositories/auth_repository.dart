@@ -1,4 +1,4 @@
-import '../../infraestructure/models/auth_response_model.dart';
+import '../../infrastructure/models/auth_response_model.dart';
 import '../entities/user_entity.dart';
 
 abstract class AuthRepository {

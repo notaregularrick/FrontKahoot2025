@@ -21,7 +21,6 @@ class AuthDatasourceImpl implements AuthDatasource {
       return AuthResponseModel.fromJson(response.data);
     } catch (e) {
       if (e is DioException) {
-        // Manejo específico para Login
         if (e.response?.statusCode == 401) {
           throw Exception('Usuario o contraseña incorrectos.');
         }
@@ -78,7 +77,7 @@ class AuthDatasourceImpl implements AuthDatasource {
   @override
   Future<AuthResponseModel> checkAuthStatus(String token) async {
     try {
-      final response = await dio.get(
+      final response = await dio.post(
         '/auth/check-status',
         options: Options(
           headers: {
@@ -86,10 +85,12 @@ class AuthDatasourceImpl implements AuthDatasource {
           },
         ),
       );
-
       return AuthResponseModel.fromJson(response.data);
     } catch (e) {
-      throw Exception('Token inválido o expirado');
+      if (e is DioException && e.response?.statusCode == 401) {
+        throw Exception('Token inválido');
+      }
+      throw Exception('Error al verificar sesión: $e');
     }
   }
 }

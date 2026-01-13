@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/services/api_service.dart';
 import '../../application/state/profile_state.dart';
-import '../../infraestructure/datasource/profile_datasource.dart';
-import '../../infraestructure/repositories/profile_repository_impl.dart';
+import '../../infrastructure/datasource/profile_datasource.dart';
+import '../../infrastructure/repositories/profile_repository_impl.dart';
 import '../../application/controllers/profile_notifier.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepositoryImpl>((ref) {

@@ -1,4 +1,4 @@
-import '../../infraestructure/models/profile_model.dart';
+import '../../infrastructure/models/profile_model.dart';
 import '../entities/profile_entity.dart';
 
 abstract class ProfileRepository {

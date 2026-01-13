@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/repositories/profile_repository.dart';
 import '../state/profile_state.dart';
-import '../../infraestructure/models/profile_model.dart';
+import '../../infrastructure/models/profile_model.dart';
 
 class ProfileNotifier extends StateNotifier<ProfileState> {
 
