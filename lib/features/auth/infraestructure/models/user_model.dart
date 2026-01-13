@@ -1,49 +1,47 @@
 import '../../domain/entities/user_entity.dart';
 
 class UserModel extends UserEntity {
-  final List<String> roles;
-
   UserModel({
     required super.id,
-    required super.email,
     required super.name,
-    required this.roles,
-    String userType = 'default', 
-    DateTime? createdAt, 
-  }) : super(
-          userType: userType,
-          createdAt: createdAt ?? DateTime.now(), 
-        );
+    required super.email,
+    required super.userType,
+    required super.createdAt,
+  });
 
+  // Constructor para leer el JSON que viene del Backend
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    // 1. Manejo seguro de "userProfileDetails"
+    final profileDetails = json['userProfileDetails'] as Map<String, dynamic>?;
+
     return UserModel(
       id: json['id'] ?? '',
       email: json['email'] ?? '',
-      name: json['name'] ?? 'Usuario',
-      roles: List<String>.from(json['roles'] ?? ['user']),
-      userType: (json['roles'] as List?)?.contains('admin') == true ? 'admin' : 'default',
-      createdAt: json['createdAt'] != null 
-          ? DateTime.tryParse(json['createdAt'])
-          : null,
+      // Mapeamos el nombre que está dentro de userProfileDetails
+      name: profileDetails?['name'] ?? json['username'] ?? 'Usuario',
+      // Mapeamos el tipo
+      userType: json['type'] ?? 'user',
+      // Como este endpoint no devuelve fecha, ponemos la actual por defecto
+      createdAt: DateTime.now(), 
     );
   }
 
+  // Para enviar datos (si fuera necesario)
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'email': email,
       'name': name,
-      'roles': roles,
-      'userType': userType,
-      'createdAt': createdAt.toIso8601String(),
+      'type': userType,
     };
   }
-
+  
+  // Método de utilidad para convertir a Entidad pura
   UserEntity toEntity() {
     return UserEntity(
       id: id,
-      email: email,
       name: name,
+      email: email,
       userType: userType,
       createdAt: createdAt,
     );

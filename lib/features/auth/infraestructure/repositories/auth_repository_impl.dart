@@ -4,12 +4,6 @@ import '../../domain/repositories/auth_repository.dart';
 import '../../domain/entities/user_entity.dart';
 import '../datasource/auth_datasource.dart';
 import '../models/auth_response_model.dart';
-import '../models/profile_model.dart';
-import '../models/user_model.dart';
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-
-//import '../../../../core/simulated_data.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthDatasource datasource;
@@ -23,55 +17,16 @@ class AuthRepositoryImpl implements AuthRepository {
     required String name,
     required String email,
     required String password,
+    required String username, // Agregado
   }) async {
-    /*const simulate = false;
-
-    if (simulate) {
-      await Future.delayed(const Duration(milliseconds: 800));
-
-      // 1. Crear el modelo de perfil
-      final newProfile = ProfileModel(
-        id: email, // Usamos el email como ID
-        name: name,
-        email: email,
-        avatarUrl: "",
-        description: "Nuevo usuario",
-        userType: "Básico",
-        gameStreak: 0,
-        theme: "Día",
-        language: "Español",
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      final prefs = await SharedPreferences.getInstance();
-
-      // 2. Guardar los datos del usuario en su caja específica
-      String profileJson = jsonEncode(newProfile.toJson());
-      await prefs.setString('profile_$email', profileJson);
-
-      // 3. ¡¡CRÍTICO!! GUARDAR QUE ESTE ES EL USUARIO ACTIVO
-      // Sin esta línea, el ProfileRepository no sabe qué caja buscar.
-      await prefs.setString('current_active_email', email);
-
-      // 4. Guardar token (para la sesión)
-      await storage.saveToken("fake-token-$email");
-
-      // 5. Retornar UserEntity para que el Notifier actualice el estado
-      return UserModel(
-        id: newProfile.id,
-        name: newProfile.name,
-        email: newProfile.email,
-        userType: newProfile.userType,
-        createdAt: newProfile.createdAt,
-      ).toEntity();
-    }*/
-
+    // Llamamos al datasource
     final userModel = await datasource.register(
       name: name,
       email: email,
       password: password,
+      username: username,
     );
+    
     return userModel.toEntity();
   }
 
@@ -134,9 +89,9 @@ class AuthRepositoryImpl implements AuthRepository {
     String resetToken,
     String newPassword,
   ) async {
-    const simulate = false;
+  /*  const simulate = false;
 
-  /*  if (simulate) {
+    if (simulate) {
       // 1. Simular retraso de red (1.5 segundos)
       await Future.delayed(const Duration(milliseconds: 1500));
 

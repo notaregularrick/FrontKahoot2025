@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_providers.dart';
 import 'package:go_router/go_router.dart';
@@ -12,23 +13,27 @@ class RegisterForm extends ConsumerStatefulWidget {
 
 class _RegisterFormState extends ConsumerState<RegisterForm> {
   final nameCtrl = TextEditingController();
+  final usernameCtrl = TextEditingController(); // NUEVO: Controlador para username
   final emailCtrl = TextEditingController();
   final passCtrl = TextEditingController();
   
-  // 1. Variable para controlar el estado de carga
   bool _isLoading = false;
 
   @override
   void dispose() {
     nameCtrl.dispose();
+    usernameCtrl.dispose(); // No olvides limpiarlo
     emailCtrl.dispose();
     passCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    // Validar campos vacíos rápidamente
-    if (nameCtrl.text.isEmpty || emailCtrl.text.isEmpty || passCtrl.text.isEmpty) {
+    // Validamos que todos los campos estén llenos
+    if (nameCtrl.text.isEmpty || 
+        usernameCtrl.text.isEmpty || 
+        emailCtrl.text.isEmpty || 
+        passCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor llena todos los campos')),
       );
@@ -40,42 +45,41 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
     try {
       final notifier = ref.read(authNotifierProvider.notifier);
 
-      // 2. Intentamos registrar
+      // Enviamos todos los datos al backend
       await notifier.register(
         name: nameCtrl.text.trim(),
+        username: usernameCtrl.text.trim(), // NUEVO
         email: emailCtrl.text.trim(),
         password: passCtrl.text.trim(),
       );
-
-      // Verificamos si hubo un error guardado en el estado (depende de cómo esté hecho tu notifier)
-      // Pero si tu notifier lanza excepción en caso de error, el catch lo agarrará.
       
       if (mounted) {
-        // Verificar el estado después de la operación
+        // Verificamos si hubo error en el estado
         final authState = ref.read(authNotifierProvider);
-
         if (authState.errorMessage != null) {
-           throw authState.errorMessage!; // Forzamos ir al catch
+           throw authState.errorMessage!;
         }
 
-        // 3. SI LLEGAMOS AQUÍ, TODO SALIÓ BIEN -> NAVEGAR
-        // Usamos go para ir a profile y borrar el historial de registro si lo deseas
-        // O push si quieres permitir volver atrás.
-        context.go('/inicio'); 
+        // ÉXITO: Como este endpoint no devuelve token, redirigimos al Login
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cuenta creada con éxito. Por favor inicia sesión.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        context.go('/login'); 
       }
 
     } catch (e) {
-      // 4. Manejo de errores visual
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al registrar: $e'),
+            content: Text(e.toString().replaceAll('Exception: ', '')),
             backgroundColor: Colors.red,
           ),
         );
       }
     } finally {
-      // 5. Apagar carga siempre
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -85,7 +89,8 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
   @override
   Widget build(BuildContext context) {
     final shadow = BoxShadow(
-      color: Colors.black.withOpacity(0.05),
+      // Corrección de deprecación: withValues en lugar de withOpacity
+      color: Colors.black.withValues(alpha: 0.05), 
       blurRadius: 16,
       offset: const Offset(0, 10),
     );
@@ -110,10 +115,12 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
             ),
           ),
           const SizedBox(height: 16),
+          
+          // --- CAMPO NOMBRE ---
           TextField(
             controller: nameCtrl,
             decoration: InputDecoration(
-              labelText: 'Nombre',
+              labelText: 'Nombre Completo',
               prefixIcon: const Icon(Icons.person_outline),
               filled: true,
               fillColor: Colors.grey[100],
@@ -125,6 +132,28 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
             enabled: !_isLoading,
           ),
           const SizedBox(height: 12),
+
+          TextField(
+            controller: usernameCtrl,
+            decoration: InputDecoration(
+              labelText: 'Usuario (sin espacios)', // Aclara al usuario
+              prefixIcon: const Icon(Icons.alternate_email),
+              filled: true,
+              fillColor: Colors.grey[100],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            // ESTO EVITA ESPACIOS Y CARACTERES RAROS:
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')), 
+            ],
+            enabled: !_isLoading,
+          ),
+          const SizedBox(height: 12),
+
+          // --- CAMPO EMAIL ---
           TextField(
             controller: emailCtrl,
             decoration: InputDecoration(
@@ -141,6 +170,8 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
             enabled: !_isLoading,
           ),
           const SizedBox(height: 12),
+
+          // --- CAMPO CONTRASEÑA ---
           TextField(
             controller: passCtrl,
             obscureText: true,
@@ -157,6 +188,8 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
             enabled: !_isLoading,
           ),
           const SizedBox(height: 18),
+
+          // --- BOTÓN DE REGISTRO ---
           ElevatedButton.icon(
             onPressed: _isLoading ? null : _submit,
             icon: _isLoading
@@ -181,6 +214,8 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
             ),
           ),
           const SizedBox(height: 12),
+
+          // --- IR A LOGIN ---
           TextButton.icon(
             onPressed: _isLoading ? null : () => context.go('/login'),
             icon: const Icon(Icons.login),

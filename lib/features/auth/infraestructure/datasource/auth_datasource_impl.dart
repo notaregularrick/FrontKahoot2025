@@ -21,19 +21,50 @@ class AuthDatasourceImpl implements AuthDatasource {
       
       return AuthResponseModel.fromJson(response.data);
     } catch (e) {
-      // Aquí puedes manejar errores específicos de Dio (401, 400)
       throw Exception('Error en login: $e');
     }
   }
 
   @override
-  Future<UserModel> register({required String name, required String email, required String password}) async {
-    // Mantén tu lógica de registro anterior aquí
-    // ...
-    throw UnimplementedError(); 
+  Future<UserModel> register({
+    required String name,
+    required String email,
+    required String password,
+    required String username,
+  }) async {
+    try {
+      final response = await dio.post(
+        '/user/register',
+        data: {
+          "email": email,
+          "username": username,
+          "password": password,
+          "name": name,
+          "type": "user"
+        },
+      );
+
+      final userData = response.data['user'];
+
+      return UserModel.fromJson(userData);
+    } catch (e) {
+      // 1. Capturamos excepciones de Dio (Respuestas 400, 500, etc.)
+      if (e is DioException) {
+        // 2. Extraemos el mensaje amigable del backend
+        // Backend devuelve: { "message": "Invalid user name", ... }
+        final serverMessage = e.response?.data['message'];
+        
+        if (serverMessage != null) {
+          // 3. Lanzamos SOLO el mensaje del servidor
+          throw Exception(serverMessage); 
+        }
+      }
+      
+      // Fallback para otros errores
+      throw Exception('Error al registrar usuario. Verifica tu conexión.');
+    }
   }
 
-  // NUEVO: Implementación de Check Status
   @override
   Future<AuthResponseModel> checkAuthStatus(String token) async {
     try {

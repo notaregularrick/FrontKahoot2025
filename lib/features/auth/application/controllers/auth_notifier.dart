@@ -17,7 +17,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(
         isLoading: false,
         token: response.accessToken,
-        user: response.user, // Asegúrate que UserModel extienda UserEntity
+        user: response.user,
         errorMessage: null,
       );
     } catch (e) {
@@ -50,41 +50,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String name,
     required String email,
     required String password,
+    required String username, // <--- Nuevo parámetro agregado
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      // 1. Llamamos al repositorio.
-      // En tu simulación, esto crea el usuario Y guarda el token en el Storage.
-      final user = await repository.register(
+      // Pasamos el username al repositorio
+      await repository.register(
         name: name,
         email: email,
         password: password,
+        username: username,
       );
 
-      // 2. CORRECCIÓN CLAVE: Recuperar el token guardado.
-      // Como tu repo.register solo devuelve User, necesitamos leer el token 
-      // del storage manualmente para actualizar el estado.
-      final savedToken = await storage.getToken(); // <--- ESTO FALTABA
+      // ÉXITO:
+      // El endpoint de registro devuelve el usuario creado pero NO un token.
+      // Por eso, solo ponemos isLoading en false. 
+      // La redirección al Login la maneja la UI (RegisterForm) al detectar que no hubo error.
+      state = state.copyWith(isLoading: false);
 
-      if (savedToken == null) {
-        throw Exception("El registro fue exitoso pero no se generó el token.");
-      }
-
-      // 3. Actualizamos el estado con AMBOS: usuario y token
-      state = state.copyWith(
-        isLoading: false,
-        user: user,
-        token: savedToken, // <--- Ahora la app sabe que estás logueado
-      );
-      
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         errorMessage: e.toString(),
       );
-      // Importante: Rethrow para que tu formulario muestre el SnackBar rojo
-      rethrow; 
+      // Importante: Rethrow permite que el formulario capture el error y muestre el SnackBar rojo
+      rethrow;
     }
   }
 }
