@@ -1,17 +1,18 @@
 import 'user_model.dart';
 
 class AuthResponseModel {
-  final String token;
-  final UserModel? user;
+  final UserModel user;
+  final String accessToken; // Mapea a "token" en el JSON
 
   AuthResponseModel({
-    required this.token,
-    this.user,
+    required this.user,
+    required this.accessToken,
   });
 
-  factory AuthResponseModel.fromJson(Map<String, dynamic> json) =>
-      AuthResponseModel(
-        token: json['token'] ?? json['accessToken'] ?? '',
-        user: json['user'] != null ? UserModel.fromJson(json['user']) : null,
-      );
+  factory AuthResponseModel.fromJson(Map<String, dynamic> json) {
+    return AuthResponseModel(
+      user: UserModel.fromJson(json['user'] ?? {}),
+      accessToken: json['token'] ?? '',
+    );
+  }
 }

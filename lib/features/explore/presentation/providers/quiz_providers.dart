@@ -9,7 +9,7 @@ import '../../infrastructure/datasource/quiz_datasource_impl.dart';
 import '../../infrastructure/repositories/quiz_repository_impl.dart';
 
 final quizDatasourceProvider = Provider<QuizDatasource>((ref) {
-  final dio = ref.read(apiServiceProvider).dio;
+  final dio = ref.watch(apiServiceProvider).dio;
   return QuizDatasourceImpl(dio);
 });
 
