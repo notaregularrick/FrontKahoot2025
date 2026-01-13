@@ -72,7 +72,7 @@ class MultiplayerGameNotifier
   Future<void> joinGame(String pin, String nickname) async {
     state = const AsyncValue.loading();
     try {
-      // 1. Configuramos estado inicial optimista
+      
       final initialState = GameNotifierState(
         session: MultiplayerGameSession(pin: pin, nickname: nickname),
         role: GameRole.player,
@@ -80,10 +80,10 @@ class MultiplayerGameNotifier
       );
       state = AsyncValue.data(initialState);
 
-      // 2. Nos suscribimos ANTES de conectar para no perder eventos inmediatos
+      
       _subscribeToGameStream();
 
-      // 3. Ejecutamos conexión física
+      
       final useCase = ref.read(joinGameUseCaseProvider);
       await useCase.execute(pin, nickname, GameRole.player);
     } catch (e, st) {
@@ -95,21 +95,29 @@ class MultiplayerGameNotifier
   Future<void> createGame(String quizId) async {
     state = const AsyncValue.loading();
     try {
+      _subscribeToGameStream();
       final useCase = ref.read(createGameUseCaseProvider);
-      String pin = await useCase.execute(quizId);
+      final info = await useCase.execute(quizId);
 
       // Configurar Host
       state = AsyncValue.data(
         GameNotifierState(
-          session: MultiplayerGameSession(pin: pin),
+          session: MultiplayerGameSession(pin: info.sessionPin),
           role: GameRole.host,
           myPlayerId: "HOST",
         ),
       );
-
-      _subscribeToGameStream();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> endSession() async {
+    try {
+      final useCase = ref.read(hostEndSessionUseCaseProvider);
+      await useCase.execute();
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
     }
   }
 
@@ -136,16 +144,12 @@ class MultiplayerGameNotifier
     try {
       final useCase = ref.read(submitAnswerUseCaseProvider);
 
-      // Asumo que tu UseCase ahora acepta el objeto CurrentQuestion nuevo
-      // O los parámetros primitivos (ID, Index, Tiempo)
       await useCase.execute(
         currentState.session.currentQuestion!,
         answerIds,
         timeElapsed,
       );
 
-      // Nota: No quitamos el isLoading aquí, esperamos al evento 'player_answer_confirmation'
-      // que llegará por el socket para confirmar.
     } catch (e) {
       // Si falla el envío (ej. sin internet), desbloqueamos
       state = AsyncValue.data(

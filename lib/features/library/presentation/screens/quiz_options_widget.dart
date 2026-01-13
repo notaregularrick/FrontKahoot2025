@@ -87,13 +87,13 @@ class QuizOptionsSheet extends ConsumerWidget {
             if (type == QuizContextType.myCreations) ...[
               //3 puntos para descomponer el array
               createEditButton(context),
-              createPlayMultiplayerButton(),
+              createPlayMultiplayerButton(context),
               createPlaySoloButton(context, ref),
             ],
 
             if (type == QuizContextType.favorites) ...[
               //3 puntos para descomponer el array
-              createPlayMultiplayerButton(),
+              createPlayMultiplayerButton(context),
               createPlaySoloButton(context, ref),
               createRemoveFavoriteButton(context, ref, quiz.id),
             ],
@@ -101,14 +101,14 @@ class QuizOptionsSheet extends ConsumerWidget {
             if (type == QuizContextType.inProgress) ...[
               //3 puntos para descomponer el array
               createContinueButton(context),
-              createPlayMultiplayerButton(),
+              createPlayMultiplayerButton(context),
               createPlaySoloButton(context, ref),
             ],
 
             if (type == QuizContextType.completed) ...[
               //3 puntos para descomponer el array
               createWatchResultsButton(),
-              createPlayMultiplayerButton(),
+              createPlayMultiplayerButton(context),
               createPlaySoloButton(context, ref),
             ],
           ],
@@ -135,7 +135,7 @@ class QuizOptionsSheet extends ConsumerWidget {
     );
   }
 
-  Widget createPlayMultiplayerButton() {
+  Widget createPlayMultiplayerButton(BuildContext context) {
     return ListTile(
       leading: Icon(Icons.group),
       title: Text(
@@ -147,7 +147,9 @@ class QuizOptionsSheet extends ConsumerWidget {
         ),
       ),
       onTap: () {
-        //Lleva a la pestaña de juego sincrono
+        Navigator.pop(context);
+        //context.go('/hostGame/${quiz.id}');
+        context.go('/hostGame/14f5d158-fe86-4ba4-85cf-b83ce514c0bd');
       },
     );
   }

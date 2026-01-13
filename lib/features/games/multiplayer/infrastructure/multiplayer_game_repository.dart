@@ -256,7 +256,8 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
         break;
 
       case 'host_results':
-        HostResults resultsHost = HostResults.fromJson(data);
+      final options = updatedSession.currentQuestion?.options ?? [];
+        HostResults resultsHost = HostResults.fromJson(data, options: options);
         resultsHost.logDebugInfo();
         updatedSession = updatedSession.copyWith(
           gameStatus: GameStatus.results,
@@ -279,6 +280,7 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
         updatedSession = updatedSession.copyWith(
           gameStatus: GameStatus.lobby,
           hostLobby: hostLobby,
+          pin: _pin,
         );
         break;
 
@@ -299,6 +301,7 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
       _socket.clearListeners();
 
       _socket.dispose();
+      debugPrint('Conexion cerrada');
     } catch (e) {
       debugPrint('❌ Error al disponer el socket: $e');
     }
