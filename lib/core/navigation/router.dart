@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/core/navigation/navbar.dart';
 import 'package:frontkahoot2526/core/presentation/change_backend_screen.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/game_orchestrator.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/host/host_screen.dart';
 // import 'package:frontkahoot2526/features/auth/games/multiplayer/presentation/screens/game_orchestrator.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/join_game.dart';
 // import 'package:frontkahoot2526/features/library/presentation/pages/edit_profile_page.dart';
@@ -209,6 +210,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/game',
         builder: (context, state) => const GameOrchestratorScreen(),
+      ),
+      GoRoute(
+        path: '/hostGame/:quizId',
+        builder: (context, state) {
+          final quizId = state.pathParameters['quizId']!;
+          return HostGameScreen(quizId: quizId);
+        },
       ),
       GoRoute(path: '/inicio', builder: (context, state) => const TitlePage()),
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
