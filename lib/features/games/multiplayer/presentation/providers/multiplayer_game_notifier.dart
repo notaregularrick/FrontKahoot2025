@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_enums.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_game_session.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/models/multiplayer_game_notifier_state.dart'; // Asegura ruta correcta
+import 'package:frontkahoot2526/features/games/multiplayer/presentation/providers/multiplayer_game_repository_prodiver.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/providers/use_cases_providers.dart';
 
 class MultiplayerGameNotifier
@@ -186,6 +187,7 @@ class MultiplayerGameNotifier
     _gameSubscription?.cancel();
     _gameSubscription = null;
     _questionStartTime = null;
+    ref.invalidate(multiplayerGameRepositoryProvider);
 
     // Reset total
     state = AsyncValue.data(

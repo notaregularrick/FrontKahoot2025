@@ -20,12 +20,13 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
   String _pin = '';
   MultiplayerGameSession _currentGameSession = MultiplayerGameSession();
   Dio _dio;
-  MultiplayerGameRepositoryImpl(this._dio);
+  final String  socketUrl;
+  MultiplayerGameRepositoryImpl(this._dio, this.socketUrl);
 
   @override
   Stream<MultiplayerGameSession> get gameStream => _sessionController.stream;
 
-  late io.Socket _socket;
+  io.Socket? _socket;
 
   @override
   Future<void> connectToGame(
@@ -34,7 +35,8 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
     String jwt,
     GameRole role,
   ) async {
-    final url = 'https://quizzy-backend-1-zpvc.onrender.com/multiplayer-sessions';
+    final url =
+        '$socketUrl/multiplayer-sessions';
     debugPrint(
       '🔗 Conectando a $url con PIN: $pin como ${role.name} y ${role}',
     );
@@ -53,72 +55,72 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
     );
 
     // Eventos de conexión física
-    _socket.onConnect((_) {
-      debugPrint('✅ Socket Conectado (ID: ${_socket.id})');
+    _socket!.onConnect((_) {
+      debugPrint('✅ Socket Conectado (ID: ${_socket!.id})');
       // _socket.emit('client_ready');
       // _socket.emit('player_join', {"nickname": nickname});
-      _socket.emit('client_ready');
+      _socket!.emit('client_ready');
       _pin = pin;
     });
 
-    _socket.onConnectError((data) => debugPrint(' Error de conexión: $data'));
+    _socket!.onConnectError((data) => debugPrint(' Error de conexión: $data'));
 
-    _socket.onDisconnect((reason) {
+    _socket!.onDisconnect((reason) {
       debugPrint('🔌 Desconectado. Razón: $reason');
     });
 
     //Listeners de eventos del juego:
     if (role == GameRole.player) {
-      _socket.on('player_connected_to_server', (data) {
+      _socket!.on('player_connected_to_server', (data) {
         _handleEvent('player_connected_to_server', data);
-        _socket.emit('player_join', {"nickname": nickname});
+        _socket!.emit('player_join', {"nickname": nickname});
       });
 
-      _socket.on('player_connected_to_session', (data) {
+      _socket!.on('player_connected_to_session', (data) {
         _handleEvent('player_connected_to_session', data);
       });
 
-      _socket.on('player_answer_confirmation', (data) {
+      _socket!.on('player_answer_confirmation', (data) {
         _handleEvent('player_answer_confirmation', data);
       });
 
-      _socket.on('player_results', (data) {
+      _socket!.on('player_results', (data) {
         _handleEvent('player_results', data);
       });
 
-      _socket.on('player_game_end', (data) {
+      _socket!.on('player_game_end', (data) {
         _handleEvent('player_game_end', data);
       });
 
-      _socket.on('session_closed', (data) {
+      _socket!.on('session_closed', (data) {
         _handleEvent('session_closed', data);
       });
     }
 
-    _socket.on('question_started', (data) {
+    _socket!.on('question_started', (data) {
       _handleEvent('question_started', data);
     });
 
     //HOST
     if (role == GameRole.host) {
-      _socket.on('host_results', (data) {
+      _socket!.on('host_results', (data) {
         _handleEvent('host_results', data);
       });
 
-      _socket.on('host_game_end', (data) {
+      _socket!.on('host_game_end', (data) {
         _handleEvent('host_game_end', data);
       });
 
-      _socket.on('host_lobby_update', (data) {
+      _socket!.on('host_lobby_update', (data) {
         _handleEvent('host_lobby_update', data);
       });
 
-      _socket.on('host_answer_update', (data) {
+      _socket!.on('host_answer_update', (data) {
         _handleEvent('host_answer_update', data);
       });
     }
 
-    _socket.connect();
+    _socket!.connect();
   }
 
   // void notifyClientReady() {
@@ -160,9 +162,6 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
 
       case 'player_connected_to_session':
         // {"state":"lobby","nickname":"Carlitos","score":0,"connectedBefore":false}
-        debugPrint('   🔹 Estado: ${data['state']}');
-        debugPrint('   🔹 Nickname: ${data['nickname']}');
-        debugPrint('   🔹 Score Inicial: ${data['score']}');
         updatedSession = updatedSession.copyWith(
           gameStatus: GameStatus.lobby,
           connectionStatus: ConnectionStatus.connected,
@@ -319,14 +318,19 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
 
   @override
   void dispose() {
+    if (!_sessionController.isClosed) {
+      _sessionController.close();
+    }
     try {
-      if (_socket.connected) {
-        _socket.disconnect();
+      if (_socket == null) return;
+      if (_socket!.connected) {
+        _socket!.disconnect();
       }
 
-      _socket.clearListeners();
+      _socket!.clearListeners();
 
-      _socket.dispose();
+      _socket!.dispose();
+      _socket = null;
       debugPrint('Conexion cerrada');
     } catch (e) {
       debugPrint('❌ Error al disponer el socket: $e');
@@ -365,19 +369,19 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
   @override
   Future<void> startGame() async {
     // Host
-    _socket.emit('host_start_game');
+    _socket?.emit('host_start_game');
   }
 
   @override
   Future<void> nextPhase() async {
     // Host
-    _socket.emit('host_next_phase');
+    _socket?.emit('host_next_phase');
   }
 
   @override
   Future<void> endSession() async {
     // Host
-    _socket.emit('host_end_session');
+    _socket?.emit('host_end_session');
   }
 
   @override
@@ -388,7 +392,7 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
   ) async {
     // Jugador
     debugPrint('📤 Enviando respuesta(s): $answersId');
-    _socket.emit('player_submit_answer', {
+    _socket?.emit('player_submit_answer', {
       "questionId": questionId,
       "answerId": answersId,
       "timeElapsedMs": timeElapsedMs,
