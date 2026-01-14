@@ -71,7 +71,7 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
     if (role == GameRole.player) {
       _socket.on('player_connected_to_server', (data) {
         _handleEvent('player_connected_to_server', data);
-        _socket.emit('player_join', {"nickname": 'pepe'});
+        _socket.emit('player_join', {"nickname": nickname});
       });
 
       _socket.on('player_connected_to_session', (data) {
