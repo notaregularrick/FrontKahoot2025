@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontkahoot2526/features/library/presentation/models/library_colors.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/quiz_model.dart';
 import 'package:frontkahoot2526/features/library/presentation/providers/library_notifier.dart';
 import 'package:go_router/go_router.dart';
@@ -18,7 +19,7 @@ class QuizOptionsSheet extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.creamBackground,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SingleChildScrollView(
@@ -35,17 +36,23 @@ class QuizOptionsSheet extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-
             Container(
               height: 150,
               width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 16),
+              margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade200),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.cardBorder),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primaryRed.withOpacity(0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
                 child: Image.network(
                   quiz.imageUrl,
                   fit: BoxFit.cover,
@@ -78,14 +85,26 @@ class QuizOptionsSheet extends ConsumerWidget {
             // 2. Info Básica (Lo que pediste)
             Text(
               quiz.title,
-              style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: AppColors.darkBlueText,
+              ),
               textAlign: TextAlign.center,
             ),
-            const Divider(height: 30),
+            const SizedBox(height: 6),
+            Text(
+              quiz.category,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primaryRed,
+              ),
+            ),
+            const Divider(height: 28),
 
             // 3. Botones Dinámicos según la Sección
             if (type == QuizContextType.myCreations) ...[
-              //3 puntos para descomponer el array
               createEditButton(context),
               if (quiz.status != 'Borrador') ...[
                 createPlayMultiplayerButton(context),
@@ -94,21 +113,16 @@ class QuizOptionsSheet extends ConsumerWidget {
             ],
 
             if (type == QuizContextType.favorites) ...[
-              //3 puntos para descomponer el array
               createPlayMultiplayerButton(context),
               createPlaySoloButton(context, ref),
               createRemoveFavoriteButton(context, ref, quiz.id),
             ],
 
             if (type == QuizContextType.inProgress) ...[
-              //3 puntos para descomponer el array
               createContinueButton(context),
-              createPlayMultiplayerButton(context),
-              createPlaySoloButton(context, ref),
             ],
 
             if (type == QuizContextType.completed) ...[
-              //3 puntos para descomponer el array
               createWatchResultsButton(),
               createPlayMultiplayerButton(context),
               createPlaySoloButton(context, ref),
@@ -121,11 +135,10 @@ class QuizOptionsSheet extends ConsumerWidget {
 
   Widget createEditButton(BuildContext context) {
     return ListTile(
-      leading: Icon(Icons.edit),
+      leading: const Icon(Icons.edit, color: AppColors.primaryRed),
       title: Text(
         "Editar",
         style: TextStyle(
-          //color: Colors.blue,
           fontWeight: FontWeight.w600,
           fontSize: 20,
         ),
@@ -139,11 +152,10 @@ class QuizOptionsSheet extends ConsumerWidget {
 
   Widget createPlayMultiplayerButton(BuildContext context) {
     return ListTile(
-      leading: Icon(Icons.group),
+      leading: const Icon(Icons.group, color: AppColors.primaryRed),
       title: Text(
         "Jugar multijugador",
         style: TextStyle(
-          //color: Colors.blue,
           fontWeight: FontWeight.w600,
           fontSize: 20,
         ),
@@ -158,11 +170,10 @@ class QuizOptionsSheet extends ConsumerWidget {
 
   Widget createPlaySoloButton(BuildContext context, WidgetRef ref) {
     return ListTile(
-      leading: Icon(Icons.gamepad),
+      leading: const Icon(Icons.gamepad, color: AppColors.primaryRed),
       title: Text(
         "Jugar en solitario",
         style: TextStyle(
-          //color: Colors.blue,
           fontWeight: FontWeight.w600,
           fontSize: 20,
         ),
@@ -182,11 +193,10 @@ class QuizOptionsSheet extends ConsumerWidget {
     String quizId,
   ) {
     return ListTile(
-      leading: Icon(Icons.delete),
+      leading: const Icon(Icons.delete_outline, color: AppColors.primaryRed),
       title: Text(
         "Eliminar de favoritos",
         style: TextStyle(
-          //color: Colors.blue,
           fontWeight: FontWeight.w600,
           fontSize: 20,
         ),
@@ -204,11 +214,10 @@ class QuizOptionsSheet extends ConsumerWidget {
     String quizId,
   ) {
     return ListTile(
-      leading: Icon(Icons.favorite),
+      leading: const Icon(Icons.favorite, color: AppColors.primaryRed),
       title: Text(
         "Agregar a favoritos",
         style: TextStyle(
-          //color: Colors.blue,
           fontWeight: FontWeight.w600,
           fontSize: 20,
         ),
@@ -223,14 +232,13 @@ class QuizOptionsSheet extends ConsumerWidget {
   Widget createContinueButton(BuildContext context) {
     return ListTile(
       leading: quiz.gameType == 'multiplayer'
-          ? Icon(Icons.group)
-          : Icon(Icons.gamepad),
+          ? const Icon(Icons.group, color: AppColors.primaryRed)
+          : const Icon(Icons.gamepad, color: AppColors.primaryRed),
       title: Text(
         quiz.gameType == 'multiplayer'
             ? "Continuar juego multijugador"
             : "Continuar juego en solitario",
         style: TextStyle(
-          //color: Colors.blue,
           fontWeight: FontWeight.w600,
           fontSize: 20,
         ),
@@ -271,13 +279,12 @@ class QuizOptionsSheet extends ConsumerWidget {
 
   Widget createWatchResultsButton() {
     return ListTile(
-      leading: Icon(Icons.visibility),
+      leading: const Icon(Icons.visibility, color: AppColors.primaryRed),
       title: Text(
         quiz.gameType == 'multiplayer'
             ? "Ver resultados de juego multijugador"
             : "Ver resultados de juego en solitario",
         style: TextStyle(
-          //color: Colors.blue,
           fontWeight: FontWeight.w600,
           fontSize: 20,
         ),
