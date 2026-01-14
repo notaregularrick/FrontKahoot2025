@@ -20,7 +20,6 @@ class AuthRepositoryImpl implements AuthRepository {
     required String username, 
     required String userType,
   }) async {
-    // Llamamos al datasource
     final userModel = await datasource.register(
       name: name,
       email: email,
@@ -34,7 +33,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<AuthResponseModel> login({required String username, required String password}) async {
-    // Pasamos username al datasource
     final response = await datasource.login(username: username, password: password);
     await storage.saveToken(response.accessToken);
     return response;
@@ -42,7 +40,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<AuthResponseModel> checkAuthStatus() async {
-    // 1. Leemos el token guardado
     final token = await storage.getToken();
 
     if (token == null) {
@@ -50,15 +47,11 @@ class AuthRepositoryImpl implements AuthRepository {
     }
 
     try {
-      // 2. Verificamos con el backend y obtenemos token renovado
       final response = await datasource.checkAuthStatus(token);
-      
-      // 3. Guardamos el NUEVO token
       await storage.saveToken(response.accessToken);
       
       return response;
     } catch (e) {
-      // Si falla (token expirado), limpiamos todo
       await logout();
       throw Exception('Sesión expirada');
     }

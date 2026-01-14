@@ -24,7 +24,7 @@ extension BackendTypeExtension on BackendType {
       case BackendType.backOmega:
         return "https://backcomun-mzvy.onrender.com";
       case BackendType.backAlpha:
-        return "https://quizzy-backend-0wh2.onrender.com/api";
+        return "https://quizzy-backend-1-zpvc.onrender.com/api";
     }
   }
 }

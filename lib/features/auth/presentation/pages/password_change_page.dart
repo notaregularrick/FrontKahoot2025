@@ -14,9 +14,9 @@ class ChangePasswordPage extends ConsumerStatefulWidget {
 class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
   final currentPasswordCtrl = TextEditingController();
   final newPasswordCtrl = TextEditingController();
-  final confirmPasswordCtrl = TextEditingController(); // Nuevo campo de confirmación
+  final confirmPasswordCtrl = TextEditingController();
   
-  bool isLoading = false; // Estado de carga local
+  bool isLoading = false;
 
   @override
   void dispose() {
@@ -27,7 +27,6 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
   }
 
   Future<void> _handleChangePassword() async {
-    // Validaciones básicas
     if (currentPasswordCtrl.text.isEmpty || 
         newPasswordCtrl.text.isEmpty || 
         confirmPasswordCtrl.text.isEmpty) {
@@ -51,12 +50,10 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
     final newPassword = newPasswordCtrl.text.trim();
 
     try {
-      // Llamamos al notifier para cambiar la contraseña
       await ref.read(profileNotifierProvider.notifier)
           .changePassword(currentPassword, newPassword);
 
       if (mounted) {
-        // Verificar errores en el estado global
         final profileState = ref.read(profileNotifierProvider);
         if (profileState.errorMessage != null) {
            throw profileState.errorMessage!;
@@ -68,7 +65,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
             backgroundColor: Colors.green,
           ),
         );
-        context.pop(); // Volver al perfil
+        context.pop();
       }
     } catch (e) {
       if (mounted) {
@@ -88,7 +85,6 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Estilos del tema (consistentes con Login/Register)
     final primaryColor = const Color(0xFFFF6A5F);
 
     return Scaffold(

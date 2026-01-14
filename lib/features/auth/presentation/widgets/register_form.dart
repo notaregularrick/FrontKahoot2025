@@ -13,7 +13,7 @@ class RegisterForm extends ConsumerStatefulWidget {
 
 class _RegisterFormState extends ConsumerState<RegisterForm> {
   final nameCtrl = TextEditingController();
-  final usernameCtrl = TextEditingController(); // NUEVO: Controlador para username
+  final usernameCtrl = TextEditingController();
   final emailCtrl = TextEditingController();
   final passCtrl = TextEditingController();
   
@@ -23,14 +23,13 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
   @override
   void dispose() {
     nameCtrl.dispose();
-    usernameCtrl.dispose(); // No olvides limpiarlo
+    usernameCtrl.dispose();
     emailCtrl.dispose();
     passCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    // Validamos que todos los campos estén llenos
     if (nameCtrl.text.isEmpty || 
         usernameCtrl.text.isEmpty || 
         emailCtrl.text.isEmpty || 
@@ -46,23 +45,20 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
     try {
       final notifier = ref.read(authNotifierProvider.notifier);
 
-      // Enviamos todos los datos al backend
       await notifier.register(
         name: nameCtrl.text.trim(),
-        username: usernameCtrl.text.trim(), // NUEVO
+        username: usernameCtrl.text.trim(),
         email: emailCtrl.text.trim(),
         password: passCtrl.text.trim(),
         userType: _selectedUserType,
       );
       
       if (mounted) {
-        // Verificamos si hubo error en el estado
         final authState = ref.read(authNotifierProvider);
         if (authState.errorMessage != null) {
            throw authState.errorMessage!;
         }
 
-        // ÉXITO: Como este endpoint no devuelve token, redirigimos al Login
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Cuenta creada con éxito. Por favor inicia sesión.'),
@@ -91,7 +87,6 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
   @override
   Widget build(BuildContext context) {
     final shadow = BoxShadow(
-      // Corrección de deprecación: withValues en lugar de withOpacity
       color: Colors.black.withValues(alpha: 0.05), 
       blurRadius: 16,
       offset: const Offset(0, 10),
@@ -139,7 +134,7 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
           TextField(
             controller: usernameCtrl,
             decoration: InputDecoration(
-              labelText: 'Usuario (sin espacios)', // Aclara al usuario
+              labelText: 'Usuario (sin espacios)',
               prefixIcon: const Icon(Icons.alternate_email),
               filled: true,
               fillColor: Colors.grey[100],
@@ -148,7 +143,6 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
                 borderSide: BorderSide.none,
               ),
             ),
-            // ESTO EVITA ESPACIOS Y CARACTERES RAROS:
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]')), 
             ],
