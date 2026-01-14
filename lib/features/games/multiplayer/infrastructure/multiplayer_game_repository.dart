@@ -34,7 +34,7 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
     String jwt,
     GameRole role,
   ) async {
-    final url = 'https://quizzy-backend-0wh2.onrender.com/multiplayer-sessions';
+    final url = 'https://quizzy-backend-1-zpvc.onrender.com/multiplayer-sessions';
     debugPrint(
       '🔗 Conectando a $url con PIN: $pin como ${role.name} y ${role}',
     );

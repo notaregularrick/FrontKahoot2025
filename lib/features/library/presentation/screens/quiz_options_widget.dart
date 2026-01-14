@@ -150,8 +150,8 @@ class QuizOptionsSheet extends ConsumerWidget {
       ),
       onTap: () {
         Navigator.pop(context);
-        //context.go('/hostGame/${quiz.id}');
-        context.go('/hostGame/14f5d158-fe86-4ba4-85cf-b83ce514c0bd');
+        context.push('/hostGame/${quiz.id}');
+        //context.push('/hostGame/6f1cefdc-b538-475b-802d-f680b34eab2d');
       },
     );
   }
