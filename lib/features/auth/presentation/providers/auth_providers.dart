@@ -1,39 +1,39 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
-
-import '../../../../core/providers/secure_storage_provider.dart';
 import '../../../../core/services/api_service.dart';
+//import '../../../../core/services/secure_storage_service.dart';
+import '../../../../core/providers/secure_storage_provider.dart';
 import '../../domain/repositories/auth_repository.dart';
-import '../../infraestructure/datasource/auth_datasource_impl.dart';
-import '../../infraestructure/repositories/auth_repository_impl.dart';
-import '../controllers/auth_notifier.dart';
+import '../../application/controllers/auth_notifier.dart';
 import '../../application/state/auth_state.dart';
+import '../../infrastructure/datasource/auth_datasource.dart';
+import '../../infrastructure/datasource/auth_datasource_impl.dart';
+import '../../infrastructure/repositories/auth_repository_impl.dart';
 
-// Dio Provider
-final dioProvider = Provider<Dio>((ref) {
-  return Dio(BaseOptions(baseUrl: "http://localhost:3000")); // Ajusta tu IP real
+// 1. Provider del Datasource
+final authDatasourceProvider = Provider<AuthDatasource>((ref) {
+  // Usamos watch para reconstruir si cambia el Dio (URL)
+  final apiService = ref.watch(apiServiceProvider);
+  return AuthDatasourceImpl(apiService.dio);
 });
 
-// Datasource Provider
-final authDatasourceProvider = Provider((ref) {
-  final dio = ref.watch(dioProvider);
-  return AuthDatasourceImpl(dio);
-});
-
-// Repository Provider
+// 2. Provider del Repositorio
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final datasource = ref.read(authDatasourceProvider);
-  final apiService = ref.read(apiServiceProvider);
-  final storage = ref.read(secureStorageProvider);
+  final datasource = ref.watch(authDatasourceProvider);
+  final storage = ref.watch(secureStorageProvider);
+  final apiService = ref.watch(apiServiceProvider);
 
-  return AuthRepositoryImpl(datasource,apiService,storage);
+  // Asegúrate de que el orden de los parámetros coincida con tu constructor en AuthRepositoryImpl
+  // Según lo último que vimos era: (datasource, storage, apiService)
+  return AuthRepositoryImpl(datasource, apiService, storage);
 });
 
-// Controller Provider
-final authNotifierProvider =
-    StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  final repo = ref.watch(authRepositoryProvider);
-  final storage = ref.read(secureStorageProvider);
-
-  return AuthNotifier(repo, storage);
+// 3. Provider del Notifier (Estado)
+final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  // ¡AQUÍ ESTABA EL PROBLEMA!
+  // Antes usabas ref.read, por lo que el Notifier nunca se enteraba del cambio de backend.
+  // Al usar ref.watch, si cambias el backend, este provider se reconstruye y crea un Notifier nuevo y fresco.
+  final repository = ref.watch(authRepositoryProvider); 
+  final storage = ref.watch(secureStorageProvider);
+  
+  return AuthNotifier(repository, storage);
 });

@@ -1,9 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-//import 'package:frontkahoot2526/features/auth/presentation/providers/auth_providers.dart';
-//import 'package:frontkahoot2526/core/services/secure_storage_service.dart';
-
 import '../providers/secure_storage_provider.dart';
+import '../services/secure_storage_service.dart'; // Verifica esta ruta
+import '../providers/backend_provider.dart'; // <--- IMPORTANTE: Importar el provider del backend
 
 class ApiService {
   final Dio _dio;
@@ -12,56 +11,74 @@ class ApiService {
 
   Dio get dio => _dio;
 
-  // Configuración global para Dio
-  void setUpInterceptors(Ref ref) {
+  // Configuración de interceptores (Token)
+  void setUpInterceptors(SecureStorageService storage) {
+    _dio.interceptors.clear();
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        // Conseguimos el token desde SecureStorage
-        final storage = ref.read(secureStorageProvider); // Lee el servicio de storage
-        final token = await storage.getToken(); // Lee el token guardado
-
+        final token = await storage.getToken();
         if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
         }
-
         return handler.next(options);
       },
-      onResponse: (response, handler) {
-        return handler.next(response);
-      },
-      onError: (error, handler) {
-        return handler.next(error);
-      },
+      onResponse: (response, handler) => handler.next(response),
+      onError: (error, handler) => handler.next(error),
+    ));
+
+    // Log para ver qué URL está usando realmente en la consola
+    _dio.interceptors.add(LogInterceptor(
+      request: true,
+      requestHeader: false,
+      responseHeader: false,
+      error: true,
     ));
   }
 
-  // Método GET como ejemplo
-  Future<Response> get(String path) async {
+  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
     try {
-      final response = await _dio.get(path);
-      return response;
+      return await _dio.get(path, queryParameters: queryParameters);
     } catch (e) {
-      rethrow; // Aquí puedes agregar el manejo de errores
+      rethrow;
     }
   }
 
-  // Otros métodos para POST, PUT, DELETE, etc., siguiendo el mismo patrón
   Future<Response> post(String path, {Map<String, dynamic>? data}) async {
     try {
-      final response = await _dio.post(path, data: data);
-      return response;
+      return await _dio.post(path, data: data);
     } catch (e) {
       rethrow;
     }
   }
 }
 
+// --- EL PROVIDER QUE CONECTA TODO ---
 final apiServiceProvider = Provider<ApiService>((ref) {
-  final dio = Dio(); // Crear instancia de Dio
-  //final storage = ref.read(secureStorageProvider); // Acceder a SecureStorage
-  final apiService = ApiService(dio);
+  // 1. ESCUCHAMOS QUÉ BACKEND ESTÁ SELECCIONADO
+  // Si esto cambia (Back1 -> Back2), este provider se reconstruye con la nueva URL.
+  final backendType = ref.watch(backendProvider); 
+  
+  // 2. OBTENEMOS EL STORAGE
+  final storage = ref.read(secureStorageProvider);
 
-  apiService.setUpInterceptors(ref); // Configura el interceptor
+  // 3. CONFIGURAMOS DIO CON LA URL DEL BACKEND SELECCIONADO
+  print("API Service configurado con URL: ${backendType.url}"); // <--- Debug en consola
+
+  final options = BaseOptions(
+    baseUrl: backendType.url, // <--- AQUÍ ESTÁ LA MAGIA
+    connectTimeout: const Duration(seconds: 60),
+    receiveTimeout: const Duration(seconds: 60),
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+  );
+
+  final dio = Dio(options);
+  final apiService = ApiService(dio);
+  
+  // Configuramos interceptores pasando el storage directamente
+  apiService.setUpInterceptors(storage);
 
   return apiService;
 });

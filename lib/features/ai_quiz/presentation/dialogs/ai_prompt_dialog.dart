@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontkahoot2526/features/categories/presentation/providers/categories_provider.dart';
 
-class AIPromptDialog extends StatefulWidget {
+class AIPromptDialog extends ConsumerStatefulWidget {
   final String? initialTitle;
   final String? initialDescription;
   final String? initialCategory;
@@ -13,35 +15,23 @@ class AIPromptDialog extends StatefulWidget {
   });
 
   @override
-  State<AIPromptDialog> createState() => _AIPromptDialogState();
+  ConsumerState<AIPromptDialog> createState() => _AIPromptDialogState();
 }
 
-class _AIPromptDialogState extends State<AIPromptDialog> {
+class _AIPromptDialogState extends ConsumerState<AIPromptDialog> {
   final _formKey = GlobalKey<FormState>();
   final _promptController = TextEditingController();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  String _selectedCategory = 'Estudio';
+  String? _selectedCategory;
   int _numberOfQuestions = 5;
-
-  final List<String> categories = [
-    'Estudio',
-    'Familia',
-    'Noche de juegos',
-    'Celebración',
-    'Proyectos',
-    'Calentamiento',
-    'Trivia',
-    'De temporada',
-    'Social',
-  ];
 
   @override
   void initState() {
     super.initState();
     _titleController.text = widget.initialTitle ?? '';
     _descriptionController.text = widget.initialDescription ?? '';
-    _selectedCategory = widget.initialCategory ?? 'Estudio';
+    _selectedCategory = widget.initialCategory;
   }
 
   @override
@@ -53,7 +43,7 @@ class _AIPromptDialogState extends State<AIPromptDialog> {
   }
 
   void _submit() {
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState!.validate() && _selectedCategory != null) {
       Navigator.of(context).pop({
         'prompt': _promptController.text.trim(),
         'title': _titleController.text.trim(),
@@ -66,6 +56,8 @@ class _AIPromptDialogState extends State<AIPromptDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final categoriesAsync = ref.watch(categoryNamesProvider);
+
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -149,25 +141,72 @@ class _AIPromptDialogState extends State<AIPromptDialog> {
                       ),
                       const SizedBox(height: 16),
                       // Categoría
-                      DropdownButtonFormField<String>(
-                        value: _selectedCategory,
-                        decoration: const InputDecoration(
-                          labelText: 'Categoría',
-                          border: OutlineInputBorder(),
-                        ),
-                        items: categories.map((category) {
-                          return DropdownMenuItem(
-                            value: category,
-                            child: Text(category),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _selectedCategory = value;
+                      categoriesAsync.when(
+                        data: (categories) {
+                          // Si no hay categoría seleccionada, seleccionar la primera
+                          if (_selectedCategory == null && categories.isNotEmpty) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (mounted) {
+                                setState(() {
+                                  _selectedCategory = categories.first;
+                                });
+                              }
                             });
                           }
+                          return DropdownButtonFormField<String>(
+                            value: _selectedCategory,
+                            decoration: const InputDecoration(
+                              labelText: 'Categoría',
+                              border: OutlineInputBorder(),
+                            ),
+                            items: categories.map((category) {
+                              return DropdownMenuItem(
+                                value: category,
+                                child: Text(category),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() {
+                                  _selectedCategory = value;
+                                });
+                              }
+                            },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'La categoría es requerida';
+                              }
+                              return null;
+                            },
+                          );
                         },
+                        loading: () => const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                        error: (error, _) => Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.red),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            children: [
+                              const Icon(Icons.error_outline, color: Colors.red),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Error al cargar categorías',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                              TextButton(
+                                onPressed: () => ref.invalidate(categoryNamesProvider),
+                                child: const Text('Reintentar'),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 16),
                       // Número de preguntas
@@ -220,7 +259,7 @@ class _AIPromptDialogState extends State<AIPromptDialog> {
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
-                    onPressed: _submit,
+                    onPressed: _selectedCategory != null ? _submit : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.purple[600],
                       foregroundColor: Colors.white,
@@ -247,5 +286,3 @@ class _AIPromptDialogState extends State<AIPromptDialog> {
     );
   }
 }
-
-

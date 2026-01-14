@@ -9,7 +9,7 @@ git add README.md<div align="center">
 
 ---
 
-[Descripción](#-descripción) • [Estado](#-estado-del-proyecto) • [Demo](#-demostración) • [Instalación](#-acceso-al-proyecto) • [Tecnologías](#-tecnologías-utilizadas) • [Equipo](#-personas-contribuyentes)
+[Descripción](#-descripción) • [Estado](#-estado-del-proyecto) • [Instalación](#-acceso-al-proyecto) • [Tecnologías](#-tecnologías-utilizadas) • [Equipo](#-personas-contribuyentes)
 
 </div>
 
@@ -53,7 +53,7 @@ git add README.md<div align="center">
 | 📝 Creación de Quizzes | ✅ Completado |
 | 🤖 Generación con IA | ✅ Completado |
 | 🖼️ Gestión Multimedia | ✅ Completado |
-| 🎮 Modo Multijugador | 🔄 En desarrollo |
+| 🎮 Modo Multijugador | ✅ Completado |
 | 👤 Perfil de Usuario | ✅ Completado |
 
 </div>
@@ -62,19 +62,6 @@ git add README.md<div align="center">
 > 📅 **Última actualización:** Enero 2026
 
 ---
-
-## 🎬 Demostración
-
-### 📱 Pantallas principales
-
-<div align="center">
-
-| Inicio | Crear Quiz | Jugar |
-|:------:|:----------:|:-----:|
-| ![Home](docs/screenshots/home.png) | ![Create](docs/screenshots/create.png) | ![Play](docs/screenshots/play.png) |
-
-</div>
-
 
 ### 🔧 Funcionalidades
 
@@ -192,7 +179,7 @@ lib/
 
 <div align="center">
 
-| <img src="https://github.com/identicons/diego.png" width="100"/> | <img src="https://github.com/identicons/iker.png" width="100"/> | <img src="https://github.com/identicons/melissa.png" width="100"/> | <img src="https://github.com/identicons/ricardo.png" width="100"/> |
+| <img src="https://avatars.githubusercontent.com/u/169938669?v=4" width="100"/> | <img src="https://avatars.githubusercontent.com/u/138076587?v=4" width="100"/> | <img src="https://avatars.githubusercontent.com/u/94936491?v=4" width="100"/> | <img src="https://avatars.githubusercontent.com/u/117862951?v=4" width="100"/> |
 |:---:|:---:|:---:|:---:|
 | **Diego Sperandío** | **Iker Navas** | **Melissa Nessi** | **Ricardo Mejías** |
 
@@ -200,11 +187,6 @@ lib/
 
 ---
 
-<div align="center">
-
-### ⭐ ¡Si te gusta el proyecto, no olvides darle una estrella!
-
-<br>
 
 
 

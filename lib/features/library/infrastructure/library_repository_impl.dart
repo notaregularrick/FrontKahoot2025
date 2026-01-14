@@ -30,8 +30,9 @@ class LibraryRepositoryImpl implements ILibraryRepository {
   ) async {
     try {
       Response response = await _dio.get(
-        '/library/my-creations?',
+        '/library/my-creations',
         queryParameters: toQuery(params),
+        data: {"userId": "8e5c1f34-cd53-4180-8e6d-da2bd5399f62"}//QUITAR
       );
       final Map<String, dynamic> responseBody = response.data;
       final List<dynamic> data = responseBody['data'];
@@ -108,6 +109,7 @@ class LibraryRepositoryImpl implements ILibraryRepository {
       Response response = await _dio.get(
         '/library/favorites',
         queryParameters: toQuery(params),
+        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
       final Map<String, dynamic> responseBody = response.data;
       final List<dynamic> data = responseBody['data'];
@@ -182,11 +184,14 @@ class LibraryRepositoryImpl implements ILibraryRepository {
       Response response = await _dio.get(
         '/library/in-progress',
         queryParameters: toQuery(params),
+        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
       final Map<String, dynamic> responseBody = response.data;
       final List<dynamic> data = responseBody['data'];
       List<LibraryQuiz> quizzes = [];
       for (var quiz in data) {
+        // ignore: avoid_print
+        print('[library][in-progress][item] $quiz');
         String id = quiz['id'] as String;
         String? title = quiz['title'] as String?;
         String? description = quiz['description'] as String?;
@@ -200,8 +205,14 @@ class LibraryRepositoryImpl implements ILibraryRepository {
         int playCount = (quiz['playCount'] as num?)?.toInt() ?? 0;
         String category = quiz['category'] as String;
         String status = quiz['status'] as String;
-        String gameId = quiz['gameId'] as String;
-        String gameType = quiz['gameType'] as String;
+        // Robust extraction for in-progress identifiers and type
+        String? gameId = (quiz['gameId'] ?? quiz['attemptId'] ?? quiz['attemptID'] ?? quiz['sessionId'] ?? quiz['sessionID']) as String?;
+        String? gameType = (quiz['gameType'] ?? quiz['type'])?.toString();
+        if (gameType == null) {
+          if (quiz['attemptId'] != null || quiz['attemptID'] != null) gameType = 'singleplayer';
+          else if (quiz['sessionId'] != null || quiz['sessionID'] != null) gameType = 'multiplayer';
+          else gameType = 'singleplayer'; // default fallback
+        }
 
         LibraryQuiz newQuiz = LibraryQuiz(
           id: id,
@@ -260,6 +271,7 @@ class LibraryRepositoryImpl implements ILibraryRepository {
       Response response = await _dio.get(
         '/library/completed',
         queryParameters: toQuery(params),
+        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
       final Map<String, dynamic> responseBody = response.data;
       final List<dynamic> data = responseBody['data'];
@@ -278,8 +290,14 @@ class LibraryRepositoryImpl implements ILibraryRepository {
         int playCount = (quiz['playCount'] as num?)?.toInt() ?? 0;
         String category = quiz['category'] as String;
         String status = quiz['status'] as String;
-        String gameId = quiz['gameId'] as String;
-        String gameType = quiz['gameType'] as String;
+        // Robust extraction for completed identifiers and type
+        String? gameId = (quiz['gameId'] ?? quiz['attemptId'] ?? quiz['attemptID'] ?? quiz['sessionId'] ?? quiz['sessionID']) as String?;
+        String? gameType = (quiz['gameType'] ?? quiz['type'])?.toString();
+        if (gameType == null) {
+          if (quiz['attemptId'] != null || quiz['attemptID'] != null) gameType = 'singleplayer';
+          else if (quiz['sessionId'] != null || quiz['sessionID'] != null) gameType = 'multiplayer';
+          else gameType = 'singleplayer'; // default fallback
+        }
 
         LibraryQuiz newQuiz = LibraryQuiz(
           id: id,
@@ -334,7 +352,8 @@ class LibraryRepositoryImpl implements ILibraryRepository {
     try {
       final Dio dio = Dio();
       await dio.post(
-        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/favorites/:$quizId',
+        '/library/favorites/$quizId',
+        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
     } on DioException catch (e) {
       print(e);
@@ -362,7 +381,8 @@ class LibraryRepositoryImpl implements ILibraryRepository {
     try {
       final Dio dio = Dio();
       await dio.delete(
-        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/favorites/:$quizId',
+        '/library/favorites/$quizId',
+        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
     } on DioException catch (e) {
       if (e.response != null) {
@@ -383,11 +403,4 @@ class LibraryRepositoryImpl implements ILibraryRepository {
       );
     }
   }
-}
-
-void main(List<String> args) {
-  final repo = LibraryRepositoryImpl(Dio());
-  repo.findMyCreations(
-    LibraryFilterParams(q: 'funcione')
-  );
 }

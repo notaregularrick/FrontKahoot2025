@@ -1,13 +1,36 @@
 enum GameStatus {
-  connecting, // Conectando al juego
-  lobby,    // Esperando jugadores
-  question, // Pregunta activa 
-  results,  // Resultados de la pregunta
-  end       // Podio final
+  none,
+  lobby, 
+  question,
+  answerSubmitted, 
+  results, 
+  end, 
 }
 
-enum GameRole {
-  host,
-  player,
-  none
+enum ConnectionStatus {
+  connecting, 
+  connected, 
+  disconected, 
+  error,  
 }
+
+extension GameStatusParser on String {
+  GameStatus? toGameStatus() {
+    switch (this) {
+      case 'GAME_STARTED': 
+      case 'NEW_QUESTION':
+        return GameStatus.question;
+
+      case 'SHOW_LEADERBOARD':
+        return GameStatus.results;
+
+      case 'GAME_ENDED':
+        return GameStatus.end;
+
+      default:
+        return null; 
+    }
+  }
+}
+
+enum GameRole { host, player, none }

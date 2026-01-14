@@ -10,5 +10,15 @@ class CreateQuizService {
   Future<Quiz> createQuiz(Quiz quiz) {
     return repository.createQuiz(quiz);
   }
+
+  /// Obtiene un quiz por ID
+  Future<Quiz> getQuiz(String quizId) {
+    return repository.getQuiz(quizId);
+  }
+
+  /// Actualiza un quiz existente
+  Future<Quiz> updateQuiz(String quizId, Quiz quiz) {
+    return repository.updateQuiz(quizId, quiz);
+  }
 }
 

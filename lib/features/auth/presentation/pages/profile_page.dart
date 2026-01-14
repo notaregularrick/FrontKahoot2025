@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../providers/auth_providers.dart';
 import '../providers/profile_providers.dart'; // Verifica que esta ruta sea correcta
 
 class ProfilePage extends ConsumerWidget {
@@ -10,6 +11,13 @@ class ProfilePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // 1. Escuchamos cambios en el estado
     final state = ref.watch(profileNotifierProvider);
+    final auth = ref.watch(authNotifierProvider);
+
+    // Prefer data returned by login (auth.user) for name/email/userType
+    final loginUser = auth.user;
+    final displayName = loginUser?.name ?? state.profile?.name ?? '';
+    final displayEmail = loginUser?.email ?? state.profile?.email ?? '';
+    final displayUserType = loginUser?.userType ?? state.profile?.userType ?? '';
 
     // 2. LÓGICA AUTOMÁTICA DE CARGA (El "Trigger")
     // Si no hay perfil, no está cargando y no hay error, forzamos la petición de datos.
@@ -23,7 +31,16 @@ class ProfilePage extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Perfil")),
+      appBar: AppBar(
+        title: const Text("Perfil"),
+        actions: [
+          IconButton(
+            tooltip: 'Cambiar backend',
+            icon: const Icon(Icons.settings_ethernet),
+            onPressed: () => context.push('/back-settings'),
+          ),
+        ],
+      ),
       // 3. Renderizado condicional directo (sin Builder extra)
       body: state.isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -55,17 +72,35 @@ class ProfilePage extends ConsumerWidget {
 
                     const SizedBox(height: 20),
 
+                    // --- ACCIÓN: CAMBIAR CONTRASEÑA ---
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.lock_outline),
+                        label: const Text('Cambiar Contraseña'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade100,
+                          foregroundColor: Colors.red.shade900,
+                        ),
+                        onPressed: () {
+                          context.push('/passchange');
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
                     // --- ITEMS DE INFORMACIÓN ---
                     // Usamos state.profile! con seguridad porque ya validamos que no es null arriba
-                    _InfoItem(label: 'Nombre', value: state.profile!.name),
-                    _InfoItem(label: 'Email', value: state.profile!.email),
+                    _InfoItem(label: 'Nombre', value: displayName),
+                    _InfoItem(label: 'Email', value: displayEmail),
                     _InfoItem(
                       label: 'Descripción',
                       value: state.profile!.description,
                     ),
                     _InfoItem(
                       label: 'Tipo de Usuario',
-                      value: state.profile!.userType,
+                      value: displayUserType,
                     ),
                     _InfoItem(
                       label: 'Racha',
@@ -88,34 +123,23 @@ class ProfilePage extends ConsumerWidget {
 
                     const SizedBox(height: 10),
 
-                    // --- BOTÓN CAMBIAR CONTRASEÑA ---
+                    // --- BOTÓN CERRAR SESIÓN ---
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red.shade100,
-                          foregroundColor: Colors.red.shade900,
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
                         ),
-                        onPressed: () {
-                          context.push('/passchange');
+                        onPressed: () async {
+                          final notifier =
+                              ref.read(authNotifierProvider.notifier);
+                          await notifier.logout();
+                          if (context.mounted) {
+                            context.go('/inicio');
+                          }
                         },
-                        child: const Text('Cambiar Contraseña'),
-                      ),
-                    ),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red.shade100,
-                          foregroundColor: Colors.red.shade900,
-                        ),
-                        icon: const Icon(Icons.build_circle_outlined),
-                        label: const Text("Configurar Backend"),
-                        onPressed: () {
-                          context.push(
-                            '/back-settings',
-                          ); // Navega a la ruta nueva
-                        },
+                        child: const Text('Cerrar Sesión'),
                       ),
                     ),
 
