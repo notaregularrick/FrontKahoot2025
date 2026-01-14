@@ -1,8 +1,8 @@
 // lib/core/simulated_data.dart
 
 import '../features/auth/domain/entities/user_entity.dart';
-import '../features/auth/infraestructure/models/profile_model.dart';
-import '../features/auth/infraestructure/models/user_model.dart';
+import '../features/auth/infrastructure/models/profile_model.dart';
+import '../features/auth/infrastructure/models/user_model.dart';
 
 // --- BASE DE DATOS SIMULADA (RAM) ---
 // Al ser globales, ambos repositorios accederán a la misma información.

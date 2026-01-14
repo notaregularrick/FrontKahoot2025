@@ -9,7 +9,7 @@ import '../../infrastructure/repositories/explore_repository_impl.dart';
 
 // 1. Provider del Datasource
 final exploreDatasourceProvider = Provider<ExploreDatasource>((ref) {
-  final dio = ref.read(apiServiceProvider).dio;
+  final dio = ref.watch(apiServiceProvider).dio;
   return ExploreDatasourceImpl(dio);
 });
 

@@ -6,25 +6,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // });
 
 // 2. El Notifier que controla la URL
-enum BackendType { back1, back2 }
+enum BackendType { backOmega, backAlpha }
 
 extension BackendTypeExtension on BackendType {
   String get name {
     switch (this) {
-      case BackendType.back1:
-        return "Backend 1";
-      case BackendType.back2:
-        return "Backend 2";
+      case BackendType.backOmega:
+        return "Backend Omega";
+      case BackendType.backAlpha:
+        return "Backend Alpha";
     }
   }
 
   String get url {
     //modificar según las de los equipos
     switch (this) {
-      case BackendType.back1:
-        return "https://backcomun-mzvy.onrender.com/";
-      case BackendType.back2:
-        return "https://quizzy-backend-0wh2.onrender.com/api";
+      case BackendType.backOmega:
+        return "https://backcomun-mzvy.onrender.com";
+      case BackendType.backAlpha:
+        return "https://quizzy-backend-1-zpvc.onrender.com/api";
     }
   }
 }
@@ -32,7 +32,7 @@ extension BackendTypeExtension on BackendType {
 class BackendNotifier extends Notifier<BackendType> {
   @override
   BackendType build() {
-    return BackendType.back2; // Valor por defecto inicial
+    return BackendType.backOmega; // Valor por defecto inicial
   }
 
   // Función para cambiar la URL desde la UI

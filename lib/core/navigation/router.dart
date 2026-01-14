@@ -1,20 +1,25 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+// --- IMPORTS ---
+// Core
 import 'package:frontkahoot2526/core/navigation/navbar.dart';
 import 'package:frontkahoot2526/core/presentation/change_backend_screen.dart';
-import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/game_orchestrator.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/host/host_screen.dart';
-// import 'package:frontkahoot2526/features/auth/games/multiplayer/presentation/screens/game_orchestrator.dart';
-import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/join_game.dart';
-// import 'package:frontkahoot2526/features/library/presentation/pages/edit_profile_page.dart';
-//import 'package:frontkahoot2526/features/presentation/screens/library_screen.dart';
+import '../../features/explore/presentation/screens/quiz_detail_screen.dart';
+import 'inicio.dart';
+
+// Auth
 import 'package:frontkahoot2526/features/auth/presentation/pages/login_page.dart';
 import 'package:frontkahoot2526/features/auth/presentation/pages/edit_profile_page.dart';
 import 'package:frontkahoot2526/features/auth/presentation/pages/password_change_page.dart';
-import 'package:frontkahoot2526/features/auth/presentation/pages/password_reset_confirm_page.dart';
-import 'package:frontkahoot2526/features/auth/presentation/pages/password_reset_page.dart';
 import 'package:frontkahoot2526/features/auth/presentation/pages/profile_page.dart';
 import 'package:frontkahoot2526/features/auth/presentation/pages/register_page.dart';
+import 'package:frontkahoot2526/features/auth/presentation/providers/auth_providers.dart';
+
+// Features
 import 'package:frontkahoot2526/features/library/presentation/screens/library_home_screen.dart';
 import 'package:frontkahoot2526/features/groups/presentation/screens/groups_screen.dart';
 import 'package:frontkahoot2526/features/groups/presentation/screens/group_detail_screen.dart';
@@ -28,66 +33,89 @@ import 'package:frontkahoot2526/features/library/reports/domain/game_type.dart';
 import 'package:frontkahoot2526/features/library/reports/presentation/screens/personal_results_secreen.dart';
 import 'package:frontkahoot2526/features/library/reports/presentation/screens/reports_screen.dart';
 import 'package:frontkahoot2526/features/library/reports/presentation/screens/session_report_screen.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/game_orchestrator.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/join_game.dart';
 import 'package:frontkahoot2526/features/explore/presentation/screens/explore_screen.dart';
-import 'package:frontkahoot2526/features/explore/presentation/screens/quiz_detail_screen.dart';
-import 'package:go_router/go_router.dart';
 
-//import '../../features/auth/presentation/providers/auth_providers.dart';
+// Quiz
+//import '../../quiz/presentation/screens/quiz_detail_screen.dart';
 import '../../features/explore/domain/entities/quiz_entity.dart';
-import 'inicio.dart';
 
+// --- UTILIDAD PARA ESCUCHAR RIVERPOD EN GOROUTER ---
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen(
+      (dynamic _) => notifyListeners(),
+    );
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
+
+// --- PROVIDER DEL ROUTER ---
 final appRouterProvider = Provider<GoRouter>((ref) {
-  //final authState = ref.watch(authNotifierProvider);
+  final authNotifier = ref.read(authNotifierProvider.notifier);
 
   return GoRouter(
-    initialLocation: '/inicio', // Ruta inicial mientras no haya redirección
-    //logica de redireccion deprecada por interferir en la simulacion
-    /*redirect: (BuildContext context, GoRouterState state) {
-      print("/nTOKEN ACTUAL: ${ref.read(authNotifierProvider).token}/n");
+    initialLocation: '/inicio',
+    refreshListenable: GoRouterRefreshStream(authNotifier.stream),
+    
+    
+    redirect: (BuildContext context, GoRouterState state) {
+      final authState = ref.read(authNotifierProvider);
       final isLoggedIn = authState.token != null;
-      final currentLocation = state.uri.toString();
-      final isLoginRoute = currentLocation == '/login';
-      final isRegisterRoute = currentLocation == '/register'; // Añadido
-      final isPassResetRoute = currentLocation == '/passreset';
-      final isPassConfirmRoute = currentLocation == '/passconfirm';
-      final isTitleRoute = currentLocation == '/inicio';
+      final isLoading = authState.isLoading;
 
-      // Si no está logueado y está intentando acceder a rutas protegidas, redirige a login
-      if (!isLoggedIn && !isLoginRoute && !isRegisterRoute && !isPassResetRoute && !isPassConfirmRoute && !isTitleRoute) {
+      if (isLoading && !isLoggedIn) return null;
+
+      final currentPath = state.uri.path;
+      
+      // Rutas públicas (No requieren login)
+      final publicRoutes = [
+        '/inicio', 
+        '/login', 
+        '/register', 
+        '/passreset', 
+        '/passconfirm', 
+        '/passchange',
+        '/back-settings'
+      ];
+      final isPublicRoute = publicRoutes.any((route) => currentPath.startsWith(route));
+
+      if (!isLoggedIn && !isPublicRoute) {
         return '/inicio';
       }
 
-      if (isLoggedIn && isTitleRoute) return '/home';
-
-      // Si está logueado y entra en /login, redirige a home
-      if (isLoggedIn && isLoginRoute) {
+      if (isLoggedIn && (currentPath == '/login' || currentPath == '/register' || currentPath == '/inicio')) {
         return '/home';
       }
 
-      if (isLoggedIn && isRegisterRoute) return '/home';
-
-      if (isLoggedIn && isPassResetRoute) return '/home';
-
-      if(isLoggedIn && isPassConfirmRoute) return '/home';
-
-      // Si nada de lo anterior, deja el flujo continuar normalmente
       return null;
-    },*/
+    },
+
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return ScaffoldWithNavBar(navigationShell: navigationShell);
         },
         branches: [
-          // Branch 0: Explore
+          // Explore Tab
           StatefulShellBranch(
-                routes: [
-                GoRoute(path: '/home',
+            routes: [
+              GoRoute(
+                path: '/home',
                 builder: (context, state) => const ExploreScreen(),
-                ),
-              ],
+              ),
+            ],
           ),
-          // Branch 1: Join game (so navbar remains visible while joining)
+          // Join Game Tab
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -96,30 +124,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          //Branch 2: Create Kahoot
+          // Create Kahoot Tab
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/create-kahoot',
-                builder: (context, state) =>
-                    const CreateKahootScreen(), // Pantalla de selección
+                builder: (context, state) => const CreateKahootScreen(),
                 routes: [
                   GoRoute(
                     path: 'quiz-metadata',
-                    builder: (context, state) =>
-                        const QuizMetadataScreen(), // Pantalla de metadata
+                    builder: (context, state) => const QuizMetadataScreen(),
                   ),
                   GoRoute(
                     path: 'from-scratch',
-                    builder: (context, state) =>
-                        const FromScratchScreen(), // Pantalla de edición
+                    builder: (context, state) => const FromScratchScreen(),
                   ),
                 ],
               ),
             ],
           ),
-
-          // Branch 3: Library-related routes
+          // Library Tab
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -128,8 +152,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'quices',
-                    builder: (context, state) =>
-                        const LibraryScreen(), // Tu pantalla con los tabs y la lista
+                    builder: (context, state) => const LibraryScreen(),
                   ),
                 ],
               ),
@@ -138,75 +161,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // Singleplayer full-screen route (hide navbar when playing)
+      // --- RUTAS GLOBALES (Fuera del Shell/Navbar) ---
+      
+      // Detalle del Quiz (Corregido para estar en la raíz)
       GoRoute(
         path: '/quiz/:quizId',
         builder: (context, state) {
           final quizId = state.pathParameters['quizId'] ?? 'no-id';
-          final quiz = state.extra as QuizEntity?;
-          return QuizDetailScreen(
-            quizId: quizId,
-            quizSummary: quiz
-          );
-        },
-      ),
-      
-      GoRoute(
-        path: '/library/singleplayer/:kahootId',
-        builder: (context, state) {
-          final id = state.pathParameters['kahootId']!;
-          final attemptId = state.uri.queryParameters['attemptId'];
-          return SingleplayerOrchestratorScreen(kahootId: id, attemptId: attemptId);
+          final quiz = state.extra as QuizEntity?; 
+          return QuizDetailScreen(quizId: quizId, quizSummary: quiz);
         },
       ),
 
-      // Groups routes kept as full-screen (accessible from library)
-      GoRoute(
-        path: '/groups',
-        builder: (context, state) => const GroupsScreen(),
-      ),
-      GoRoute(
-        path: '/groups/:groupId',
-        builder: (context, state) {
-          final id = state.pathParameters['groupId']!;
-          return GroupDetailScreen(groupId: id);
-        },
-      ),
+      // Rutas de Auth
+      GoRoute(path: '/inicio', builder: (context, state) => const TitlePage()),
+      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+      GoRoute(path: '/register', builder: (context, state) => const RegisterPage()),
+      GoRoute(path: '/profile', builder: (context, state) => const ProfilePage()),
+      GoRoute(path: '/edit-profile', builder: (context, state) => const EditProfilePage()),
+      GoRoute(path: '/passchange', builder: (context, state) => const ChangePasswordPage()),
+      GoRoute(path: '/back-settings', builder: (context, state) => const ChangeBackendScreen()),
 
-      GoRoute(
-        path: '/reports',
-        builder: (context, state) => const PlayerReportsScreen(),
-      ),
-
-      GoRoute(
-        path: '/reports/sessionReport/:sessionId',
-        builder: (context, state) {
-          final sessionId = state.pathParameters['sessionId']!;
-          return SessionReportScreen(sessionId: sessionId);
-        },
-      ),
-
-      GoRoute(
-        path: '/reports/personalResults/:gameId/:typeName',
-        builder: (context, state) {
-          final gameId = state.pathParameters['gameId']!;
-          final typeName = state.pathParameters['typeName']!;
-          final gameType = typeName == 'multiplayer'
-              ? GameType.multiplayer
-              : GameType.singleplayer;
-          return PersonalResultsScreen(gameId: gameId, gameType: gameType);
-        },
-      ),
-
-      GoRoute(
-        path: '/groups/join/:token',
-        builder: (context, state) {
-          final token = state.pathParameters['token']!;
-          return JoinGroupScreen(token: token);
-        },
-      ),
-
-      // Multiplayer routes (keep orchestrator full-screen)
+      // Rutas de Juego y Grupos
       GoRoute(
         path: '/game',
         builder: (context, state) => const GameOrchestratorScreen(),
@@ -218,53 +194,61 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return HostGameScreen(quizId: quizId);
         },
       ),
-      GoRoute(path: '/inicio', builder: (context, state) => const TitlePage()),
-      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
-        path: '/profile',
-        builder: (context, state) => const ProfilePage(),
+        path: '/library/singleplayer/:kahootId',
+        builder: (context, state) {
+          final id = state.pathParameters['kahootId']!;
+          final attemptId = state.uri.queryParameters['attemptId'];
+          return SingleplayerOrchestratorScreen(kahootId: id, attemptId: attemptId);
+        },
       ),
       GoRoute(
-        path: '/register',
-        builder: (context, state) => const RegisterPage(),
+        path: '/groups',
+        builder: (context, state) => const GroupsScreen(),
       ),
       GoRoute(
-        path: '/passreset',
-        builder: (context, state) => const PasswordResetPage(),
+        path: '/groups/:groupId',
+        builder: (context, state) {
+          final id = state.pathParameters['groupId']!;
+          return GroupDetailScreen(groupId: id);
+        },
       ),
       GoRoute(
-        path: '/passchange',
-        builder: (context, state) => const ChangePasswordPage(),
+        path: '/groups/join/:token',
+        builder: (context, state) {
+          final token = state.pathParameters['token']!;
+          return JoinGroupScreen(token: token);
+        },
       ),
       GoRoute(
-        path: '/passconfirm',
-        builder: (context, state) => const PasswordResetConfirmPage(),
+        path: '/reports',
+        builder: (context, state) => const PlayerReportsScreen(),
       ),
       GoRoute(
-        path: '/edit-profile',
-        builder: (context, state) => const EditProfilePage(),
+        path: '/reports/sessionReport/:sessionId',
+        builder: (context, state) {
+          final sessionId = state.pathParameters['sessionId']!;
+          return SessionReportScreen(sessionId: sessionId);
+        },
       ),
       GoRoute(
-        path: '/back-settings',
-        builder: (context, state) => const ChangeBackendScreen(),
+        path: '/reports/personalResults/:gameId/:typeName',
+        builder: (context, state) {
+          final gameId = state.pathParameters['gameId']!;
+          final typeName = state.pathParameters['typeName']!;
+          final gameType = typeName == 'multiplayer'
+              ? GameType.multiplayer
+              : GameType.singleplayer;
+          return PersonalResultsScreen(gameId: gameId, gameType: gameType);
+        },
       ),
     ],
-
-    // Manejo de Error: Si algo falla, volver a Home
+    
+    // Página de Error Genérica
     errorBuilder: (context, state) => Scaffold(
-      appBar: AppBar(title: const Text('Error de Navegación')),
+      appBar: AppBar(title: const Text('Error')),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('No se encontró la ruta.'),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => context.go('/home'),
-              child: const Text('Ir al Inicio'),
-            ),
-          ],
-        ),
+        child: Text('Página no encontrada: ${state.uri.path}'),
       ),
     ),
   );
