@@ -212,7 +212,6 @@ class _HostGameScreenState extends ConsumerState<HostGameScreen> {
             onPressed: () {
               Navigator.pop(context);
               ref.read(multiplayerGameNotifierProvider.notifier).endSession();
-              ref.read(multiplayerGameNotifierProvider.notifier).leaveGame();
               context.go('/home');
             },
             child: const Text("Finalizar Partida"),

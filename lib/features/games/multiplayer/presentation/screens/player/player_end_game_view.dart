@@ -64,7 +64,7 @@ class PlayerGameEndView extends StatelessWidget {
                 children: [
                   Text(
                     myNickname,
-                    style: const TextStyle(fontSize: 20, color: Colors.grey),
+                    style: const TextStyle(fontSize: 20, color: Colors.black),
                   ),
                   const Divider(height: 30),
                   Row(
