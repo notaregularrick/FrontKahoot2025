@@ -35,7 +35,9 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
     GameRole role,
   ) async {
     final url = 'https://quizzy-backend-0wh2.onrender.com/multiplayer-sessions';
-
+    debugPrint(
+      '🔗 Conectando a $url con PIN: $pin como ${role.name} y ${role}',
+    );
     // Configuración del Cliente Socket.IO
     _socket = io.io(
       url,
@@ -66,47 +68,55 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
     });
 
     //Listeners de eventos del juego:
-    _socket.on('player_connected_to_server', (data) {
-      _handleEvent('player_connected_to_server', data);
-      _socket.emit('player_join', {"nickname": nickname});
-    });
+    if (role == GameRole.player) {
+      _socket.on('player_connected_to_server', (data) {
+        _handleEvent('player_connected_to_server', data);
+        _socket.emit('player_join', {"nickname": 'pepe'});
+      });
 
-    _socket.on('player_connected_to_session', (data) {
-      _handleEvent('player_connected_to_session', data);
-    });
+      _socket.on('player_connected_to_session', (data) {
+        _handleEvent('player_connected_to_session', data);
+      });
+
+      _socket.on('player_answer_confirmation', (data) {
+        _handleEvent('player_answer_confirmation', data);
+      });
+
+      _socket.on('player_results', (data) {
+        _handleEvent('player_results', data);
+      });
+
+      _socket.on('player_game_end', (data) {
+        _handleEvent('player_game_end', data);
+      });
+
+      _socket.on('session_closed', (data) {
+        _handleEvent('session_closed', data);
+      });
+    }
 
     _socket.on('question_started', (data) {
       _handleEvent('question_started', data);
     });
 
-    _socket.on('player_answer_confirmation', (data) {
-      _handleEvent('player_answer_confirmation', data);
-    });
-
-    _socket.on('player_results', (data) {
-      _handleEvent('player_results', data);
-    });
-
-    _socket.on('player_game_end', (data) {
-      _handleEvent('player_game_end', data);
-    });
-
-    _socket.on('session_closed', (data) {
-      _handleEvent('session_closed', data);
-    });
-
     //HOST
-    _socket.on('host_results', (data) {
-      _handleEvent('host_results', data);
-    });
+    if (role == GameRole.host) {
+      _socket.on('host_results', (data) {
+        _handleEvent('host_results', data);
+      });
 
-    _socket.on('host_game_end', (data) {
-      _handleEvent('host_game_end', data);
-    });
+      _socket.on('host_game_end', (data) {
+        _handleEvent('host_game_end', data);
+      });
 
-    _socket.on('host_lobby_update', (data) {
-      _handleEvent('host_lobby_update', data);
-    });
+      _socket.on('host_lobby_update', (data) {
+        _handleEvent('host_lobby_update', data);
+      });
+
+      _socket.on('host_answer_update', (data) {
+        _handleEvent('host_answer_update', data);
+      });
+    }
 
     _socket.connect();
   }
@@ -256,7 +266,7 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
         break;
 
       case 'host_results':
-      final options = updatedSession.currentQuestion?.options ?? [];
+        final options = updatedSession.currentQuestion?.options ?? [];
         HostResults resultsHost = HostResults.fromJson(data, options: options);
         resultsHost.logDebugInfo();
         updatedSession = updatedSession.copyWith(
@@ -282,6 +292,22 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
           hostLobby: hostLobby,
           pin: _pin,
         );
+        break;
+
+      case 'host_answer_update':
+        debugPrint('   🔹 Actualización de respuestas recibida');
+        int submissions = data['numberOfSubmissions'] as int? ?? 0;
+        debugPrint('   🔹Número de respuestas recibidas: $submissions');
+        CurrentQuestion? updatedQuestion = updatedSession.currentQuestion;
+        if (updatedQuestion != null) {
+          updatedQuestion = updatedQuestion.copyWith(
+            numberOfSubmissions: submissions,
+          );
+          updatedSession = updatedSession.copyWith(
+            currentQuestion: updatedQuestion,
+            gameStatus: GameStatus.question,
+          );
+        }
         break;
 
       default:

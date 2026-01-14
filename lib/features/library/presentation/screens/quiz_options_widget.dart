@@ -38,7 +38,7 @@ class QuizOptionsSheet extends ConsumerWidget {
 
             Container(
               height: 150,
-              width: double.infinity, 
+              width: double.infinity,
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
@@ -49,7 +49,7 @@ class QuizOptionsSheet extends ConsumerWidget {
                 child: Image.network(
                   quiz.imageUrl,
                   fit: BoxFit.cover,
-                  
+
                   loadingBuilder: (context, child, loadingProgress) {
                     if (loadingProgress == null) return child;
                     return Center(
@@ -87,8 +87,10 @@ class QuizOptionsSheet extends ConsumerWidget {
             if (type == QuizContextType.myCreations) ...[
               //3 puntos para descomponer el array
               createEditButton(context),
-              createPlayMultiplayerButton(context),
-              createPlaySoloButton(context, ref),
+              if (quiz.status != 'Borrador') ...[
+                createPlayMultiplayerButton(context),
+                createPlaySoloButton(context, ref),
+              ],
             ],
 
             if (type == QuizContextType.favorites) ...[
@@ -174,7 +176,11 @@ class QuizOptionsSheet extends ConsumerWidget {
     );
   }
 
-  Widget createRemoveFavoriteButton(BuildContext context, WidgetRef ref, String quizId) {
+  Widget createRemoveFavoriteButton(
+    BuildContext context,
+    WidgetRef ref,
+    String quizId,
+  ) {
     return ListTile(
       leading: Icon(Icons.delete),
       title: Text(
@@ -192,7 +198,11 @@ class QuizOptionsSheet extends ConsumerWidget {
     );
   }
 
-  Widget createAddFavoriteButton(BuildContext context, WidgetRef ref, String quizId) {
+  Widget createAddFavoriteButton(
+    BuildContext context,
+    WidgetRef ref,
+    String quizId,
+  ) {
     return ListTile(
       leading: Icon(Icons.favorite),
       title: Text(
@@ -212,9 +222,13 @@ class QuizOptionsSheet extends ConsumerWidget {
 
   Widget createContinueButton(BuildContext context) {
     return ListTile(
-      leading: quiz.gameType == 'multiplayer' ? Icon(Icons.group) : Icon(Icons.gamepad),
+      leading: quiz.gameType == 'multiplayer'
+          ? Icon(Icons.group)
+          : Icon(Icons.gamepad),
       title: Text(
-        quiz.gameType == 'multiplayer' ? "Continuar juego multijugador" : "Continuar juego en solitario",
+        quiz.gameType == 'multiplayer'
+            ? "Continuar juego multijugador"
+            : "Continuar juego en solitario",
         style: TextStyle(
           //color: Colors.blue,
           fontWeight: FontWeight.w600,
@@ -226,11 +240,16 @@ class QuizOptionsSheet extends ConsumerWidget {
         final type = (quiz.gameType ?? '').toLowerCase();
         // Intento almacenado localmente (por kahootId)
         final prefs = await SharedPreferences.getInstance();
-        final storedAttemptId = prefs.getString('singleplayer_attempt_${quiz.id}') ?? '';
-        final attemptId = quiz.gameId?.isNotEmpty == true ? quiz.gameId! : storedAttemptId;
+        final storedAttemptId =
+            prefs.getString('singleplayer_attempt_${quiz.id}') ?? '';
+        final attemptId = quiz.gameId?.isNotEmpty == true
+            ? quiz.gameId!
+            : storedAttemptId;
         // Debug rápido para ver qué llega desde el backend en la UI
         // ignore: avoid_print
-        print('[in-progress][continue] type=${quiz.gameType} attemptId=$attemptId stored=$storedAttemptId quizId=${quiz.id}');
+        print(
+          '[in-progress][continue] type=${quiz.gameType} attemptId=$attemptId stored=$storedAttemptId quizId=${quiz.id}',
+        );
         if (type == 'multiplayer') {
           Navigator.pop(context);
           context.go('/join');
@@ -240,7 +259,9 @@ class QuizOptionsSheet extends ConsumerWidget {
         final title = Uri.encodeComponent(quiz.title);
         Navigator.pop(context);
         if (attemptId.isNotEmpty) {
-          context.go('/library/singleplayer/${quiz.id}?attemptId=$attemptId&title=$title');
+          context.go(
+            '/library/singleplayer/${quiz.id}?attemptId=$attemptId&title=$title',
+          );
         } else {
           context.go('/library/singleplayer/${quiz.id}?title=$title');
         }
@@ -252,7 +273,9 @@ class QuizOptionsSheet extends ConsumerWidget {
     return ListTile(
       leading: Icon(Icons.visibility),
       title: Text(
-        quiz.gameType == 'multiplayer' ? "Ver resultados de juego multijugador" : "Ver resultados de juego en solitario",
+        quiz.gameType == 'multiplayer'
+            ? "Ver resultados de juego multijugador"
+            : "Ver resultados de juego en solitario",
         style: TextStyle(
           //color: Colors.blue,
           fontWeight: FontWeight.w600,
@@ -265,5 +288,3 @@ class QuizOptionsSheet extends ConsumerWidget {
     );
   }
 }
-
-

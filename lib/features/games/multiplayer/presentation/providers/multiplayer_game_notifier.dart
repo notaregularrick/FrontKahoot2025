@@ -103,6 +103,8 @@ class MultiplayerGameNotifier
       state = AsyncValue.data(
         GameNotifierState(
           session: MultiplayerGameSession(pin: info.sessionPin),
+          quizTitle: info.quizTitle,
+          quizImageUrl: info.coverImageUrl,
           role: GameRole.host,
           myPlayerId: "HOST",
         ),
