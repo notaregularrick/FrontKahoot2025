@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/application/change_next_phase_use_case.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/application/create_game_use_case.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/application/host_end_session_use_case.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/application/join_game_use_case.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/application/listen_game_session_use_case.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/application/start_game_use_case.dart';
@@ -35,4 +36,9 @@ final startGameUseCaseProvider = Provider<StartGameUseCase>((ref) {
 final changeNextPhaseUseCaseProvider = Provider<ChangeNextPhaseUseCase>((ref) {
   final repo = ref.watch(multiplayerGameRepositoryProvider);
   return ChangeNextPhaseUseCase(repo);
+});
+
+final hostEndSessionUseCaseProvider = Provider<HostEndSessionUseCase>((ref) {
+  final repo = ref.watch(multiplayerGameRepositoryProvider);
+  return HostEndSessionUseCase(repo);
 });

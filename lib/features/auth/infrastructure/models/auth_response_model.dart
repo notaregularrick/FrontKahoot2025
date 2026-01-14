@@ -2,7 +2,7 @@ import 'user_model.dart';
 
 class AuthResponseModel {
   final UserModel user;
-  final String accessToken; // Mapea a "token" en el JSON
+  final String accessToken;
 
   AuthResponseModel({
     required this.user,

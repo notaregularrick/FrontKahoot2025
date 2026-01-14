@@ -92,6 +92,7 @@ class _PlayerGameScreenState extends ConsumerState<PlayerGameScreen> {
   Widget _buildContent(GameNotifierState state) {
     switch (state.session.gameStatus) {
       case GameStatus.none:
+        //return Scaffold(body: Center(child: CircularProgressIndicator()));//prueba
       case GameStatus.lobby:
         return PlayerLobbyView(
           gamePin: state.session.pin,
@@ -153,7 +154,7 @@ class _PlayerGameScreenState extends ConsumerState<PlayerGameScreen> {
           myNickname: state.myPlayerId ?? "Yo",
           onQuit: () {
             ref.read(multiplayerGameNotifierProvider.notifier).leaveGame();
-            context.go('/join');
+            context.go('/home');
           },
         );
       //return Text("Fin del juego - En desarrollo");
@@ -175,7 +176,7 @@ class _PlayerGameScreenState extends ConsumerState<PlayerGameScreen> {
             onPressed: () {
               Navigator.pop(context);
               ref.read(multiplayerGameNotifierProvider.notifier).leaveGame();
-              context.go('/join');
+              context.go('/home');
             },
             child: const Text("Salir", style: TextStyle(color: Colors.red)),
           ),

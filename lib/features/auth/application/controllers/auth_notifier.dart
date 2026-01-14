@@ -53,7 +53,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> checkAuthStatus() async {
-    state = state.copyWith(isLoading: true); // Opcional: mostrar carga inicial
+    state = state.copyWith(isLoading: true);
     try {
       final response = await repository.checkAuthStatus();
       
@@ -63,7 +63,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         user: response.user,
       );
     } catch (e) {
-      // Si falla, volvemos a estado inicial (Logout)
       state = AuthState.initial();
     }
   }
@@ -100,7 +99,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      // Pasamos el username al repositorio
       await repository.register(
         name: name,
         email: email,
@@ -109,10 +107,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         userType: userType,
       );
 
-      // ÉXITO:
-      // El endpoint de registro devuelve el usuario creado pero NO un token.
-      // Por eso, solo ponemos isLoading en false. 
-      // La redirección al Login la maneja la UI (RegisterForm) al detectar que no hubo error.
       state = state.copyWith(isLoading: false);
 
     } catch (e) {
@@ -120,7 +114,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isLoading: false,
         errorMessage: e.toString(),
       );
-      // Importante: Rethrow permite que el formulario capture el error y muestre el SnackBar rojo
       rethrow;
     }
   }

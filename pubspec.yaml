@@ -50,6 +50,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
+  bdd_widget_test: ^1.6.0
+  build_runner: ^2.4.0
   flutter_launcher_icons: "^0.13.1"
   
 
