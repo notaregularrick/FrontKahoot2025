@@ -14,11 +14,9 @@ import 'inicio.dart';
 import 'package:frontkahoot2526/features/auth/presentation/pages/login_page.dart';
 import 'package:frontkahoot2526/features/auth/presentation/pages/edit_profile_page.dart';
 import 'package:frontkahoot2526/features/auth/presentation/pages/password_change_page.dart';
-import 'package:frontkahoot2526/features/auth/presentation/pages/password_reset_confirm_page.dart';
-import 'package:frontkahoot2526/features/auth/presentation/pages/password_reset_page.dart';
 import 'package:frontkahoot2526/features/auth/presentation/pages/profile_page.dart';
 import 'package:frontkahoot2526/features/auth/presentation/pages/register_page.dart';
-import 'package:frontkahoot2526/features/auth/presentation/providers/auth_providers.dart'; // Importante para el notifier
+import 'package:frontkahoot2526/features/auth/presentation/providers/auth_providers.dart';
 
 // Features
 import 'package:frontkahoot2526/features/library/presentation/screens/library_home_screen.dart';
@@ -62,23 +60,18 @@ class GoRouterRefreshStream extends ChangeNotifier {
 
 // --- PROVIDER DEL ROUTER ---
 final appRouterProvider = Provider<GoRouter>((ref) {
-  // 1. Usamos READ para el notifier (para no reconstruir el Router entero)
   final authNotifier = ref.read(authNotifierProvider.notifier);
 
   return GoRouter(
     initialLocation: '/inicio',
-    // 2. Conectamos el stream de cambios de auth al router
     refreshListenable: GoRouterRefreshStream(authNotifier.stream),
     
-    // 3. Lógica de Redirección Optimadada
+    
     redirect: (BuildContext context, GoRouterState state) {
-      // Leemos el estado actual sin suscribirnos
       final authState = ref.read(authNotifierProvider);
       final isLoggedIn = authState.token != null;
       final isLoading = authState.isLoading;
 
-      // Si está cargando (ej. proceso de login), no redirigimos todavía para evitar bucles,
-      // a menos que sea el arranque inicial donde token es null.
       if (isLoading && !isLoggedIn) return null;
 
       final currentPath = state.uri.path;
@@ -90,23 +83,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         '/register', 
         '/passreset', 
         '/passconfirm', 
-        '/passchange', // A veces esta es privada, depende de tu flujo
+        '/passchange',
         '/back-settings'
       ];
       final isPublicRoute = publicRoutes.any((route) => currentPath.startsWith(route));
 
-      // A. Usuario NO logueado tratando de acceder a ruta privada -> Login/Inicio
       if (!isLoggedIn && !isPublicRoute) {
         return '/inicio';
       }
 
-      // B. Usuario Logueado tratando de acceder a ruta de "solo invitados" -> Home
-      // (Ejemplo: Si ya estoy logueado y voy a /login, me manda a /home)
       if (isLoggedIn && (currentPath == '/login' || currentPath == '/register' || currentPath == '/inicio')) {
         return '/home';
       }
 
-      // C. Dejar pasar
       return null;
     },
 
@@ -189,9 +178,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/register', builder: (context, state) => const RegisterPage()),
       GoRoute(path: '/profile', builder: (context, state) => const ProfilePage()),
       GoRoute(path: '/edit-profile', builder: (context, state) => const EditProfilePage()),
-      GoRoute(path: '/passreset', builder: (context, state) => const PasswordResetPage()),
       GoRoute(path: '/passchange', builder: (context, state) => const ChangePasswordPage()),
-      GoRoute(path: '/passconfirm', builder: (context, state) => const PasswordResetConfirmPage()),
       GoRoute(path: '/back-settings', builder: (context, state) => const ChangeBackendScreen()),
 
       // Rutas de Juego y Grupos
