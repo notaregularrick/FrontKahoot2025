@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 // Core
 import 'package:frontkahoot2526/core/navigation/navbar.dart';
 import 'package:frontkahoot2526/core/presentation/change_backend_screen.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/host/host_screen.dart';
 import '../../features/explore/presentation/screens/quiz_detail_screen.dart';
 import 'inicio.dart';
 
@@ -185,6 +186,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/game',
         builder: (context, state) => const GameOrchestratorScreen(),
+      ),
+      GoRoute(
+        path: '/hostGame/:quizId',
+        builder: (context, state) {
+          final quizId = state.pathParameters['quizId']!;
+          return HostGameScreen(quizId: quizId);
+        },
       ),
       GoRoute(
         path: '/library/singleplayer/:kahootId',

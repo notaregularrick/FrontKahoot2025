@@ -92,6 +92,7 @@ class _PlayerGameScreenState extends ConsumerState<PlayerGameScreen> {
   Widget _buildContent(GameNotifierState state) {
     switch (state.session.gameStatus) {
       case GameStatus.none:
+        //return Scaffold(body: Center(child: CircularProgressIndicator()));//prueba
       case GameStatus.lobby:
         return PlayerLobbyView(
           gamePin: state.session.pin,

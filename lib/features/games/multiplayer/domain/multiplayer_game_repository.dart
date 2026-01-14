@@ -1,3 +1,4 @@
+import 'package:frontkahoot2526/features/games/multiplayer/domain/host_session_info.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_enums.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_game_session.dart';
 
@@ -5,8 +6,7 @@ abstract class IMultiplayerGameRepository {
   Stream<MultiplayerGameSession> get gameStream;
 
   //Conexiones
-  Future<String> createGame(String quizId);
-  //Future<void> joinGame(String pin, String nickname);
+  Future<HostSessionInfo> createGame(String quizId);
 
   Future<void> connectToGame(
     String pin,
@@ -18,6 +18,9 @@ abstract class IMultiplayerGameRepository {
   //Acciones del host/jugador
   Future<void> startGame(); // Host
   Future<void> nextPhase(); // Host
+  Future<void> endSession();
+
+
   Future<void> submitAnswer(
     List<String> answersId,
     String questionId,
