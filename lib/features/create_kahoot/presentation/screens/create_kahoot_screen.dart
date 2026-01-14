@@ -9,6 +9,7 @@ import 'package:frontkahoot2526/features/ai_quiz/presentation/providers/ai_api_k
 import 'package:frontkahoot2526/features/ai_quiz/application/ai_quiz_service.dart';
 import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
 import 'package:frontkahoot2526/core/providers/secure_storage_provider.dart';
+import 'package:frontkahoot2526/features/create_kahoot/data/predefined_templates.dart';
 
 class CreateKahootScreen extends ConsumerStatefulWidget {
   const CreateKahootScreen({super.key});
@@ -561,7 +562,7 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          // Grid de plantillas
+                          // Grid de plantillas predefinidas
                           GridView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
@@ -571,48 +572,94 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
                               mainAxisSpacing: 12,
                               childAspectRatio: 0.75,
                             ),
-                            itemCount: 4,
+                            itemCount: predefinedTemplates.length,
                             itemBuilder: (context, index) {
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: lightGray,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Header de la plantilla
-                                    Padding(
-                                      padding: const EdgeInsets.all(8),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.description,
-                                            size: 16,
-                                            color: Colors.grey[600],
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'Plantilla',
-                                            style: TextStyle(
-                                              color: Colors.grey[600],
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
+                              final template = predefinedTemplates[index];
+                              return GestureDetector(
+                                onTap: () {
+                                  // Navegar a la pantalla de preview
+                                  context.push('/create-kahoot/template/${template.id}');
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.1),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
                                       ),
-                                    ),
-                                    // Área de imagen/preview (blanco)
-                                    Expanded(
-                                      child: Container(
-                                        margin: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(8),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Header con categoría
+                                      Padding(
+                                        padding: const EdgeInsets.all(8),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.description,
+                                              size: 14,
+                                              color: Colors.grey[600],
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                template.category,
+                                                style: TextStyle(
+                                                  color: Colors.grey[600],
+                                                  fontSize: 11,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                      // Área de imagen
+                                      Expanded(
+                                        child: Container(
+                                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey[100],
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          clipBehavior: Clip.antiAlias,
+                                          child: _buildTemplateImage(template),
+                                        ),
+                                      ),
+                                      // Título de la plantilla
+                                      Padding(
+                                        padding: const EdgeInsets.all(8),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              template.title,
+                                              style: const TextStyle(
+                                                color: Colors.black87,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              '${template.questionCount} preguntas',
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize: 11,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               );
                             },
@@ -625,6 +672,36 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Construye la imagen de la plantilla o un placeholder
+  Widget _buildTemplateImage(template) {
+    if (template.coverImagePath != null) {
+      return Image.asset(
+        template.coverImagePath!,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildPlaceholder(template);
+        },
+      );
+    }
+    return _buildPlaceholder(template);
+  }
+
+  /// Placeholder cuando no hay imagen de portada
+  Widget _buildPlaceholder(template) {
+    final emoji = template.title.split(' ').first;
+    return Container(
+      color: Colors.grey[200],
+      child: Center(
+        child: Text(
+          emoji,
+          style: const TextStyle(fontSize: 48),
         ),
       ),
     );

@@ -42,6 +42,7 @@ class MediaRepositoryImpl implements IMediaRepository {
       }
 
       // Crear FormData con el archivo
+      //
       final formData = FormData.fromMap({
         'file': await MultipartFile.fromFile(
           file.path,
@@ -54,6 +55,7 @@ class MediaRepositoryImpl implements IMediaRepository {
       print('[MEDIA UPLOAD] Enviando request...');
 
       // Realizar POST request a /media/upload
+      //lamada para subir la imagen al backend usando dio
       final response = await _dio.post(
         '/media/upload',
         data: formData,

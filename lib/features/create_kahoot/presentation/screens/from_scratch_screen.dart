@@ -91,6 +91,23 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     }
   }
 
+  Future<void> _loadCoverImageUrl(String mediaId) async {
+    try {
+      // Si el mediaId ya es una URL completa, la usamos directamente
+      if (mediaId.startsWith('http://') || mediaId.startsWith('https://')) {
+        setState(() {
+          quizCoverImageUrl = mediaId;
+        });
+      } else {
+        // Si no es una URL completa, intentamos construirla
+        print('[FROM SCRATCH] MediaId recibido sin URL: $mediaId');
+        // No establecemos quizCoverImageUrl para que el usuario pueda subir una nueva imagen si lo desea
+      }
+    } catch (e) {
+      print('[FROM SCRATCH] Error al cargar URL de imagen de portada: $e');
+    }
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -98,39 +115,54 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     final uri = route.uri;
     final queryParams = uri.queryParameters;
     
-    if (quizTitle.isEmpty && queryParams.isNotEmpty) {
-      print('Parámetros de URL recibidos:');
-      print('  - title: "${queryParams['title']}" (${queryParams['title']?.length ?? 0} caracteres)');
-      print('  - description: "${queryParams['description']}" (${queryParams['description']?.length ?? 0} caracteres)');
-      print('  - category: "${queryParams['category']}" (${queryParams['category']?.length ?? 0} caracteres)');
-      print('  - visibility: "${queryParams['visibility']}"');
-      print('  - ai_generated: "${queryParams['ai_generated']}"');
-      print('  - questions: ${queryParams['questions']?.length ?? 0} caracteres');
-      if (queryParams['questions'] != null && queryParams['questions']!.length > 0) {
-        final questionsPreview = queryParams['questions']!.substring(0, queryParams['questions']!.length > 100 ? 100 : queryParams['questions']!.length);
-        print('  - questions (preview): $questionsPreview${queryParams['questions']!.length > 100 ? '...' : ''}');
-      }
-      print('URI completa: ${uri.toString()}');
-      
-      setState(() {
-        quizTitle = Uri.decodeComponent(queryParams['title'] ?? '');
-        quizDescription = Uri.decodeComponent(queryParams['description'] ?? '');
-        quizCategory = Uri.decodeComponent(queryParams['category'] ?? 'Estudio');
-        quizVisibility = queryParams['visibility'] ?? 'private';
-        
-        print('Parámetros decodificados:');
-        print('  - title decodificado: "$quizTitle"');
-        print('  - description decodificada: "$quizDescription"');
-        print('  - category decodificada: "$quizCategory"');
-        print('  - visibility: "$quizVisibility"');
-        
-        // Si viene de IA, cargar las preguntas generadas
-        if (queryParams['ai_generated'] == 'true' && queryParams['questions'] != null) {
-          print('Detectado quiz generado por IA - Cargando preguntas...');
-          _loadAIGeneratedQuestions(queryParams['questions']!);
+      if (quizTitle.isEmpty && queryParams.isNotEmpty) {
+        print('Parámetros de URL recibidos:');
+        print('  - title: "${queryParams['title']}" (${queryParams['title']?.length ?? 0} caracteres)');
+        print('  - description: "${queryParams['description']}" (${queryParams['description']?.length ?? 0} caracteres)');
+        print('  - category: "${queryParams['category']}" (${queryParams['category']?.length ?? 0} caracteres)');
+        print('  - visibility: "${queryParams['visibility']}"');
+        print('  - ai_generated: "${queryParams['ai_generated']}"');
+        print('  - coverImageId: "${queryParams['coverImageId']}"');
+        print('  - questions: ${queryParams['questions']?.length ?? 0} caracteres');
+        if (queryParams['questions'] != null && queryParams['questions']!.length > 0) {
+          final questionsPreview = queryParams['questions']!.substring(0, queryParams['questions']!.length > 100 ? 100 : queryParams['questions']!.length);
+          print('  - questions (preview): $questionsPreview${queryParams['questions']!.length > 100 ? '...' : ''}');
         }
-      });
-    }
+        print('URI completa: ${uri.toString()}');
+        
+        setState(() {
+          quizTitle = Uri.decodeComponent(queryParams['title'] ?? '');
+          quizDescription = Uri.decodeComponent(queryParams['description'] ?? '');
+          quizCategory = Uri.decodeComponent(queryParams['category'] ?? 'Estudio');
+          quizVisibility = queryParams['visibility'] ?? 'private';
+          
+          // Cargar coverImageId y coverImageUrl si vienen en los parámetros
+          if (queryParams['coverImageId'] != null && queryParams['coverImageId']!.isNotEmpty) {
+            quizCoverImageId = Uri.decodeComponent(queryParams['coverImageId']!);
+            // Si también viene la URL, usarla directamente
+            if (queryParams['coverImageUrl'] != null && queryParams['coverImageUrl']!.isNotEmpty) {
+              quizCoverImageUrl = Uri.decodeComponent(queryParams['coverImageUrl']!);
+            } else {
+              // Si no viene la URL, intentar construirla desde el ID
+              _loadCoverImageUrl(quizCoverImageId!);
+            }
+          }
+          
+          print('Parámetros decodificados:');
+          print('  - title decodificado: "$quizTitle"');
+          print('  - description decodificada: "$quizDescription"');
+          print('  - category decodificada: "$quizCategory"');
+          print('  - visibility: "$quizVisibility"');
+          print('  - coverImageId: "$quizCoverImageId"');
+          
+          // Si viene de IA o de plantilla, cargar las preguntas precargadas
+          if ((queryParams['ai_generated'] == 'true' || queryParams['template'] == 'true') && queryParams['questions'] != null) {
+            final source = queryParams['template'] == 'true' ? 'plantilla' : 'IA';
+            print('Detectado quiz de $source - Cargando preguntas...');
+            _loadAIGeneratedQuestions(queryParams['questions']!);
+          }
+        });
+      }
   }
 
   void _loadAIGeneratedQuestions(String questionsParam) {
