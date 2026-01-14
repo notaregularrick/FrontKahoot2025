@@ -154,7 +154,7 @@ class _PlayerGameScreenState extends ConsumerState<PlayerGameScreen> {
           myNickname: state.myPlayerId ?? "Yo",
           onQuit: () {
             ref.read(multiplayerGameNotifierProvider.notifier).leaveGame();
-            context.go('/join');
+            context.go('/home');
           },
         );
       //return Text("Fin del juego - En desarrollo");
@@ -176,7 +176,7 @@ class _PlayerGameScreenState extends ConsumerState<PlayerGameScreen> {
             onPressed: () {
               Navigator.pop(context);
               ref.read(multiplayerGameNotifierProvider.notifier).leaveGame();
-              context.go('/join');
+              context.go('/home');
             },
             child: const Text("Salir", style: TextStyle(color: Colors.red)),
           ),

@@ -382,6 +382,8 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
   Future<void> endSession() async {
     // Host
     _socket?.emit('host_end_session');
+    debugPrint('Sesion borrada');
+    await Future.delayed(const Duration(milliseconds: 1000));
   }
 
   @override

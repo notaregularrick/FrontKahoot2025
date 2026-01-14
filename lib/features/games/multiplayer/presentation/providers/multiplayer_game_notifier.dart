@@ -119,6 +119,7 @@ class MultiplayerGameNotifier
     try {
       final useCase = ref.read(hostEndSessionUseCaseProvider);
       await useCase.execute();
+      leaveGame();
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
     }
