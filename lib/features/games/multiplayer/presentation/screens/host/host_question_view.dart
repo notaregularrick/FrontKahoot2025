@@ -368,31 +368,7 @@ class _HostAnswerCard extends StatelessWidget {
                       ),
                     );
                   },
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 120,
-                      color: Colors.grey.shade100, // Solo gris si falla
-                      alignment: Alignment.center,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.broken_image,
-                            size: 40,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "No disponible",
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                  errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.error, color: Colors.white)),
                 ),
               )
             else
