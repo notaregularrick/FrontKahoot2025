@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter/services.dart'; // Necesario para FilteringTextInputFormatter
+import 'package:flutter/services.dart';
 
 import '../providers/auth_providers.dart';
 
@@ -13,11 +13,9 @@ class LoginForm extends ConsumerStatefulWidget {
 }
 
 class _LoginFormState extends ConsumerState<LoginForm> {
-  // CAMBIO 1: Usamos controlador para Username en vez de Email
   final usernameCtrl = TextEditingController();
   final passCtrl = TextEditingController();
   
-  // Estado local para controlar el spinner de carga
   bool _isLoading = false;
 
   @override
@@ -28,7 +26,6 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   }
 
   Future<void> _submit() async {
-    // Validaciones básicas
     if (usernameCtrl.text.isEmpty || passCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor ingresa usuario y contraseña')),
@@ -37,22 +34,18 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     }
 
     setState(() => _isLoading = true);
-    FocusScope.of(context).unfocus(); // Ocultar teclado
+    FocusScope.of(context).unfocus();
 
     try {
-      // CAMBIO 2: Llamamos al login con el username
       await ref.read(authNotifierProvider.notifier).login(
         usernameCtrl.text.trim(),
         passCtrl.text.trim(),
       );
       
-      // No necesitamos navegación explícita aquí (context.go), 
-      // porque el Router escuchará el cambio de token y redirigirá solo.
 
     } catch (e) {
-      // El error se maneja en el listener del build, pero por seguridad:
       if (mounted) {
-        // setState(() => _isLoading = false); // Ya lo hacemos en finally
+        // setState(() => _isLoading = false);
       }
     } finally {
       if (mounted) {
@@ -63,7 +56,6 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
-    // Escuchar errores del proveedor para mostrarlos en un SnackBar
     ref.listen(authNotifierProvider, (previous, next) {
       if (next.errorMessage != null && !next.isLoading) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -105,10 +97,9 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           // --- CAMPO USUARIO ---
           TextField(
             controller: usernameCtrl,
-            // Quitamos TextInputType.emailAddress
             decoration: InputDecoration(
-              labelText: 'Usuario', // Etiqueta actualizada
-              prefixIcon: const Icon(Icons.person_outline), // Icono de persona
+              labelText: 'Usuario',
+              prefixIcon: const Icon(Icons.person_outline),
               filled: true,
               fillColor: Colors.grey[100],
               border: OutlineInputBorder(
@@ -116,7 +107,6 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                 borderSide: BorderSide.none,
               ),
             ),
-            // Evitamos espacios en blanco
             inputFormatters: [
               FilteringTextInputFormatter.deny(RegExp(r'\s')),
             ],
@@ -180,16 +170,6 @@ class _LoginFormState extends ConsumerState<LoginForm> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-            ),
-          ),
-          
-          // BOTÓN OLVIDÉ CONTRASEÑA
-          TextButton.icon(
-            onPressed: _isLoading ? null : () => context.push('/passreset'),
-            icon: const Icon(Icons.lock_reset),
-            label: const Text('Olvidé mi contraseña'),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.brown.shade700,
             ),
           ),
           

@@ -88,7 +88,7 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
     _queryParams = _queryParams.copyWith();
     List<QuizCardUiModel> list = result.items.map((quiz) {
       final imageUrl =
-          'https://placehold.co/600x400.png?text=Quiz_Image'; // Modificar luego esto
+          'https://placehold.co/600x400.png?text=Sin%20portada'; // Modificar luego esto
       switch (_currentIndex) {
         case 0:
           return QuizCardUiModel.forMyCreations(quiz, imageUrl);
@@ -143,6 +143,7 @@ class AsyncLibraryNotifier extends AsyncNotifier<LibraryNotifierState> {
           final result = await useCase.execute();
           return processResult(result);
         });
+        break;
       case 3:
         state = await AsyncValue.guard(() async {
           final useCase = FindCompletedQuizzesUseCase(

@@ -1,4 +1,4 @@
-import '../../infrastructure/models/profile_model.dart';
+//import '../../infrastructure/models/profile_model.dart';
 import '../entities/profile_entity.dart';
 
 abstract class ProfileRepository {
@@ -6,5 +6,7 @@ abstract class ProfileRepository {
 
   Future<void> changePassword(String currentPassword, String newPassword);
 
-   Future<ProfileModel> getUserProfile();
+   Future<ProfileEntity> getUserProfile();
+   Future<ProfileEntity> getUserProfileById(String id);
+   Future<ProfileEntity> getUserProfileByUsername(String username);
 }

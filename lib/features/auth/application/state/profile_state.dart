@@ -5,14 +5,13 @@ class ProfileState {
   final ProfileEntity? profile;
   final String? errorMessage;
 
-  // Constructor
+  
   ProfileState({
     this.isLoading = false,
     this.profile,
     this.errorMessage,
   });
 
-  // Método copyWith para actualizar solo ciertos valores del estado
   ProfileState copyWith({
     bool? isLoading,
     ProfileEntity? profile,

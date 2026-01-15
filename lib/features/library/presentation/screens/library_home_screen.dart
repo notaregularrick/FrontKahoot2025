@@ -28,6 +28,7 @@ class LibraryHomeScreen extends StatelessWidget {
         backgroundColor: AppColors.primaryRed,
         foregroundColor: Colors.white,
         centerTitle: true,
+        elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),

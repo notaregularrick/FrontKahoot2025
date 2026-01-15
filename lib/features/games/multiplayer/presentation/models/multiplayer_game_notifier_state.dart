@@ -3,6 +3,8 @@ import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_ga
 
 class GameNotifierState {
   final MultiplayerGameSession session;
+  final String quizTitle;
+  final String quizImageUrl;
 
   final GameRole role;
   final String? myPlayerId; 
@@ -18,6 +20,8 @@ class GameNotifierState {
     this.hasAnsweredCurrentQuestion = false,
     this.isLoading = false,
     this.errorMessage,
+    this.quizTitle = "",
+    this.quizImageUrl = "",
   });
 
   bool get isHost => role == GameRole.host;
@@ -56,6 +60,8 @@ class GameNotifierState {
   // COPY WITH
   GameNotifierState copyWith({
     MultiplayerGameSession? session,
+    String? quizTitle,
+    String? quizImageUrl,
     GameRole? role,
     String? myPlayerId,
     bool? hasAnsweredCurrentQuestion,
@@ -64,6 +70,8 @@ class GameNotifierState {
   }) {
     return GameNotifierState(
       session: session ?? this.session,
+      quizTitle: quizTitle ?? this.quizTitle,
+      quizImageUrl: quizImageUrl ?? this.quizImageUrl,
       role: role ?? this.role,
       myPlayerId: myPlayerId ?? this.myPlayerId,
       hasAnsweredCurrentQuestion:

@@ -47,7 +47,7 @@ class QuizCardUiModel {
       dateInfo: "${quiz.createdAt.day}/${quiz.createdAt.month}/${quiz.createdAt.year}",
       playCount: "${quiz.playCount} jugadas",
       category: quiz.category,
-      status: quiz.status == 'draft' ? 'Borrador' : 'Publicado',
+      status: quiz.status == 'draft' ||quiz.status == 'Draft' ||quiz.status == 'DRAFT' ? 'Borrador' : 'Publicado',
       authorName: null,
       authorId: null,
       visibilityText: quiz.visibility == 'public' || quiz.visibility == 'PUBLIC' ? 'Público' : 'Privado',

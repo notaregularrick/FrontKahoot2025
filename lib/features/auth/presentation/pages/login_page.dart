@@ -20,8 +20,6 @@ class LoginPage extends ConsumerWidget {
       }
 
       if (next.user != null) {
-        // Login OK → navega
-        //Navigator.pushReplacementNamed(context, '/home');
         context.go('/home');
       }
     });
@@ -32,7 +30,6 @@ class LoginPage extends ConsumerWidget {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Fondo con gradiente suave
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(

@@ -9,6 +9,7 @@ class CurrentQuestion {
   final String questionImageUrl;
   final int pointsValue;
   final List<QuestionAnswers> options;
+  final int? numberOfSubmissions;
 
   const CurrentQuestion({
     required this.questionId,
@@ -19,7 +20,32 @@ class CurrentQuestion {
     required this.timeLimitSeconds,
     required this.pointsValue,
     required this.options,
+    this.numberOfSubmissions,
   });
+
+  CurrentQuestion copyWith({
+    String? questionId,
+    int? questionIndex,
+    QuestionType? type,
+    int? timeLimitSeconds,
+    String? questionText,
+    String? questionImageUrl,
+    int? pointsValue,
+    List<QuestionAnswers>? options,
+    int? numberOfSubmissions,
+  }) {
+    return CurrentQuestion(
+      questionId: questionId ?? this.questionId,
+      questionIndex: questionIndex ?? this.questionIndex,
+      type: type ?? this.type,
+      timeLimitSeconds: timeLimitSeconds ?? this.timeLimitSeconds,
+      questionText: questionText ?? this.questionText,
+      questionImageUrl: questionImageUrl ?? this.questionImageUrl,
+      pointsValue: pointsValue ?? this.pointsValue,
+      options: options ?? this.options,
+      numberOfSubmissions: numberOfSubmissions ?? this.numberOfSubmissions,
+    );
+  }
 
   factory CurrentQuestion.fromJson(Map<String, dynamic> json) {
     String qId = json['id'] as String? ?? '';
