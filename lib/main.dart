@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,11 +11,7 @@ void main() async {
   // Inicializar Firebase
   await Firebase.initializeApp();
 
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends ConsumerWidget {
@@ -25,6 +22,13 @@ class MyApp extends ConsumerWidget {
     // Suscribirse a la inicialización del token desde SecureStorage
     // Usar `watch` para que el widget se reconstruya cuando la inicialización termine.
     final authInit = ref.watch(authInitProvider);
+
+    var messaging = FirebaseMessaging.instance;
+    messaging.requestPermission(alert: true, badge: true, sound: true).then((
+      value,
+    ) {
+      print('Permission granted: ${value.authorizationStatus}');
+    });
 
     return authInit.when(
       loading: () => const MaterialApp(
