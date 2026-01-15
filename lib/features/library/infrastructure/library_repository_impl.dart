@@ -272,7 +272,7 @@ class LibraryRepositoryImpl implements ILibraryRepository {
       Response response = await _dio.get(
         '/library/completed',
         queryParameters: toQuery(params),
-        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
+        //data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
       final Map<String, dynamic> responseBody = response.data;
       final List<dynamic> data = responseBody['data'];
@@ -353,7 +353,7 @@ class LibraryRepositoryImpl implements ILibraryRepository {
     try {
       await _dio.post(
         '/library/favorites/$quizId',
-        data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
+        //data: {"userId": "123e4567-e89b-42d3-a456-426614174123"}//QUITAR
       );
     } on DioException catch (e) {
       print(e);

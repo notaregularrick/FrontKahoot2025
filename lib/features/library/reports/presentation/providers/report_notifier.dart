@@ -8,7 +8,7 @@ import 'package:frontkahoot2526/features/library/reports/domain/results.dart';
 import 'package:frontkahoot2526/features/library/reports/presentation/models/report_notifier_state.dart';
 import 'package:frontkahoot2526/features/library/reports/presentation/providers/report_use_case_providers.dart';
 
-class AsyncReportNotifier extends AsyncNotifier<ReportNotifierState> {
+class AsyncReportNotifier extends AutoDisposeAsyncNotifier<ReportNotifierState> {
   ReportsFilterParams _queryParams = ReportsFilterParams();
 
   @override
@@ -36,8 +36,8 @@ class AsyncReportNotifier extends AsyncNotifier<ReportNotifierState> {
       final result = await useCase.execute(sessionId);
       return result;
     } catch (error, stackTrace) {
-      state = AsyncError(error, stackTrace);
-      return null;
+      //state = AsyncError(error, stackTrace);
+      rethrow;
     }
   }
 
@@ -47,8 +47,8 @@ class AsyncReportNotifier extends AsyncNotifier<ReportNotifierState> {
       final result = await useCase.execute(sessionId, gameType);
       return result;
     } catch (error, stackTrace) {
-      state = AsyncError(error, stackTrace);
-      return null;
+      //state = AsyncError(error, stackTrace);
+      rethrow;
     }
   }
 
@@ -75,6 +75,6 @@ class AsyncReportNotifier extends AsyncNotifier<ReportNotifierState> {
 }
 
 final asyncReportProvider =
-    AsyncNotifierProvider<AsyncReportNotifier, ReportNotifierState>(() {
+    AsyncNotifierProvider.autoDispose<AsyncReportNotifier, ReportNotifierState>(() {
       return AsyncReportNotifier();
     });

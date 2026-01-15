@@ -3,7 +3,6 @@ import 'package:frontkahoot2526/features/library/reports/domain/question_analysi
 
 //Informe de sesión
 class Report {
-  final String reportId;
   final String sessionId;
   final String title;
   final DateTime executionDate;
@@ -11,7 +10,6 @@ class Report {
   final List<Questionanalysis> questionAnalysis;
 
   const Report({
-    required this.reportId,
     required this.sessionId,
     required this.title,
     required this.executionDate,

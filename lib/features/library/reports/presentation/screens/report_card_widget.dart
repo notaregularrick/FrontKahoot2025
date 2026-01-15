@@ -16,7 +16,7 @@ class ReportCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Determinar color e ícono según tipo de juego
-    final isMultiplayer = result.gameType == GameType.multiplayer;
+    final isMultiplayer = result.gameType != GameType.singleplayer;
     final iconColor = isMultiplayer ? Colors.purple : Colors.blue;
     final icon = isMultiplayer ? Icons.groups : Icons.person;
 

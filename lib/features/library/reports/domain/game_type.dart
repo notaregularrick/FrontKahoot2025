@@ -1,4 +1,5 @@
 enum GameType{
-  multiplayer,
-  singleplayer
+  multiplayerHost,
+  multiplayerPlayer,
+  singleplayer,
 }
