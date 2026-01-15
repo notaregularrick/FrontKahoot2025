@@ -88,15 +88,16 @@ class ReportCardWidget extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          "${result.finalScore} pts",
-                          style: const TextStyle(
-                            fontSize: 15,
-                            color: AppColors
-                                .darkBlueText, // Color de éxito para puntaje
+                        if (result.gameType == GameType.multiplayerPlayer)
+                          Text(
+                            "${result.finalScore} pts",
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: AppColors
+                                  .darkBlueText, // Color de éxito para puntaje
                               fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
                         if (result.rankingPosition != null)
                           Text(
                             "Puesto #${result.rankingPosition}",
@@ -119,4 +120,3 @@ class ReportCardWidget extends StatelessWidget {
     );
   }
 }
-

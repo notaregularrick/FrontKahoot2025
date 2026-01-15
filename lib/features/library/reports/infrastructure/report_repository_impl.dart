@@ -152,7 +152,7 @@ class ReportRepositoryImpl implements IReportsRepository {
           : null;
 
       List<PersonalQuestionResult> questionResults = [];
-      List<dynamic> questionsData = responseBody['questionResults'];
+      List<dynamic> questionsData = responseBody['questionResults']??[];
       for (var item in questionsData) {
         int questionIndex = (item['questionIndex'] as num?)?.toInt() ?? 0;
         String questionText = item['questionText'] as String;
@@ -203,6 +203,7 @@ class ReportRepositoryImpl implements IReportsRepository {
         throw AppException(message: 'Error desconocido', statusCode: 500);
       }
     } catch (e) {
+      debugPrint('AQI2' + e.toString());
       throw AppException(
         message: "Ocurrió un error inesperado",
         statusCode: 500,
@@ -223,7 +224,7 @@ class ReportRepositoryImpl implements IReportsRepository {
       );
 
       List<PlayerRanking> playerRanking = [];
-      List<dynamic> rankingData = responseBody['playerRanking'];
+      List<dynamic> rankingData = responseBody['playerRanking']??=[];
       for (var item in rankingData) {
         int position = (item['position'] as num?)?.toInt() ?? 0;
         String username = item['username'] as String;
@@ -240,7 +241,7 @@ class ReportRepositoryImpl implements IReportsRepository {
       }
 
       List<Questionanalysis> questionAnalysis = [];
-      List<dynamic> questionsData = responseBody['questionAnalysis'];
+      List<dynamic> questionsData = (responseBody['questionAnalysis'] ?? responseBody['questionsAnalysis']) ?? [];
       for (var item in questionsData) {
         int questionIndex = (item['questionIndex'] as num?)?.toInt() ?? 0;
         String questionText = item['questionText'] as String;
@@ -273,6 +274,7 @@ class ReportRepositoryImpl implements IReportsRepository {
         throw AppException(message: 'Error desconocido', statusCode: 500);
       }
     } catch (e) {
+      debugPrint('AQI3' + e.toString());
       throw AppException(
         message: "Ocurrió un error inesperado",
         statusCode: 500,
