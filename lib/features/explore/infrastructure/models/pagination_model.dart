@@ -10,10 +10,17 @@ class PaginationModel extends PaginationEntity {
 
   factory PaginationModel.fromJson(Map<String, dynamic> json) {
     return PaginationModel(
-      page: (json['page'] as num?)?.toInt() ?? 1,
-      limit: (json['limit'] as num?)?.toInt() ?? 20,
-      totalCount: (json['totalCount'] as num?)?.toInt() ?? 0,
-      totalPages: (json['totalPages'] as num?)?.toInt() ?? 0,
+      page: _parseInt(json['page']) ?? 1,
+      limit: _parseInt(json['limit']) ?? 20,
+      totalCount: _parseInt(json['totalCount']) ?? 0,
+      totalPages: _parseInt(json['totalPages']) ?? 0,
     );
+  }
+
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
   }
 }

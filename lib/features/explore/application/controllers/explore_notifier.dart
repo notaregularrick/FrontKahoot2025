@@ -4,10 +4,12 @@ import '../state/explore_state.dart';
 
 class ExploreNotifier extends StateNotifier<ExploreState> {
   final ExploreRepository repository;
+  
+  // Bandera local para evitar múltiples llamadas de paginación simultáneas
+  bool _isFetchingMore = false; 
 
   ExploreNotifier(this.repository) : super(ExploreState.initial());
 
-  //Carga de Datos Paralela
   Future<void> loadInitialData() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     await Future.wait([
@@ -37,14 +39,20 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
   }
 
   Future<void> loadQuizzes({bool isLoadMore = false, bool setGlobalLoading = true}) async {
-    if (setGlobalLoading && state.isLoading) return;
-    if (isLoadMore && !state.hasMoreData) return;
+    // 1. Validaciones de bloqueo
+    if (setGlobalLoading && state.isLoading) return; // Ya está cargando inicio
+    if (isLoadMore && !state.hasMoreData) return;    // No hay más datos
+    if (isLoadMore && _isFetchingMore) return;       // CORRECCIÓN: Ya está paginando
 
     try {
       if (setGlobalLoading && !isLoadMore) {
         state = state.copyWith(isLoading: true, errorMessage: null);
       }
-      //Pagina Inf
+      
+      if (isLoadMore) {
+        _isFetchingMore = true; // Bloqueamos nuevas peticiones
+      }
+
       final pageToLoad = isLoadMore ? state.currentPage + 1 : 1;
 
       final result = await repository.getQuizzes(
@@ -70,6 +78,8 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
         isLoading: false,
         errorMessage: e.toString(),
       );
+    } finally {
+      _isFetchingMore = false; // Desbloqueamos siempre al final
     }
   }
 
@@ -81,15 +91,12 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
 
   void onCategorySelected(String? categoryId) {
     final newCategory = state.selectedCategory == categoryId ? null : categoryId;
-
     if (state.selectedCategory == newCategory) return;
 
-    
     state = state.copyWith(
       selectedCategory: newCategory,
       clearSelectedCategory: newCategory == null,
     );
-    
     loadQuizzes(isLoadMore: false);
   }
   

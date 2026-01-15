@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../domain/entities/quiz_entity.dart';
 import '../../application/controllers/quiz_detail_notifier.dart';
+import '../../domain/entities/quiz_entity.dart';
 import '../providers/quiz_providers.dart';
 
 class QuizDetailScreen extends ConsumerWidget {
@@ -18,46 +18,56 @@ class QuizDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final params = QuizDetailFamilyParams(id: quizId, quiz: quizSummary);
+    
     final state = ref.watch(quizDetailProvider(params));
 
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // 1. ESTADO DE CARGA
+    // ESTADO DE CARGA (Solo pasará si entras sin objeto quiz)
     if (state.isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
-    // 2. ESTADO DE ERROR
+    // ESTADO DE ERROR (Si entras sin objeto y la API falla)
     if (state.errorMessage != null) {
       return Scaffold(
         appBar: AppBar(title: const Text("Error")),
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
-              const SizedBox(height: 16),
-              Text(state.errorMessage!),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => ref.read(quizDetailProvider(params).notifier).refresh(),
-                child: const Text("Reintentar"),
-              )
-            ],
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.sentiment_dissatisfied, size: 60, color: Colors.grey),
+                const SizedBox(height: 20),
+                Text(
+                  state.errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () => context.go('/home'),
+                  child: const Text("Volver a Explorar"),
+                )
+              ],
+            ),
           ),
         ),
       );
     }
 
+    // ESTADO DE ÉXITO
     final quiz = state.quiz;
     if (quiz == null) return const SizedBox();
 
     return Scaffold(
       body: CustomScrollView(
         slivers: [
+          // IMAGEN DE PORTADA
           SliverAppBar(
             expandedHeight: 250.0,
             pinned: true,
@@ -78,7 +88,7 @@ class QuizDetailScreen extends ConsumerWidget {
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Container(
                       color: Colors.grey.shade800,
-                      child: const Center(child: Icon(Icons.image_not_supported, color: Colors.white)),
+                      child: const Center(child: Icon(Icons.image_not_supported, color: Colors.white, size: 50)),
                     ),
                   ),
                   const DecoratedBox(
@@ -101,18 +111,9 @@ class QuizDetailScreen extends ConsumerWidget {
                 else context.go('/home');
               },
             ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.favorite_border, color: Colors.white),
-                onPressed: () {},
-              ),
-              IconButton(
-                icon: const Icon(Icons.share, color: Colors.white),
-                onPressed: () {},
-              ),
-            ],
           ),
 
+          // CONTENIDO
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -140,7 +141,7 @@ class QuizDetailScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
 
-                  // Autor
+                  // Autor y Fecha
                   Row(
                     children: [
                       CircleAvatar(
@@ -178,7 +179,7 @@ class QuizDetailScreen extends ConsumerWidget {
                     const SizedBox(height: 24),
                   ],
 
-                  // Stats
+                  // Estadísticas
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -188,14 +189,18 @@ class QuizDetailScreen extends ConsumerWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _StatItem(icon: Icons.play_circle_fill, value: '${quiz.playCount}', label: 'Jugadas'),
+                        _StatItem(
+                          icon: Icons.play_circle_fill,
+                          value: '${quiz.playCount}',
+                          label: 'Jugadas',
+                        ),
                         const _StatItem(icon: Icons.star, value: '4.8', label: 'Rating'),
                       ],
                     ),
                   ),
                   const SizedBox(height: 30),
 
-                  // Botones
+                  // BOTONES DE ACCIÓN
                   SizedBox(
                     width: double.infinity,
                     height: 50,

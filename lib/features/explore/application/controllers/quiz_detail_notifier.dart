@@ -5,14 +5,19 @@ import '../../domain/repositories/quiz_repository.dart';
 import '../state/quiz_state.dart';
 
 class QuizDetailNotifier extends StateNotifier<QuizDetailState> {
-  final QuizRepository _repository; // Usamos el repositorio
+  final QuizRepository _repository;
   final String quizId;
 
+  // Constructor inteligente
   QuizDetailNotifier(this._repository, this.quizId, {QuizEntity? initialQuiz}) 
       : super(QuizDetailState(
+          // Si nos pasan el quiz, NO cargamos. Si es null, sí cargamos.
           isLoading: initialQuiz == null, 
           quiz: initialQuiz,
         )) {
+    
+    // Si NO nos pasaron el quiz (ej. recargar página web), intentamos buscarlo.
+    // (Nota: Esto fallará con la excepción que pusimos en el Datasource, lo cual es correcto).
     if (initialQuiz == null) {
       _loadQuiz();
     }
@@ -24,23 +29,25 @@ class QuizDetailNotifier extends StateNotifier<QuizDetailState> {
       final quiz = await _repository.getQuizDetail(quizId);
       state = state.copyWith(isLoading: false, quiz: quiz);
     } catch (e) {
+      // Capturamos el error controlado del datasource
       state = state.copyWith(
         isLoading: false, 
-        errorMessage: "No se ha podido encontrar este quiz, intente más tarde",
+        errorMessage: e.toString().replaceAll("Exception: ", ""),
       );
     }
   }
   
   Future<void> refresh() async {
+    // Si refrescamos, intentamos pedirlo de nuevo (fallará, pero es la acción lógica)
     await _loadQuiz();
   }
 }
 
-
-
+// Parámetros para identificar el provider único
 class QuizDetailFamilyParams {
   final String id;
-  final QuizEntity? quiz;
+  final QuizEntity? quiz; // El objeto completo pasado por navegación
+
   QuizDetailFamilyParams({required this.id, this.quiz});
 
   @override

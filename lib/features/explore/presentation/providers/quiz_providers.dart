@@ -20,7 +20,6 @@ final quizRepositoryProvider = Provider<QuizRepository>((ref) {
 
 final quizDetailProvider = StateNotifierProvider.family.autoDispose<QuizDetailNotifier, QuizDetailState, QuizDetailFamilyParams>(
   (ref, params) {
-    // Leemos el REPOSITORIO
     final repository = ref.read(quizRepositoryProvider);
     return QuizDetailNotifier(repository, params.id, initialQuiz: params.quiz);
   },
