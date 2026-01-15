@@ -1,7 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontkahoot2526/features/categories/presentation/providers/categories_provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:frontkahoot2526/features/media/presentation/providers/media_service_provider.dart';
+import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
 
 class QuizMetadataScreen extends ConsumerStatefulWidget {
   const QuizMetadataScreen({super.key});
@@ -16,6 +20,8 @@ class _QuizMetadataScreenState extends ConsumerState<QuizMetadataScreen> {
   final _descriptionController = TextEditingController();
   String? _selectedCategory;
   String _selectedVisibility = 'private';
+  String? quizCoverImageId; // ID para enviar al backend
+  String? quizCoverImageUrl; // URL para mostrar preview
 
   @override
   void dispose() {
@@ -24,12 +30,74 @@ class _QuizMetadataScreenState extends ConsumerState<QuizMetadataScreen> {
     super.dispose();
   }
 
+  Future<void> _uploadQuizCoverImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+
+      if (image == null) return;
+
+      // Mostrar indicador de carga
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      try {
+        final mediaService = ref.read(mediaServiceProvider);
+        final file = File(image.path);
+        final media = await mediaService.uploadMedia(file);
+
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
+          setState(() {
+            quizCoverImageId = media.assetId; // ID para backend
+            quizCoverImageUrl = media.url; // URL para preview
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Imagen de portada subida exitosamente')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
+          final errorMessage = e is AppException ? e.message : e.toString();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al subir imagen: $errorMessage')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        final errorMessage = e is AppException ? e.message : e.toString();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al seleccionar imagen: $errorMessage')),
+        );
+      }
+    }
+  }
+
   void _navigateToFromScratch() {
     if (_formKey.currentState!.validate() && _selectedCategory != null) {
+      // Construir URL con coverImageId y coverImageUrl si existe
+      String url = '/create-kahoot/from-scratch?title=${Uri.encodeComponent(_titleController.text)}&description=${Uri.encodeComponent(_descriptionController.text)}&category=${Uri.encodeComponent(_selectedCategory!)}&visibility=$_selectedVisibility';
+      
+      if (quizCoverImageId != null && quizCoverImageId!.isNotEmpty) {
+        url += '&coverImageId=${Uri.encodeComponent(quizCoverImageId!)}';
+        if (quizCoverImageUrl != null && quizCoverImageUrl!.isNotEmpty) {
+          url += '&coverImageUrl=${Uri.encodeComponent(quizCoverImageUrl!)}';
+        }
+      }
+      
       // Pasar metadata a la pantalla from-scratch mediante parámetros de consulta
-      context.go(
-        '/create-kahoot/from-scratch?title=${Uri.encodeComponent(_titleController.text)}&description=${Uri.encodeComponent(_descriptionController.text)}&category=${Uri.encodeComponent(_selectedCategory!)}&visibility=$_selectedVisibility',
-      );
+      context.go(url);
     }
   }
 
@@ -84,6 +152,112 @@ class _QuizMetadataScreenState extends ConsumerState<QuizMetadataScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const SizedBox(height: 24),
+              // Imagen de portada
+              Text(
+                'Imagen de portada (opcional)',
+                style: TextStyle(
+                  color: Colors.grey[700],
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: _uploadQuizCoverImage,
+                child: Container(
+                  height: 180,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.grey[300]!,
+                      width: 2,
+                    ),
+                    color: Colors.grey[50],
+                  ),
+                  child: quizCoverImageUrl != null && quizCoverImageUrl!.isNotEmpty
+                      ? Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.network(
+                                quizCoverImageUrl!,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                                loadingBuilder: (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Container(
+                                    color: Colors.grey[200],
+                                    child: Center(
+                                      child: CircularProgressIndicator(
+                                        value: loadingProgress.expectedTotalBytes != null
+                                            ? loadingProgress.cumulativeBytesLoaded /
+                                                loadingProgress.expectedTotalBytes!
+                                            : null,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[200],
+                                    child: const Icon(
+                                      Icons.image_not_supported,
+                                      color: Colors.grey,
+                                      size: 50,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    quizCoverImageId = null;
+                                    quizCoverImageUrl = null;
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.add_photo_alternate,
+                              size: 48,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Toca para añadir imagen',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ),
               const SizedBox(height: 24),
               // Título
               TextFormField(

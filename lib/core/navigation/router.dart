@@ -28,6 +28,7 @@ import 'package:frontkahoot2526/features/games/singleplayer/presentation/screens
 import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/create_kahoot_screen.dart';
 import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/from_scratch_screen.dart';
 import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/quiz_metadata_screen.dart';
+import 'package:frontkahoot2526/features/create_kahoot/presentation/screens/template_preview_screen.dart';
 import 'package:frontkahoot2526/features/library/presentation/screens/library_screen.dart';
 import 'package:frontkahoot2526/features/library/reports/domain/game_type.dart';
 import 'package:frontkahoot2526/features/library/reports/presentation/screens/personal_results_secreen.dart';
@@ -138,6 +139,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'from-scratch',
                     builder: (context, state) => const FromScratchScreen(),
+                  ),
+                  GoRoute(
+                    path: 'template/:templateId',
+                    builder: (context, state) {
+                      final templateId = state.pathParameters['templateId']!;
+                      return TemplatePreviewScreen(templateId: templateId);
+                    },
                   ),
                 ],
               ),
