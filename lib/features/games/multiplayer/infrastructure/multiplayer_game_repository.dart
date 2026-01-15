@@ -20,7 +20,7 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
   String _pin = '';
   MultiplayerGameSession _currentGameSession = MultiplayerGameSession();
   Dio _dio;
-  final String  socketUrl;
+  final String socketUrl;
   MultiplayerGameRepositoryImpl(this._dio, this.socketUrl);
 
   @override
@@ -35,11 +35,8 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
     String jwt,
     GameRole role,
   ) async {
-    final url =
-        '$socketUrl/multiplayer-sessions';
-    debugPrint(
-      '🔗 Conectando a $url con PIN: $pin como ${role.name} y ${role}',
-    );
+    final url = '$socketUrl/multiplayer-sessions';
+    debugPrint('🔗 Conectando a $url con PIN: $pin como ${nickname} y ${role}');
     // Configuración del Cliente Socket.IO
     _socket = io.io(
       url,
@@ -53,6 +50,30 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
           })
           .build(),
     );
+
+    _socket!.onError((data) {
+      debugPrint('❌ Error en el socket: $data');
+    });
+
+    _socket!.onAny((event, data) {
+      debugPrint('🔔 Evento recibido: $event');
+    });
+
+    _socket!.on('game_error', (data) {
+      if (data is Map) {
+        debugPrint('''
+🛑 ERROR DE SOCKET RECIBIDO:
+JSON {
+  "statusCode": ${data['statusCode']},
+  "message": "${data['message']}",
+  "error": "${data['error']}",
+  "errorId": "${data['errorId'] ?? 'null'}"
+}
+''');
+      } else {
+        debugPrint('🛑 ERROR DE SOCKET (Formato desconocido): $data');
+      }
+    });
 
     // Eventos de conexión física
     _socket!.onConnect((_) {
@@ -158,6 +179,8 @@ class MultiplayerGameRepositoryImpl implements IMultiplayerGameRepository {
         updatedSession = updatedSession.copyWith(
           connectionStatus: ConnectionStatus.connected,
         );
+        //_socket!.emit('player_join', {"nickname": "Diego"});
+        debugPrint('Enviando conexion');
         break;
 
       case 'player_connected_to_session':
