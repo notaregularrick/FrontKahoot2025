@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/library_colors.dart';
 import 'package:frontkahoot2526/features/library/reports/domain/player_ranking.dart';
 import 'package:frontkahoot2526/features/library/reports/domain/question_analysis.dart';
@@ -49,7 +50,19 @@ class _SessionReportScreenState extends ConsumerState<SessionReportScreen>
       ),
       body: reportAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Text("Error: $err"),
+        error: (error, stackTrace) {
+          if (error is AppException) {
+            if (error.statusCode == 404) {
+              return const Center(child: Text("No se encontraron quices"));
+            }
+            return Center(
+              child: Text(
+                "Error: ${error.message} (Code: ${error.statusCode}), Details: ${error.error}",
+              ),
+            );
+          }
+          return Center(child: Text("Unexpected error: $error"));
+        },
         data: (report) {
           return Column(
             children: [

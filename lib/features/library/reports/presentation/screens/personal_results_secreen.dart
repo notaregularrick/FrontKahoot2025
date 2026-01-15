@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
 import 'package:frontkahoot2526/features/library/presentation/models/library_colors.dart';
 import 'package:frontkahoot2526/features/library/reports/domain/game_type.dart';
 import 'package:frontkahoot2526/features/library/reports/domain/personal_question_result.dart';
@@ -32,7 +33,19 @@ class PersonalResultsScreen extends ConsumerWidget {
         centerTitle: true,
       ),
       body: resultsAsync.when(
-        error: (err, stack) => Text("Error: $err"),
+        error: (error, stackTrace) {
+          if (error is AppException) {
+            if (error.statusCode == 404) {
+              return const Center(child: Text("No se encontraron quices"));
+            }
+            return Center(
+              child: Text(
+                "Error: ${error.message} (Code: ${error.statusCode}), Details: ${error.error}",
+              ),
+            );
+          }
+          return Center(child: Text("Unexpected error: $error"));
+        },
         loading: () => const Center(child: CircularProgressIndicator()),
         data: (data) {
           return Column(
@@ -384,7 +397,7 @@ class PersonalResultsScreen extends ConsumerWidget {
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.all(4), // Padding mínimo para el borde
             decoration: BoxDecoration(
-              color: Colors.grey[200], 
+              color: Colors.grey[200],
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: Colors.grey.shade500),
               boxShadow: [

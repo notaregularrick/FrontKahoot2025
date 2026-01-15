@@ -245,7 +245,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final gameId = state.pathParameters['gameId']!;
           final typeName = state.pathParameters['typeName']!;
           final gameType = typeName == 'multiplayer'
-              ? GameType.multiplayer
+              ? GameType.multiplayerPlayer
               : GameType.singleplayer;
           return PersonalResultsScreen(gameId: gameId, gameType: gameType);
         },
