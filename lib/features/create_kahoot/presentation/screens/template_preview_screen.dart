@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontkahoot2526/features/media/presentation/providers/media_service_provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../domain/quiz_template.dart';
 import '../../data/predefined_templates.dart';
@@ -307,19 +311,27 @@ class TemplatePreviewScreen extends ConsumerWidget {
   }
 
   /// Navega al editor con los datos de la plantilla precargados
-  void _navigateToEditor(
+  Future<void> _navigateToEditor(
     BuildContext context,
     WidgetRef ref,
     QuizTemplate template,
-  ) {
+  ) async {
+    // Subir imagen de portada a la API
+    final mediaService = ref.read(mediaServiceProvider);
+    // Las imagenes son assets, entonces se deben obtener del asset
+    final asset = await rootBundle.load(template.coverImagePath ?? '');
+    final media = await mediaService.uploadMediaFromBytes(
+      asset.buffer.asUint8List(),
+    );
+
     // Convertir QuizTemplate a QuizPreloadData
     final preloadData = QuizPreloadData(
       title: template.title,
       description: template.description,
       category: template.category,
       visibility: 'private',
-      coverImageId: null, // Las plantillas usan assets, no mediaId
-      coverImageUrl: null,
+      coverImageId: media.assetId, // Las plantillas usan assets, no mediaId
+      coverImageUrl: media.url,
       questions: template.questions
           .map(
             (q) => PreloadedQuestion(

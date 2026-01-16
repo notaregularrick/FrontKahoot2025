@@ -1936,13 +1936,12 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     String _selectedVisibility = quizVisibility;
     String? _dialogCoverImageId = quizCoverImageId;
     String? _dialogCoverImageUrl = quizCoverImageUrl;
+    final categoriesAsync = ref.watch(categoryNamesProvider);
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
-          final categoriesAsync = ref.watch(categoryNamesProvider);
-
           return AlertDialog(
             title: const Text('Editar información del quiz'),
             content: SingleChildScrollView(
@@ -2106,6 +2105,19 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                     // Categoría
                     categoriesAsync.when(
                       data: (categories) {
+                        // Validar que la categoría seleccionada esté en la lista
+                        if (_selectedCategory != null &&
+                            !categories.contains(_selectedCategory)) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (mounted) {
+                              setDialogState(() {
+                                _selectedCategory = categories.isNotEmpty
+                                    ? categories.first
+                                    : null;
+                              });
+                            }
+                          });
+                        }
                         // Si no hay categoría seleccionada, seleccionar la primera
                         if (_selectedCategory == null &&
                             categories.isNotEmpty) {
@@ -2118,7 +2130,11 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                           });
                         }
                         return DropdownButtonFormField<String>(
-                          value: _selectedCategory,
+                          value:
+                              _selectedCategory != null &&
+                                  categories.contains(_selectedCategory)
+                              ? _selectedCategory
+                              : null,
                           decoration: const InputDecoration(
                             labelText: 'Categoría',
                             border: OutlineInputBorder(),

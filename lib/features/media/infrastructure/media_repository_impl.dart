@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:frontkahoot2526/core/domain/entities/media.dart';
 import 'package:frontkahoot2526/core/domain/entities/media_theme.dart';
@@ -135,6 +136,34 @@ class MediaRepositoryImpl implements IMediaRepository {
       print('[MEDIA UPLOAD] Excepción no manejada: ${e.runtimeType}');
       print('[MEDIA UPLOAD] Mensaje: $e');
 
+      if (e is AppException) {
+        rethrow;
+      }
+      throw AppException(
+        message: 'Error inesperado: ${e.toString()}',
+        statusCode: 500,
+        error: e.toString(),
+      );
+    }
+  }
+
+  @override
+  Future<Media> uploadMediaFromBytes(Uint8List bytes) async {
+    try {
+      // Realizar POST request a /media/upload
+      final formData = FormData.fromMap({
+        'file': MultipartFile.fromBytes(bytes, filename: 'image.jpg'),
+      });
+      final response = await _dio.post('/media/upload', data: formData);
+      if (response.statusCode == 201) {
+        return Media.fromJson(response.data);
+      } else {
+        throw AppException(
+          message: 'Error al subir el archivo',
+          statusCode: response.statusCode ?? 500,
+        );
+      }
+    } catch (e) {
       if (e is AppException) {
         rethrow;
       }
