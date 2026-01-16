@@ -2011,6 +2011,19 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         questionImageUrls[duplicatedQuestion.id] =
             questionImageUrls[currentQ.id];
       }
+
+      // Copiar URLs de imagenes de respuestas
+      for (int i = 0; i < duplicatedAnswers.length; i++) {
+        final originalAnswer = currentQ.answers[i];
+        final duplicatedAnswer = duplicatedAnswers[i];
+        if (originalAnswer.mediaId != null &&
+            originalAnswer.mediaId!.isNotEmpty &&
+            answerImageUrls[originalAnswer.id] != null) {
+          answerImageUrls[duplicatedAnswer.id] =
+              answerImageUrls[originalAnswer.id];
+        }
+      }
+
       // Insertar después de la pregunta actual
       questions.insert(currentQuestionIndex + 1, duplicatedQuestion);
       // Cambiar al índice de la pregunta duplicada
