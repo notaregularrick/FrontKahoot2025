@@ -24,6 +24,9 @@ git add README.md<div align="center">
   - [🎬 Demostración](#-demostración)
   - [💻 Acceso al Proyecto](#-acceso-al-proyecto)
   - [🛠 Tecnologías Utilizadas](#-tecnologías-utilizadas)
+  - [🏗️ Arquitectura](#-arquitectura)
+  - [🏛 Estructura de Capas](#-estructura-detallada-de-capas)
+  - [🔄 Flujo de Datos](#-flujo-de-datos)
   - [👥 Personas Contribuyentes](#-personas-contribuyentes)
 
 ---
@@ -151,7 +154,7 @@ dependencies:
 
 ### 🏗️ Arquitectura
 
-El proyecto sigue una **Arquitectura Hexagonal** (Ports & Adapters) con la siguiente estructura:
+El proyecto sigue los principios de **Clean Architecture** combinados con el patrón **MVVM** (Model-View-ViewModel). Esta estructura, junto a una separación por *features*, garantiza la separación de responsabilidades, favorece un trabajo más independiente y desacopla la lógica de negocio de la UI. El proyecto tiene la siguiente estructura:
 
 ```
 lib/
@@ -174,6 +177,38 @@ lib/
 ```
 
 ---
+
+### 🏛 Estructura Detallada de Capas
+
+**1. Capa de Dominio (Domain Layer)** Es el núcleo de la aplicación. Contiene la lógica de negocio pura y es totalmente independiente de librerías externas.
+* **Entidades:** Modelos de negocio puros.
+* **Contratos (Interfaces):** Definiciones abstractas de los Repositorios (Inversión de Dependencia).
+
+**2. Capa de Aplicación (Application Layer)** Actúa como intermediario entre la presentación y el dominio.
+* **Casos de Uso (Use Cases):** Clases que encapsulan una acción específica del negocio, orquestan la lógica y realizan validaciones previas.
+
+**3. Capa de Infraestructura (Infrastructure Layer)** Responsable de la comunicación con el mundo exterior.
+* **Implementación de Repositorios:** Clases concretas que implementan los contratos del dominio.
+* **Fuentes de Datos:** Manejo de llamadas a API (Dio), mapeo de JSON a Entidades y manejo de errores.
+
+**4. Capa de Presentación (Presentation Layer)** Responsable de la UI y el estado visual.
+* **Lógica de UI (Notifier/Riverpod):** Llama a los Casos de Uso y transforma los datos en estado.
+* **Vistas (UI):** Widgets que reaccionan a los cambios de estado.
+* **ModelUI:** Objetos optimizados para ser consumidos por la vista.
+
+---
+
+### 🔄 Flujo de Datos
+
+El flujo de información sigue un ciclo estricto desde la interacción del usuario hasta la actualización de la interfaz:
+
+1.  **El Disparador (Presentación):** El usuario interactúa con un Widget, el cual llama a un método del Notifier.
+2.  **Orquestación (Presentación → Aplicación):** El Notifier emite un estado de carga (*Loading*) e invoca al Caso de Uso.
+3.  **Reglas de Negocio (Aplicación → Dominio):** El Caso de Uso valida y llama al contrato del Repositorio.
+4.  **Acceso a los Datos (Infraestructura):** La implementación del repositorio ejecuta la llamada técnica (API REST), recibe el JSON y lo mapea a una Entidad.
+5.  **Transmisión (Aplicación):** El Caso de Uso recibe la Entidad, aplica lógica adicional si es requerida y la devuelve al Notifier.
+6.  **Composición (Presentación):** El Notifier recibe la Entidad, ensambla un objeto de presentación (ModelUI) y actualiza el estado.
+7.  **Reacción (UI):** El Widget detecta el nuevo estado y se redibuja automáticamente.
 
 ## 👥 Contribuyentes
 
