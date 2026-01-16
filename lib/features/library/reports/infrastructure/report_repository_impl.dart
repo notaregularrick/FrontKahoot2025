@@ -245,7 +245,8 @@ class ReportRepositoryImpl implements IReportsRepository {
       for (var item in questionsData) {
         int questionIndex = (item['questionIndex'] as num?)?.toInt() ?? 0;
         String questionText = item['questionText'] as String;
-        num correctPercentage = item['correctPercentage'] as num? ?? 0;
+        num rawValue = item['correctPercentage'] as num? ?? 0;
+        num correctPercentage = rawValue > 1 ? rawValue / 100 : rawValue;
         questionAnalysis.add(
           Questionanalysis(
             questionIndex: questionIndex,
