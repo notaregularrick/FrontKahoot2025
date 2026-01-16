@@ -102,73 +102,99 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
           );
         },
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FloatingActionButton.extended(
-            heroTag: 'join-group',
-            onPressed: () async {
-              final token = await _showJoinDialog(context);
-              if (token == null || token.trim().isEmpty) return;
-              final cleanToken = _extractToken(token.trim());
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Uniendo al grupo...')),
-              );
-              try {
-                await ref.read(groupsListProvider.notifier).joinWithInvite(cleanToken);
-                if (context.mounted) {
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Botón de unirse abajo a la izquierda
+              FloatingActionButton.extended(
+                heroTag: 'join-group',
+                onPressed: () async {
+                  final token = await _showJoinDialog(context);
+                  if (token == null || token.trim().isEmpty) return;
+                  final cleanToken = _extractToken(token.trim());
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Te has unido al grupo')), 
+                    const SnackBar(content: Text('Uniendo al grupo...')),
                   );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  final msg = _prettyError(e);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('No se pudo unir: $msg')),
+                  try {
+                    await ref.read(groupsListProvider.notifier).joinWithInvite(cleanToken);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Te has unido al grupo')),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      final msg = _prettyError(e);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('No se pudo unir: $msg')),
+                      );
+                    }
+                  }
+                },
+                backgroundColor: Colors.white,
+                foregroundColor: AppColors.primaryRed,
+                icon: const Icon(Icons.link),
+                label: const Text('Unirse con enlace'),
+              ),
+              // Espaciador para separar de la derecha
+              FloatingActionButton(
+                heroTag: 'create-group',
+                onPressed: () async {
+                  final result = await showDialog<Map<String, String>?>(
+                    context: context,
+                    builder: (ctx) {
+                      final nameCtrl = TextEditingController();
+                      final descCtrl = TextEditingController();
+                      return AlertDialog(
+                        title: const Text('Crear grupo'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextField(
+                              controller: nameCtrl,
+                              decoration: const InputDecoration(labelText: 'Nombre'),
+                            ),
+                            TextField(
+                              controller: descCtrl,
+                              decoration: const InputDecoration(labelText: 'Descripción'),
+                            ),
+                          ],
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Cancelar'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(
+                              ctx,
+                              {
+                                'name': nameCtrl.text,
+                                'desc': descCtrl.text,
+                              },
+                            ),
+                            child: const Text('Crear'),
+                          ),
+                        ],
+                      );
+                    },
                   );
-                }
-              }
-            },
-            backgroundColor: Colors.white,
-            foregroundColor: AppColors.primaryRed,
-            icon: const Icon(Icons.link),
-            label: const Text('Unirse con enlace'),
-          ),
-          const SizedBox(height: 12),
-          FloatingActionButton(
-            heroTag: 'create-group',
-            onPressed: () async {
-              final result = await showDialog<Map<String,String>?>(
-                context: context,
-                builder: (ctx) {
-                  final nameCtrl = TextEditingController();
-                  final descCtrl = TextEditingController();
-                  return AlertDialog(
-                    title: const Text('Crear grupo'),
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Nombre')),
-                        TextField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Descripción')),
-                      ],
-                    ),
-                    actions: [
-                      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
-                      ElevatedButton(onPressed: () => Navigator.pop(ctx, {'name': nameCtrl.text, 'desc': descCtrl.text}), child: const Text('Crear')),
-                    ],
-                  );
-                }
-              );
 
-              if (result != null && (result['name']?.trim().isNotEmpty ?? false)) {
-                await ref.read(groupsListProvider.notifier).createGroup(result['name']!.trim(), result['desc']?.trim());
-              }
-            },
-            backgroundColor: AppColors.primaryRed,
-            child: const Icon(Icons.add),
+                  if (result != null && (result['name']?.trim().isNotEmpty ?? false)) {
+                    await ref
+                        .read(groupsListProvider.notifier)
+                        .createGroup(result['name']!.trim(), result['desc']?.trim());
+                  }
+                },
+                backgroundColor: AppColors.primaryRed,
+                child: const Icon(Icons.add),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
