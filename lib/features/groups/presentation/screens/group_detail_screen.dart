@@ -278,8 +278,6 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
                               title: Text(r.userName.isEmpty
                                   ? 'Jugador'
                                   : r.userName),
-                              subtitle: Text(
-                                  'Completados: ${r.completedCount}'),
                               trailing:
                                   Text('${r.totalScore} pts'),
                             ),
