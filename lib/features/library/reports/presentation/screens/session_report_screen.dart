@@ -251,7 +251,7 @@ class _SessionReportScreenState extends ConsumerState<SessionReportScreen>
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      "P${item.questionIndex + 1}",
+                      "P${index + 1}",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.blue.shade800,
@@ -294,7 +294,7 @@ class _SessionReportScreenState extends ConsumerState<SessionReportScreen>
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    "${item.correctPercentage}%",
+                    "${item.correctPercentage*100}%",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: _getColorForPercentage(percentageVal),
