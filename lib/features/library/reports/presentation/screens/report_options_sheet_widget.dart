@@ -42,10 +42,13 @@ class ReportOptionsSheet extends ConsumerWidget {
             ),
             const Divider(height: 30),
 
-            if (results.gameType == GameType.multiplayer) ...[
+            if (results.gameType == GameType.multiplayerHost) ...[
               createSessionReportBtn(context),
             ],
-            createSessionPersonalResultsBtn(context),
+            if (results.gameType != GameType.multiplayerHost)...[
+              createSessionPersonalResultsBtn(context),
+            ]
+            
           ],
         ),
       ),
@@ -75,7 +78,7 @@ class ReportOptionsSheet extends ConsumerWidget {
       ),
       onTap: () {
         Navigator.pop(context);
-        final typeName = results.gameType == GameType.multiplayer
+        final typeName = results.gameType == GameType.multiplayerPlayer
             ? 'multiplayer'
             : 'singleplayer';
         context.push('/reports/personalResults/${results.gameId}/$typeName');

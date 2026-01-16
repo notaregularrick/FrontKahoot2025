@@ -132,6 +132,9 @@ class _JoinGameScreenState extends ConsumerState<JoinGameScreen> {
                     if (value == null || value.isEmpty) {
                       return 'Ingresa tu nickname';
                     }
+                    if (value.length < 6 || value.length > 20) {
+                      return 'Nickname inválido (deben ser entre 6 y 20 caracteres)';
+                    }
                     return null;
                   },
                 ),

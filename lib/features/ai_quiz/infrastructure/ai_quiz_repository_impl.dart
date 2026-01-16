@@ -70,7 +70,7 @@ class AIQuizRepositoryImpl implements IAIQuizRepository {
         );
       }
       print('Timeout configurado: 30 segundos');
-
+      //llamada a la API con dio
       print('Enviando request a Gemini API');
       final response = await _dio.post(
         url,
