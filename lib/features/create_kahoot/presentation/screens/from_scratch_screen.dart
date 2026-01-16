@@ -59,13 +59,15 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
   String selectedQuizType = 'Quiz';
   List<QuestionData> questions = [];
   int currentQuestionIndex = 0;
-  
+
   String quizTitle = '';
   String quizDescription = '';
   String quizCategory = 'Estudio';
   String quizVisibility = 'private';
   String? quizCoverImageId; // ID para enviar al backend
   String? quizCoverImageUrl; // URL para mostrar preview
+  Map<String, String?> questionImageUrls =
+      {}; // Map<questionId, imageUrl> para preview de imágenes de preguntas
   String? _defaultThemeId;
   bool _isEditMode = false;
   String? _editingKahootId;
@@ -93,11 +95,18 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         quizTitle = quiz.title;
         quizDescription = quiz.description;
         quizCategory = quiz.category.isNotEmpty ? quiz.category : 'Estudio';
-        quizVisibility = quiz.visibility.isNotEmpty ? quiz.visibility : 'private';
+        quizVisibility = quiz.visibility.isNotEmpty
+            ? quiz.visibility
+            : 'private';
         quizStatus = quiz.status.isNotEmpty ? quiz.status : 'draft';
         quizCoverImageId = quiz.coverImageId;
         quizCoverImageUrl = _resolveMediaUrl(quiz.coverImageId);
+        questionImageUrls.clear(); // Limpiar URLs anteriores
         questions = quiz.questions.map((q) {
+          // Resolver URL de imagen de pregunta si existe
+          if (q.mediaId != null && q.mediaId!.isNotEmpty) {
+            questionImageUrls[q.id] = _resolveMediaUrl(q.mediaId);
+          }
           return QuestionData(
             id: q.id,
             text: _truncate(q.text, 120),
@@ -105,12 +114,16 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
             timeLimit: q.timeLimit,
             points: q.points,
             mediaId: q.mediaId,
-            answers: q.answers.map((a) => AnswerData(
-              id: a.id,
-              text: a.text,
-              isCorrect: a.isCorrect,
-              mediaId: a.mediaId,
-            )).toList(),
+            answers: q.answers
+                .map(
+                  (a) => AnswerData(
+                    id: a.id,
+                    text: a.text,
+                    isCorrect: a.isCorrect,
+                    mediaId: a.mediaId,
+                  ),
+                )
+                .toList(),
           );
         }).toList();
         if (questions.isEmpty) {
@@ -119,9 +132,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         currentQuestionIndex = 0;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cargar el kahoot: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al cargar el kahoot: $e')));
     } finally {
       if (mounted) {
         setState(() {
@@ -141,7 +154,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     if (idOrUrl.startsWith('http')) return idOrUrl;
 
     final base = ref.read(backendProvider).url;
-    final normalizedBase = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
+    final normalizedBase = base.endsWith('/')
+        ? base.substring(0, base.length - 1)
+        : base;
     return '$normalizedBase/media/$idOrUrl';
   }
 
@@ -184,7 +199,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     final route = GoRouterState.of(context);
     final uri = route.uri;
     final queryParams = uri.queryParameters;
-    
+
     // Modo edición: si viene kid en query y aún no lo hemos cargado
     final kid = queryParams['kid'];
     if (!_isEditMode && kid != null && kid.isNotEmpty) {
@@ -192,55 +207,79 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       _editingKahootId = kid;
       _loadExistingQuiz(kid);
     }
-    
-      if (quizTitle.isEmpty && queryParams.isNotEmpty) {
-        print('Parámetros de URL recibidos:');
-        print('  - title: "${queryParams['title']}" (${queryParams['title']?.length ?? 0} caracteres)');
-        print('  - description: "${queryParams['description']}" (${queryParams['description']?.length ?? 0} caracteres)');
-        print('  - category: "${queryParams['category']}" (${queryParams['category']?.length ?? 0} caracteres)');
-        print('  - visibility: "${queryParams['visibility']}"');
-        print('  - ai_generated: "${queryParams['ai_generated']}"');
-        print('  - coverImageId: "${queryParams['coverImageId']}"');
-        print('  - questions: ${queryParams['questions']?.length ?? 0} caracteres');
-        if (queryParams['questions'] != null && queryParams['questions']!.length > 0) {
-          final questionsPreview = queryParams['questions']!.substring(0, queryParams['questions']!.length > 100 ? 100 : queryParams['questions']!.length);
-          print('  - questions (preview): $questionsPreview${queryParams['questions']!.length > 100 ? '...' : ''}');
-        }
-        print('URI completa: ${uri.toString()}');
-        
-        setState(() {
-          quizTitle = Uri.decodeComponent(queryParams['title'] ?? '');
-          quizDescription = Uri.decodeComponent(queryParams['description'] ?? '');
-          quizCategory = Uri.decodeComponent(queryParams['category'] ?? 'Estudio');
-          quizVisibility = queryParams['visibility'] ?? 'private';
-          
-          // Cargar coverImageId y coverImageUrl si vienen en los parámetros
-          if (queryParams['coverImageId'] != null && queryParams['coverImageId']!.isNotEmpty) {
-            quizCoverImageId = Uri.decodeComponent(queryParams['coverImageId']!);
-            // Si también viene la URL, usarla directamente
-            if (queryParams['coverImageUrl'] != null && queryParams['coverImageUrl']!.isNotEmpty) {
-              quizCoverImageUrl = Uri.decodeComponent(queryParams['coverImageUrl']!);
-            } else {
-              // Si no viene la URL, intentar construirla desde el ID
-              _loadCoverImageUrl(quizCoverImageId!);
-            }
-          }
-          
-          print('Parámetros decodificados:');
-          print('  - title decodificado: "$quizTitle"');
-          print('  - description decodificada: "$quizDescription"');
-          print('  - category decodificada: "$quizCategory"');
-          print('  - visibility: "$quizVisibility"');
-          print('  - coverImageId: "$quizCoverImageId"');
-          
-          // Si viene de IA o de plantilla, cargar las preguntas precargadas
-          if ((queryParams['ai_generated'] == 'true' || queryParams['template'] == 'true') && queryParams['questions'] != null) {
-            final source = queryParams['template'] == 'true' ? 'plantilla' : 'IA';
-            print('Detectado quiz de $source - Cargando preguntas...');
-            _loadAIGeneratedQuestions(queryParams['questions']!);
-          }
-        });
+
+    if (quizTitle.isEmpty && queryParams.isNotEmpty) {
+      print('Parámetros de URL recibidos:');
+      print(
+        '  - title: "${queryParams['title']}" (${queryParams['title']?.length ?? 0} caracteres)',
+      );
+      print(
+        '  - description: "${queryParams['description']}" (${queryParams['description']?.length ?? 0} caracteres)',
+      );
+      print(
+        '  - category: "${queryParams['category']}" (${queryParams['category']?.length ?? 0} caracteres)',
+      );
+      print('  - visibility: "${queryParams['visibility']}"');
+      print('  - ai_generated: "${queryParams['ai_generated']}"');
+      print('  - coverImageId: "${queryParams['coverImageId']}"');
+      print(
+        '  - questions: ${queryParams['questions']?.length ?? 0} caracteres',
+      );
+      if (queryParams['questions'] != null &&
+          queryParams['questions']!.length > 0) {
+        final questionsPreview = queryParams['questions']!.substring(
+          0,
+          queryParams['questions']!.length > 100
+              ? 100
+              : queryParams['questions']!.length,
+        );
+        print(
+          '  - questions (preview): $questionsPreview${queryParams['questions']!.length > 100 ? '...' : ''}',
+        );
       }
+      print('URI completa: ${uri.toString()}');
+
+      setState(() {
+        quizTitle = Uri.decodeComponent(queryParams['title'] ?? '');
+        quizDescription = Uri.decodeComponent(queryParams['description'] ?? '');
+        quizCategory = Uri.decodeComponent(
+          queryParams['category'] ?? 'Estudio',
+        );
+        quizVisibility = queryParams['visibility'] ?? 'private';
+
+        // Cargar coverImageId y coverImageUrl si vienen en los parámetros
+        if (queryParams['coverImageId'] != null &&
+            queryParams['coverImageId']!.isNotEmpty) {
+          quizCoverImageId = Uri.decodeComponent(queryParams['coverImageId']!);
+          // Si también viene la URL, usarla directamente
+          if (queryParams['coverImageUrl'] != null &&
+              queryParams['coverImageUrl']!.isNotEmpty) {
+            quizCoverImageUrl = Uri.decodeComponent(
+              queryParams['coverImageUrl']!,
+            );
+          } else {
+            // Si no viene la URL, intentar construirla desde el ID
+            _loadCoverImageUrl(quizCoverImageId!);
+          }
+        }
+
+        print('Parámetros decodificados:');
+        print('  - title decodificado: "$quizTitle"');
+        print('  - description decodificada: "$quizDescription"');
+        print('  - category decodificada: "$quizCategory"');
+        print('  - visibility: "$quizVisibility"');
+        print('  - coverImageId: "$quizCoverImageId"');
+
+        // Si viene de IA o de plantilla, cargar las preguntas precargadas
+        if ((queryParams['ai_generated'] == 'true' ||
+                queryParams['template'] == 'true') &&
+            queryParams['questions'] != null) {
+          final source = queryParams['template'] == 'true' ? 'plantilla' : 'IA';
+          print('Detectado quiz de $source - Cargando preguntas...');
+          _loadAIGeneratedQuestions(queryParams['questions']!);
+        }
+      });
+    }
   }
 
   void _loadAIGeneratedQuestions(String questionsParam) {
@@ -248,189 +287,266 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     print('[FROM SCRATCH] Parámetro questions recibido:');
     print('[FROM SCRATCH]   - Tamaño: ${questionsParam.length} caracteres');
     if (questionsParam.length > 0) {
-      final preview = questionsParam.substring(0, questionsParam.length > 150 ? 150 : questionsParam.length);
-      print('[FROM SCRATCH]   - Preview (primeros 150 caracteres): $preview${questionsParam.length > 150 ? '...' : ''}');
+      final preview = questionsParam.substring(
+        0,
+        questionsParam.length > 150 ? 150 : questionsParam.length,
+      );
+      print(
+        '[FROM SCRATCH]   - Preview (primeros 150 caracteres): $preview${questionsParam.length > 150 ? '...' : ''}',
+      );
     }
-    
+
     try {
       print('[FROM SCRATCH] Paso 1: Decodificando parámetro de URL...');
       final urlDecoded = Uri.decodeComponent(questionsParam);
-      print('[FROM SCRATCH]   - Tamaño después de URL decode: ${urlDecoded.length} caracteres');
+      print(
+        '[FROM SCRATCH]   - Tamaño después de URL decode: ${urlDecoded.length} caracteres',
+      );
       if (urlDecoded.length > 0) {
-        final urlPreview = urlDecoded.substring(0, urlDecoded.length > 100 ? 100 : urlDecoded.length);
-        print('[FROM SCRATCH]   - Preview URL decoded: $urlPreview${urlDecoded.length > 100 ? '...' : ''}');
+        final urlPreview = urlDecoded.substring(
+          0,
+          urlDecoded.length > 100 ? 100 : urlDecoded.length,
+        );
+        print(
+          '[FROM SCRATCH]   - Preview URL decoded: $urlPreview${urlDecoded.length > 100 ? '...' : ''}',
+        );
       }
-      
+
       print('[FROM SCRATCH] Paso 2: Decodificando desde base64...');
       final base64Decoded = base64Decode(urlDecoded);
-      print('[FROM SCRATCH]   - Tamaño después de base64 decode: ${base64Decoded.length} bytes');
-      
+      print(
+        '[FROM SCRATCH]   - Tamaño después de base64 decode: ${base64Decoded.length} bytes',
+      );
+
       print('[FROM SCRATCH] Paso 3: Convirtiendo bytes a string UTF-8...');
       final decodedQuestions = utf8.decode(base64Decoded);
-      print('[FROM SCRATCH]   - Tamaño final del string: ${decodedQuestions.length} caracteres');
+      print(
+        '[FROM SCRATCH]   - Tamaño final del string: ${decodedQuestions.length} caracteres',
+      );
       if (decodedQuestions.length > 0) {
-        final finalPreview = decodedQuestions.substring(0, decodedQuestions.length > 200 ? 200 : decodedQuestions.length);
-        print('[FROM SCRATCH]   - Preview final: $finalPreview${decodedQuestions.length > 200 ? '...' : ''}');
+        final finalPreview = decodedQuestions.substring(
+          0,
+          decodedQuestions.length > 200 ? 200 : decodedQuestions.length,
+        );
+        print(
+          '[FROM SCRATCH]   - Preview final: $finalPreview${decodedQuestions.length > 200 ? '...' : ''}',
+        );
       }
-      
+
       print('[FROM SCRATCH] Separando preguntas...');
       final questionsList = decodedQuestions.split('|||');
       print('[FROM SCRATCH] Preguntas recibidas: ${questionsList.length}');
-      
+
       questions.clear(); // Limpiar preguntas iniciales
       print('[FROM SCRATCH] Preguntas anteriores limpiadas');
-      
+
       for (int i = 0; i < questionsList.length; i++) {
-        print('[FROM SCRATCH] Procesando pregunta ${i + 1}/${questionsList.length}...');
-        
+        print(
+          '[FROM SCRATCH] Procesando pregunta ${i + 1}/${questionsList.length}...',
+        );
+
         final questionParts = questionsList[i].split('|');
         print('[FROM SCRATCH] Partes encontradas: ${questionParts.length}');
-        
+
         if (questionParts.length >= 4) {
           final questionText = questionParts[0];
           final questionType = questionParts[1];
           final timeLimit = int.tryParse(questionParts[2]) ?? 20;
           final points = int.tryParse(questionParts[3]) ?? 1000;
-          
-          print('[FROM SCRATCH] Texto: "${questionText.substring(0, questionText.length > 30 ? 30 : questionText.length)}${questionText.length > 30 ? '...' : ''}"');
+
+          print(
+            '[FROM SCRATCH] Texto: "${questionText.substring(0, questionText.length > 30 ? 30 : questionText.length)}${questionText.length > 30 ? '...' : ''}"',
+          );
           print('[FROM SCRATCH] Tipo: $questionType');
           print('[FROM SCRATCH] Tiempo límite: $timeLimit segundos');
           print('[FROM SCRATCH] Puntos: $points');
-          
+
           final answers = <AnswerData>[];
           if (questionParts.length > 4) {
             print('[FROM SCRATCH] Procesando respuestas...');
             final answersList = questionParts[4].split(';');
-            print('[FROM SCRATCH] Respuestas encontradas: ${answersList.length}');
-            
+            print(
+              '[FROM SCRATCH] Respuestas encontradas: ${answersList.length}',
+            );
+
             for (int j = 0; j < answersList.length; j++) {
               // Validar que la respuesta no esté vacía
               if (answersList[j].trim().isEmpty) {
                 print('[FROM SCRATCH] Respuesta $j ignorada (vacía)');
                 continue;
               }
-              
+
               // Usar ~ como separador entre texto e isCorrect (evita conflicto con | usado en partes de pregunta)
               final answerParts = answersList[j].split('~');
               if (answerParts.length >= 2) {
-                final answerText = answerParts[0].isEmpty ? null : answerParts[0].trim();
+                final answerText = answerParts[0].isEmpty
+                    ? null
+                    : answerParts[0].trim();
                 final isCorrect = answerParts[1].trim() == 'true';
-                
+
                 // Validar que la respuesta tenga al menos texto (mediaId se maneja después)
                 // Para true/false, permitir respuestas sin texto ya que se completarán después
                 if (answerText == null || answerText.isEmpty) {
                   if (questionType != 'true_false') {
-                    print('[FROM SCRATCH] Respuesta $j ignorada (sin texto ni mediaId)');
+                    print(
+                      '[FROM SCRATCH] Respuesta $j ignorada (sin texto ni mediaId)',
+                    );
                     continue;
                   }
                 }
-                
-                final answerPreview = answerText != null 
-                    ? answerText.substring(0, answerText.length > 20 ? 20 : answerText.length) + (answerText.length > 20 ? '...' : '')
+
+                final answerPreview = answerText != null
+                    ? answerText.substring(
+                            0,
+                            answerText.length > 20 ? 20 : answerText.length,
+                          ) +
+                          (answerText.length > 20 ? '...' : '')
                     : 'null';
-                print('[FROM SCRATCH]          Respuesta $j: "$answerPreview" (Correcta: $isCorrect)');
-              
-                answers.add(AnswerData(
-                  id: 'answer_${i}_$j',
-                  text: answerText,
-                  isCorrect: isCorrect,
-                  mediaId: null,
-                ));
+                print(
+                  '[FROM SCRATCH]          Respuesta $j: "$answerPreview" (Correcta: $isCorrect)',
+                );
+
+                answers.add(
+                  AnswerData(
+                    id: 'answer_${i}_$j',
+                    text: answerText,
+                    isCorrect: isCorrect,
+                    mediaId: null,
+                  ),
+                );
               } else {
-                print('[FROM SCRATCH] Respuesta $j ignorada (formato inválido - se requieren al menos 2 partes, encontradas: ${answerParts.length})');
+                print(
+                  '[FROM SCRATCH] Respuesta $j ignorada (formato inválido - se requieren al menos 2 partes, encontradas: ${answerParts.length})',
+                );
               }
             }
           } else {
-            print('[FROM SCRATCH] No se encontraron respuestas para esta pregunta');
+            print(
+              '[FROM SCRATCH] No se encontraron respuestas para esta pregunta',
+            );
           }
-          
+
           // Validar y completar respuestas según el tipo de pregunta
           final requiredAnswers = questionType == 'true_false' ? 2 : 4;
           final minRequiredAnswers = questionType == 'true_false' ? 2 : 2;
-          
-          print('[FROM SCRATCH] Validando respuestas: ${answers.length} encontradas, ${requiredAnswers} requeridas');
-          
+
+          print(
+            '[FROM SCRATCH] Validando respuestas: ${answers.length} encontradas, ${requiredAnswers} requeridas',
+          );
+
           // Completar respuestas faltantes
           while (answers.length < requiredAnswers) {
             if (questionType == 'true_false') {
               // Para true/false, agregar "Verdadero" o "Falso"
-              answers.add(AnswerData(
-                id: 'answer_${i}_${answers.length}',
-                text: answers.length == 0 ? 'Verdadero' : 'Falso',
-                isCorrect: false,
-                mediaId: null,
-              ));
-              print('[FROM SCRATCH] Respuesta ${answers.length} agregada automáticamente (true/false)');
+              answers.add(
+                AnswerData(
+                  id: 'answer_${i}_${answers.length}',
+                  text: answers.length == 0 ? 'Verdadero' : 'Falso',
+                  isCorrect: false,
+                  mediaId: null,
+                ),
+              );
+              print(
+                '[FROM SCRATCH] Respuesta ${answers.length} agregada automáticamente (true/false)',
+              );
             } else {
               // Para quiz, agregar respuestas vacías
-              answers.add(AnswerData(
-                id: 'answer_${i}_${answers.length}',
-                text: null,
-                isCorrect: false,
-                mediaId: null,
-              ));
-              print('[FROM SCRATCH] Respuesta ${answers.length} agregada automáticamente (quiz vacía)');
+              answers.add(
+                AnswerData(
+                  id: 'answer_${i}_${answers.length}',
+                  text: null,
+                  isCorrect: false,
+                  mediaId: null,
+                ),
+              );
+              print(
+                '[FROM SCRATCH] Respuesta ${answers.length} agregada automáticamente (quiz vacía)',
+              );
             }
           }
-          
+
           // Solo agregar la pregunta si tiene al menos el mínimo requerido
           if (answers.length >= minRequiredAnswers) {
-            questions.add(QuestionData(
-              id: 'question_$i',
-              text: questionText,
-              type: questionType,
-              timeLimit: timeLimit,
-              points: points,
-              mediaId: null,
-              answers: answers,
-            ));
-            
-            print('[FROM SCRATCH] Pregunta ${i + 1} cargada exitosamente (${answers.length} respuestas)');
+            questions.add(
+              QuestionData(
+                id: 'question_$i',
+                text: questionText,
+                type: questionType,
+                timeLimit: timeLimit,
+                points: points,
+                mediaId: null,
+                answers: answers,
+              ),
+            );
+
+            print(
+              '[FROM SCRATCH] Pregunta ${i + 1} cargada exitosamente (${answers.length} respuestas)',
+            );
           } else {
-            print('[FROM SCRATCH] Pregunta ${i + 1} ignorada (no tiene suficientes respuestas: ${answers.length} < $minRequiredAnswers)');
+            print(
+              '[FROM SCRATCH] Pregunta ${i + 1} ignorada (no tiene suficientes respuestas: ${answers.length} < $minRequiredAnswers)',
+            );
           }
         } else {
-          print('[FROM SCRATCH] Pregunta ${i + 1} ignorada (formato inválido - se requieren al menos 4 partes)');
+          print(
+            '[FROM SCRATCH] Pregunta ${i + 1} ignorada (formato inválido - se requieren al menos 4 partes)',
+          );
         }
       }
-      
+
       print('[FROM SCRATCH] Total preguntas cargadas: ${questions.length}');
-      
+
       if (questions.isNotEmpty) {
         currentQuestionIndex = 0;
         print('[FROM SCRATCH] Índice de pregunta actual establecido en 0');
       } else {
-        print('[FROM SCRATCH] No se pudieron cargar preguntas - Creando pregunta por defecto');
+        print(
+          '[FROM SCRATCH] No se pudieron cargar preguntas - Creando pregunta por defecto',
+        );
         // Si no se pudieron cargar preguntas, mantener las por defecto
         if (questions.isEmpty) {
           _addNewQuestion();
         }
       }
     } on FormatException catch (e) {
-      print('[FROM SCRATCH] ERROR: Error al decodificar base64: ${e.toString()}');
-      print('[FROM SCRATCH] CAUSA: El formato base64 es inválido o está corrupto');
-      print('[FROM SCRATCH] Parámetro recibido (primeros 100 caracteres): ${questionsParam.substring(0, questionsParam.length > 100 ? 100 : questionsParam.length)}');
-      
+      print(
+        '[FROM SCRATCH] ERROR: Error al decodificar base64: ${e.toString()}',
+      );
+      print(
+        '[FROM SCRATCH] CAUSA: El formato base64 es inválido o está corrupto',
+      );
+      print(
+        '[FROM SCRATCH] Parámetro recibido (primeros 100 caracteres): ${questionsParam.substring(0, questionsParam.length > 100 ? 100 : questionsParam.length)}',
+      );
+
       // Si hay error al parsear, mantener las preguntas por defecto
       if (questions.isEmpty) {
-        print('[FROM SCRATCH] Creando pregunta por defecto debido al error de base64');
+        print(
+          '[FROM SCRATCH] Creando pregunta por defecto debido al error de base64',
+        );
         _addNewQuestion();
       }
     } on ArgumentError catch (e) {
       print('[FROM SCRATCH] ERROR: Error de codificación URI: ${e.toString()}');
-      print('[FROM SCRATCH] CAUSA: El parámetro de URL tiene codificación inválida');
-      print('[FROM SCRATCH] Parámetro recibido (primeros 100 caracteres): ${questionsParam.substring(0, questionsParam.length > 100 ? 100 : questionsParam.length)}');
-      
+      print(
+        '[FROM SCRATCH] CAUSA: El parámetro de URL tiene codificación inválida',
+      );
+      print(
+        '[FROM SCRATCH] Parámetro recibido (primeros 100 caracteres): ${questionsParam.substring(0, questionsParam.length > 100 ? 100 : questionsParam.length)}',
+      );
+
       // Si hay error al parsear, mantener las preguntas por defecto
       if (questions.isEmpty) {
-        print('[FROM SCRATCH] Creando pregunta por defecto debido al error de URI');
+        print(
+          '[FROM SCRATCH] Creando pregunta por defecto debido al error de URI',
+        );
         _addNewQuestion();
       }
     } catch (e, stackTrace) {
       print('[FROM SCRATCH] ERROR al cargar preguntas: ${e.toString()}');
       print('[FROM SCRATCH] Tipo de error: ${e.runtimeType}');
       print('[FROM SCRATCH] Stack trace: $stackTrace');
-      
+
       // Si hay error al parsear, mantener las preguntas por defecto
       if (questions.isEmpty) {
         print('[FROM SCRATCH] Creando pregunta por defecto debido al error');
@@ -443,36 +559,38 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     setState(() {
       final questionType = _mapQuizTypeToQuestionType(selectedQuizType);
       final isTrueFalse = questionType == 'true_false';
-      
-      questions.add(QuestionData(
-        id: 'question_${DateTime.now().millisecondsSinceEpoch}_${questions.length}',
-        text: '',
-        type: questionType,
-        timeLimit: 20,
-        points: 1000,
-        answers: [
-          AnswerData(
-            id: 'answer_${DateTime.now().millisecondsSinceEpoch}_0',
-            text: isTrueFalse ? 'Verdadero' : null,
-            isCorrect: false,
-          ),
-          AnswerData(
-            id: 'answer_${DateTime.now().millisecondsSinceEpoch}_1',
-            text: isTrueFalse ? 'Falso' : null,
-            isCorrect: false,
-          ),
-          AnswerData(
-            id: 'answer_${DateTime.now().millisecondsSinceEpoch}_2',
-            text: null,
-            isCorrect: false,
-          ),
-          AnswerData(
-            id: 'answer_${DateTime.now().millisecondsSinceEpoch}_3',
-            text: null,
-            isCorrect: false,
-          ),
-        ],
-      ));
+
+      questions.add(
+        QuestionData(
+          id: 'question_${DateTime.now().millisecondsSinceEpoch}_${questions.length}',
+          text: '',
+          type: questionType,
+          timeLimit: 20,
+          points: 1000,
+          answers: [
+            AnswerData(
+              id: 'answer_${DateTime.now().millisecondsSinceEpoch}_0',
+              text: isTrueFalse ? 'Verdadero' : null,
+              isCorrect: false,
+            ),
+            AnswerData(
+              id: 'answer_${DateTime.now().millisecondsSinceEpoch}_1',
+              text: isTrueFalse ? 'Falso' : null,
+              isCorrect: false,
+            ),
+            AnswerData(
+              id: 'answer_${DateTime.now().millisecondsSinceEpoch}_2',
+              text: null,
+              isCorrect: false,
+            ),
+            AnswerData(
+              id: 'answer_${DateTime.now().millisecondsSinceEpoch}_3',
+              text: null,
+              isCorrect: false,
+            ),
+          ],
+        ),
+      );
       currentQuestionIndex = questions.length - 1;
     });
   }
@@ -494,7 +612,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     // Validar que se haya cargado el themeId
     if (_defaultThemeId == null || _defaultThemeId!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error: No se pudo cargar el tema. Intenta de nuevo.')),
+        const SnackBar(
+          content: Text('Error: No se pudo cargar el tema. Intenta de nuevo.'),
+        ),
       );
       // Intentar cargar el theme de nuevo
       await _loadDefaultTheme();
@@ -502,7 +622,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     }
 
     // Validar que haya al menos una pregunta con texto
-    final validQuestions = questions.where((q) => q.text.trim().isNotEmpty).toList();
+    final validQuestions = questions
+        .where((q) => q.text.trim().isNotEmpty)
+        .toList();
     if (validQuestions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Debes agregar al menos una pregunta')),
@@ -512,34 +634,49 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
 
     // Validar que cada pregunta tenga al menos una respuesta
     for (var question in validQuestions) {
-      final validAnswers = question.answers.where((a) => 
-        (a.text != null && a.text!.trim().isNotEmpty) || 
-        (a.mediaId != null && a.mediaId!.trim().isNotEmpty)
-      ).toList();
+      final validAnswers = question.answers
+          .where(
+            (a) =>
+                (a.text != null && a.text!.trim().isNotEmpty) ||
+                (a.mediaId != null && a.mediaId!.trim().isNotEmpty),
+          )
+          .toList();
       if (validAnswers.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cada pregunta debe tener al menos una respuesta')),
+          const SnackBar(
+            content: Text('Cada pregunta debe tener al menos una respuesta'),
+          ),
         );
         return;
       }
-      
+
       // Validar que al menos una respuesta esté marcada como correcta
       if (question.type == 'quiz' || question.type == 'true_false') {
         final hasCorrectAnswer = validAnswers.any((a) => a.isCorrect);
         if (!hasCorrectAnswer) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Cada pregunta debe tener al menos una respuesta correcta')),
+            const SnackBar(
+              content: Text(
+                'Cada pregunta debe tener al menos una respuesta correcta',
+              ),
+            ),
           );
           return;
         }
       }
-      
+
       // Validar que para selección múltiple haya al menos 2 respuestas correctas
       if (question.type == 'multiple') {
-        final correctAnswersCount = validAnswers.where((a) => a.isCorrect).length;
+        final correctAnswersCount = validAnswers
+            .where((a) => a.isCorrect)
+            .length;
         if (correctAnswersCount < 2) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Las preguntas de selección múltiple deben tener al menos 2 respuestas correctas')),
+            const SnackBar(
+              content: Text(
+                'Las preguntas de selección múltiple deben tener al menos 2 respuestas correctas',
+              ),
+            ),
           );
           return;
         }
@@ -549,16 +686,19 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     // Construir entidades Question
     final questionEntities = validQuestions.map((q) {
       final validAnswers = q.answers
-          .where((a) => 
-            (a.text != null && a.text!.trim().isNotEmpty) || 
-            (a.mediaId != null && a.mediaId!.trim().isNotEmpty)
+          .where(
+            (a) =>
+                (a.text != null && a.text!.trim().isNotEmpty) ||
+                (a.mediaId != null && a.mediaId!.trim().isNotEmpty),
           )
-          .map((a) => Answer(
-                id: a.id,
-                text: a.text,
-                isCorrect: a.isCorrect,
-                mediaId: a.mediaId,
-              ))
+          .map(
+            (a) => Answer(
+              id: a.id,
+              text: a.text,
+              isCorrect: a.isCorrect,
+              mediaId: a.mediaId,
+            ),
+          )
           .toList();
 
       return Question(
@@ -581,9 +721,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       visibility: quizVisibility,
       status: 'draft',
       category: quizCategory,
-      themeId: _defaultThemeId ?? '', 
+      themeId: _defaultThemeId ?? '',
       authorId: '', // Será asignado por el backend
-      authorName: '', // Será asignado por el backend 
+      authorName: '', // Será asignado por el backend
       questions: questionEntities,
       createdAt: DateTime.now(),
       playCount: 0,
@@ -592,10 +732,12 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     try {
       final service = ref.read(createQuizServiceProvider);
       final createdQuiz = await service.createQuiz(quiz);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Quiz "${createdQuiz.title}" creado exitosamente')),
+          SnackBar(
+            content: Text('Quiz "${createdQuiz.title}" creado exitosamente'),
+          ),
         );
         context.go('/create-kahoot');
       }
@@ -606,7 +748,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         );
         print('Error al crear el quiz: ${e.message}');
         print('Error al crear el quiz: ${e.statusCode}');
-        print('Error al crear el quiz: ${e.error}');  
+        print('Error al crear el quiz: ${e.error}');
       }
     }
   }
@@ -614,14 +756,10 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoadingExisting) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (questions.isEmpty) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final currentQ = currentQuestion;
@@ -661,7 +799,11 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Icon(Icons.arrow_drop_down, color: Colors.black87, size: 20),
+                  const Icon(
+                    Icons.arrow_drop_down,
+                    color: Colors.black87,
+                    size: 20,
+                  ),
                 ],
               ),
             ),
@@ -671,7 +813,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
               selectedQuizType = value;
               final newType = _mapQuizTypeToQuestionType(value);
               currentQ.type = newType;
-              
+
               // Si se cambia a modo Verdadero/Falso, establecer textos y limpiar imágenes
               if (newType == 'true_false') {
                 for (int i = 0; i < currentQ.answers.length; i++) {
@@ -685,8 +827,14 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
           },
           itemBuilder: (context) => [
             const PopupMenuItem(value: 'Quiz', child: Text('Quiz')),
-            const PopupMenuItem(value: 'Selección Múltiple', child: Text('Selección Múltiple')),
-            const PopupMenuItem(value: 'Verdadero/Falso', child: Text('Verdadero/Falso')),
+            const PopupMenuItem(
+              value: 'Selección Múltiple',
+              child: Text('Selección Múltiple'),
+            ),
+            const PopupMenuItem(
+              value: 'Verdadero/Falso',
+              child: Text('Verdadero/Falso'),
+            ),
           ],
         ),
         actions: [
@@ -695,6 +843,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
               icon: const Icon(Icons.delete, color: Colors.red),
               onPressed: () {
                 setState(() {
+                  final questionToRemove = questions[currentQuestionIndex];
+                  // Limpiar URL de imagen si existe
+                  questionImageUrls.remove(questionToRemove.id);
                   questions.removeAt(currentQuestionIndex);
                   if (currentQuestionIndex >= questions.length) {
                     currentQuestionIndex = questions.length - 1;
@@ -762,28 +913,13 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
             // Fila de multimedia y estado (sin scroll horizontal)
             Row(
               children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _uploadQuizCoverImage(),
-                    icon: const Icon(Icons.add_photo_alternate, color: Colors.black87),
-                    label: const Text(
-                      'Añadir multimedia',
-                      style: TextStyle(color: Colors.black87),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[200],
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
                 if (_isEditMode) ...[
                   const SizedBox(width: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.circular(12),
@@ -795,7 +931,10 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                         const SizedBox(width: 8),
                         Text(
                           quizStatus == 'published' ? 'Publicado' : 'Borrador',
-                          style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         Switch(
@@ -836,9 +975,10 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                             color: Colors.grey[200],
                             child: Center(
                               child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
+                                value:
+                                    loadingProgress.expectedTotalBytes != null
                                     ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
+                                          loadingProgress.expectedTotalBytes!
                                     : null,
                               ),
                             ),
@@ -902,10 +1042,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                 child: currentQ.text.isEmpty
                     ? const Text(
                         'Pulsa para añadir una pregunta',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 16,
-                        ),
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
                       )
                     : Text(
                         currentQ.text,
@@ -917,6 +1054,105 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
               ),
             ),
             const SizedBox(height: 12),
+            // Imagen de pregunta
+            if (currentQ.mediaId != null &&
+                currentQ.mediaId!.isNotEmpty &&
+                questionImageUrls[currentQ.id] != null) ...[
+              Stack(
+                children: [
+                  Container(
+                    height: 200,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        questionImageUrls[currentQ.id]!,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            color: Colors.grey[200],
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                value:
+                                    loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.error_outline, color: Colors.grey),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Error al cargar imagen',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.black54,
+                        padding: const EdgeInsets.all(8),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          currentQ.mediaId = null;
+                          questionImageUrls.remove(currentQ.id);
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ] else ...[
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _uploadQuestionImage,
+                  icon: const Icon(
+                    Icons.add_photo_alternate,
+                    color: Colors.black87,
+                  ),
+                  label: const Text(
+                    'Añadir imagen a la pregunta',
+                    style: TextStyle(color: Colors.black87),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[200],
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             // Tiempo debajo de la pregunta
             Align(
               alignment: Alignment.centerLeft,
@@ -934,7 +1170,10 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.purple[600],
                     elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 14,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -943,7 +1182,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            // Grid de respuestas 
+            // Grid de respuestas
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
@@ -951,41 +1190,44 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
               childAspectRatio: 1.5,
-              children: List.generate(
-                currentQ.type == 'true_false' ? 2 : 4,
-                (index) {
-                  // Proteger acceso a respuestas
-                  final answer = index < currentQ.answers.length 
-                      ? currentQ.answers[index]
-                      : AnswerData(
-                          id: 'temp_${currentQ.id}_$index',
-                          text: currentQ.type == 'true_false' 
-                              ? (index == 0 ? 'Verdadero' : 'Falso')
-                              : null,
-                          isCorrect: false,
-                          mediaId: null,
-                        );
-                  final hasText = answer.text != null && answer.text!.trim().isNotEmpty;
-                  final hasImage = answer.mediaId != null && answer.mediaId!.isNotEmpty;
-                  String label;
-                  if (hasText) {
-                    label = answer.text!;
-                  } else if (currentQ.type == 'true_false') {
-                    label = index == 0 ? 'Verdadero' : 'Falso';
-                  } else {
-                    label = index < 2 ? 'Añadir respuesta' : 'Añadir respuesta (opcional)';
-                  }
-                  return _buildAnswerButton(
-                    color: answerColors[index],
-                    label: label,
-                    isOptional: index >= 2,
-                    index: index,
-                    isCorrect: answer.isCorrect,
-                    hasText: hasText,
-                    hasImage: hasImage,
-                  );
-                },
-              ),
+              children: List.generate(currentQ.type == 'true_false' ? 2 : 4, (
+                index,
+              ) {
+                // Proteger acceso a respuestas
+                final answer = index < currentQ.answers.length
+                    ? currentQ.answers[index]
+                    : AnswerData(
+                        id: 'temp_${currentQ.id}_$index',
+                        text: currentQ.type == 'true_false'
+                            ? (index == 0 ? 'Verdadero' : 'Falso')
+                            : null,
+                        isCorrect: false,
+                        mediaId: null,
+                      );
+                final hasText =
+                    answer.text != null && answer.text!.trim().isNotEmpty;
+                final hasImage =
+                    answer.mediaId != null && answer.mediaId!.isNotEmpty;
+                String label;
+                if (hasText) {
+                  label = answer.text!;
+                } else if (currentQ.type == 'true_false') {
+                  label = index == 0 ? 'Verdadero' : 'Falso';
+                } else {
+                  label = index < 2
+                      ? 'Añadir respuesta'
+                      : 'Añadir respuesta (opcional)';
+                }
+                return _buildAnswerButton(
+                  color: answerColors[index],
+                  label: label,
+                  isOptional: index >= 2,
+                  index: index,
+                  isCorrect: answer.isCorrect,
+                  hasText: hasText,
+                  hasImage: hasImage,
+                );
+              }),
             ),
           ],
         ),
@@ -1018,7 +1260,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                           });
                         }
                       : null,
-                  color: currentQuestionIndex > 0 ? Colors.black87 : Colors.grey,
+                  color: currentQuestionIndex > 0
+                      ? Colors.black87
+                      : Colors.grey,
                 ),
                 IconButton(
                   icon: const Icon(Icons.arrow_forward_ios, size: 20),
@@ -1029,7 +1273,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                           });
                         }
                       : null,
-                  color: currentQuestionIndex < questions.length - 1 ? Colors.black87 : Colors.grey,
+                  color: currentQuestionIndex < questions.length - 1
+                      ? Colors.black87
+                      : Colors.grey,
                 ),
                 const SizedBox(width: 8),
               ],
@@ -1063,7 +1309,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       return;
     }
 
-    final validQuestions = questions.where((q) => q.text.trim().isNotEmpty).toList();
+    final validQuestions = questions
+        .where((q) => q.text.trim().isNotEmpty)
+        .toList();
     if (validQuestions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Debes agregar al menos una pregunta')),
@@ -1072,13 +1320,18 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     }
 
     for (var question in validQuestions) {
-      final validAnswers = question.answers.where((a) =>
-        (a.text != null && a.text!.trim().isNotEmpty) ||
-        (a.mediaId != null && a.mediaId!.trim().isNotEmpty)
-      ).toList();
+      final validAnswers = question.answers
+          .where(
+            (a) =>
+                (a.text != null && a.text!.trim().isNotEmpty) ||
+                (a.mediaId != null && a.mediaId!.trim().isNotEmpty),
+          )
+          .toList();
       if (validAnswers.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cada pregunta debe tener al menos una respuesta')),
+          const SnackBar(
+            content: Text('Cada pregunta debe tener al menos una respuesta'),
+          ),
         );
         return;
       }
@@ -1086,16 +1339,26 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         final hasCorrectAnswer = validAnswers.any((a) => a.isCorrect);
         if (!hasCorrectAnswer) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Cada pregunta debe tener al menos una respuesta correcta')),
+            const SnackBar(
+              content: Text(
+                'Cada pregunta debe tener al menos una respuesta correcta',
+              ),
+            ),
           );
           return;
         }
       }
       if (question.type == 'multiple') {
-        final correctAnswersCount = validAnswers.where((a) => a.isCorrect).length;
+        final correctAnswersCount = validAnswers
+            .where((a) => a.isCorrect)
+            .length;
         if (correctAnswersCount < 2) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Las preguntas de selección múltiple deben tener al menos 2 respuestas correctas')),
+            const SnackBar(
+              content: Text(
+                'Las preguntas de selección múltiple deben tener al menos 2 respuestas correctas',
+              ),
+            ),
           );
           return;
         }
@@ -1104,16 +1367,19 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
 
     final questionEntities = validQuestions.map((q) {
       final validAnswers = q.answers
-          .where((a) =>
-            (a.text != null && a.text!.trim().isNotEmpty) ||
-            (a.mediaId != null && a.mediaId!.trim().isNotEmpty)
+          .where(
+            (a) =>
+                (a.text != null && a.text!.trim().isNotEmpty) ||
+                (a.mediaId != null && a.mediaId!.trim().isNotEmpty),
           )
-          .map((a) => Answer(
-                id: a.id,
-                text: a.text,
-                isCorrect: a.isCorrect,
-                mediaId: a.mediaId,
-              ))
+          .map(
+            (a) => Answer(
+              id: a.id,
+              text: a.text,
+              isCorrect: a.isCorrect,
+              mediaId: a.mediaId,
+            ),
+          )
           .toList();
 
       return Question(
@@ -1163,9 +1429,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error inesperado: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error inesperado: $e')));
       }
     }
   }
@@ -1185,7 +1451,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       // Si no existe la respuesta, crear una temporal
       final tempAnswer = AnswerData(
         id: 'temp_${currentQ.id}_$index',
-        text: currentQ.type == 'true_false' 
+        text: currentQ.type == 'true_false'
             ? (index == 0 ? 'Verdadero' : 'Falso')
             : null,
         isCorrect: false,
@@ -1195,102 +1461,116 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       currentQ.answers.add(tempAnswer);
     }
     final answer = currentQ.answers[index];
-    
+
     return Stack(
       children: [
-        Row(children: [
-          Expanded(child: ElevatedButton(
-          onPressed: () {
-            _showAnswerDialog(context, index, color);
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: color,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: EdgeInsets.zero,
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: hasImage && currentQ.type != 'true_false'
-                ? Image.network(
-                    answer.mediaId!,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        color: color,
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
-                                : null,
-                            color: Colors.white,
-                          ),
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: color,
-                        child: Center(
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  _showAnswerDialog(context, index, color);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: color,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: EdgeInsets.zero,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: hasImage && currentQ.type != 'true_false'
+                      ? Image.network(
+                          answer.mediaId!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: color,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  value:
+                                      loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                            loadingProgress.expectedTotalBytes!
+                                      : null,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: color,
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.error_outline,
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Error al cargar imagen',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      : Container(
+                          padding: const EdgeInsets.all(16),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.error_outline, color: Colors.white),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Error al cargar imagen',
-                                style: const TextStyle(color: Colors.white, fontSize: 12),
-                                textAlign: TextAlign.center,
-                              ),
+                              if (hasText)
+                                Expanded(
+                                  child: Text(
+                                    label,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                )
+                              else
+                                Text(
+                                  label,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
                             ],
                           ),
                         ),
-                      );
-                    },
-                  )
-                : Container(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (hasText)
-                          Expanded(
-                            child: Text(
-                              label,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          )
-                        else
-                          Text(
-                            label,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-          ),
-        ),)
-        ],),
+                ),
+              ),
+            ),
+          ],
+        ),
         // Slide de respuesta correcta
-        if ((hasText || hasImage) && (currentQ.type == 'quiz' || currentQ.type == 'multiple' || currentQ.type == 'true_false'))
+        if ((hasText || hasImage) &&
+            (currentQ.type == 'quiz' ||
+                currentQ.type == 'multiple' ||
+                currentQ.type == 'true_false'))
           Positioned(
             top: 8,
             right: 8,
@@ -1328,7 +1608,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
 
   void _showQuestionDialog(BuildContext context) {
     final currentQ = currentQuestion;
-    final TextEditingController controller = TextEditingController(text: currentQ.text);
+    final TextEditingController controller = TextEditingController(
+      text: currentQ.text,
+    );
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1359,6 +1641,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       ),
     );
   }
+
   String? currentMediaId; // ID para guardar en la respuesta
   String? currentMediaUrl; // URL para mostrar preview
   void _showAnswerDialog(BuildContext context, int index, Color color) {
@@ -1368,7 +1651,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       // Si no existe la respuesta, crear una temporal y agregarla
       final tempAnswer = AnswerData(
         id: 'temp_${currentQ.id}_$index',
-        text: currentQ.type == 'true_false' 
+        text: currentQ.type == 'true_false'
             ? (index == 0 ? 'Verdadero' : 'Falso')
             : null,
         isCorrect: false,
@@ -1381,10 +1664,12 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     if (currentQ.type == 'true_false' && index < 2) {
       answer.text = index == 0 ? 'Verdadero' : 'Falso';
     }
-    final TextEditingController controller = TextEditingController(text: answer.text ?? '');
+    final TextEditingController controller = TextEditingController(
+      text: answer.text ?? '',
+    );
     bool isCorrect = answer.isCorrect;
     currentMediaId = answer.mediaId;
-    
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -1396,7 +1681,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Mostrar imagen actual si existe (solo en modo Quiz)
-                if (currentMediaUrl != null && currentMediaUrl!.isNotEmpty && currentQ.type != 'true_false') ...[
+                if (currentMediaUrl != null &&
+                    currentMediaUrl!.isNotEmpty &&
+                    currentQ.type != 'true_false') ...[
                   Container(
                     height: 150,
                     width: double.infinity,
@@ -1433,9 +1720,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                     },
                     icon: const Icon(Icons.delete, size: 18),
                     label: const Text('Eliminar imagen'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.red,
-                    ),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
                   ),
                   const SizedBox(height: 12),
                   const Divider(),
@@ -1471,8 +1756,8 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                     controller: controller,
                     enabled: currentMediaId == null,
                     decoration: InputDecoration(
-                      hintText: currentMediaId != null 
-                          ? 'Elimina la imagen para escribir texto' 
+                      hintText: currentMediaId != null
+                          ? 'Elimina la imagen para escribir texto'
                           : 'Escribe la respuesta aquí',
                       border: const OutlineInputBorder(),
                     ),
@@ -1483,7 +1768,8 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () => _uploadAnswerImage(index, setDialogState),
+                      onPressed: () =>
+                          _uploadAnswerImage(index, setDialogState),
                       icon: const Icon(Icons.image),
                       label: const Text('Subir imagen'),
                       style: ElevatedButton.styleFrom(
@@ -1493,7 +1779,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                     ),
                   ),
                 // Checkbox para marcar respuesta correcta
-                if (currentQ.type == 'quiz' || currentQ.type == 'multiple' || currentQ.type == 'true_false') ...[
+                if (currentQ.type == 'quiz' ||
+                    currentQ.type == 'multiple' ||
+                    currentQ.type == 'true_false') ...[
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -1505,7 +1793,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                           });
                         },
                       ),
-                      const Expanded(child: Text('Marcar como respuesta correcta')),
+                      const Expanded(
+                        child: Text('Marcar como respuesta correcta'),
+                      ),
                     ],
                   ),
                 ],
@@ -1523,7 +1813,8 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                   // En modo Verdadero/Falso, mantener el texto fijo
                   if (currentQ.type == 'true_false') {
                     answer.text = index == 0 ? 'Verdadero' : 'Falso';
-                    answer.mediaId = null; // No permitir imágenes en Verdadero/Falso
+                    answer.mediaId =
+                        null; // No permitir imágenes en Verdadero/Falso
                   } else {
                     // Si hay imagen, limpiar texto
                     if (currentMediaId != null && currentMediaId!.isNotEmpty) {
@@ -1531,20 +1822,24 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                       answer.mediaId = currentMediaId;
                     } else {
                       // Si hay texto, limpiar imagen
-                      answer.text = controller.text.trim().isEmpty ? null : controller.text.trim();
+                      answer.text = controller.text.trim().isEmpty
+                          ? null
+                          : controller.text.trim();
                       answer.mediaId = null;
                     }
                   }
-                  
+
                   // Si se marca como correcta, desmarcar todas las demás (solo para quiz y true_false, no para multiple)
-                  if (isCorrect && (currentQ.type == 'quiz' || currentQ.type == 'true_false')) {
+                  if (isCorrect &&
+                      (currentQ.type == 'quiz' ||
+                          currentQ.type == 'true_false')) {
                     for (var otherAnswer in currentQ.answers) {
                       if (otherAnswer != answer) {
                         otherAnswer.isCorrect = false;
                       }
                     }
                   }
-                  
+
                   answer.isCorrect = isCorrect;
                 });
                 Navigator.pop(context);
@@ -1555,60 +1850,6 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _uploadQuizCoverImage() async {
-    try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 85,
-      );
-
-      if (image == null) return;
-
-      // Mostrar indicador de carga
-      if (!mounted) return;
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-
-      try {
-        final mediaService = ref.read(mediaServiceProvider);
-        final file = File(image.path);
-        final media = await mediaService.uploadMedia(file);
-
-        if (mounted) {
-          Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
-          setState(() {
-            quizCoverImageId = media.assetId; // ID para backend
-            quizCoverImageUrl = media.url; // URL para preview
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Imagen de portada subida exitosamente')),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
-          final errorMessage = e is AppException ? e.message : e.toString();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error al subir imagen: $errorMessage')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        final errorMessage = e is AppException ? e.message : e.toString();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al seleccionar imagen: $errorMessage')),
-        );
-      }
-    }
   }
 
   Future<void> _uploadAnswerImage(int index, StateSetter setDialogState) async {
@@ -1626,9 +1867,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
       try {
@@ -1637,7 +1876,10 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         final media = await mediaService.uploadMedia(file);
 
         if (mounted) {
-          Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
+          Navigator.of(
+            context,
+            rootNavigator: true,
+          ).pop(); // Cerrar indicador de carga
           // Actualizar estado del diálogo
           setDialogState(() {
             currentMediaId = media.assetId; // ID para backend
@@ -1654,7 +1896,71 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         }
       } catch (e) {
         if (mounted) {
-          Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
+          Navigator.of(
+            context,
+            rootNavigator: true,
+          ).pop(); // Cerrar indicador de carga
+          final errorMessage = e is AppException ? e.message : e.toString();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al subir imagen: $errorMessage')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        final errorMessage = e is AppException ? e.message : e.toString();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al seleccionar imagen: $errorMessage')),
+        );
+      }
+    }
+  }
+
+  Future<void> _uploadQuestionImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+
+      if (image == null) return;
+
+      // Mostrar indicador de carga
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      try {
+        final mediaService = ref.read(mediaServiceProvider);
+        final file = File(image.path);
+        final media = await mediaService.uploadMedia(file);
+
+        if (mounted) {
+          Navigator.of(
+            context,
+            rootNavigator: true,
+          ).pop(); // Cerrar indicador de carga
+          final currentQ = currentQuestion;
+          setState(() {
+            currentQ.mediaId = media.assetId; // ID para backend
+            questionImageUrls[currentQ.id] = media.url; // URL para preview
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Imagen de pregunta subida exitosamente'),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          Navigator.of(
+            context,
+            rootNavigator: true,
+          ).pop(); // Cerrar indicador de carga
           final errorMessage = e is AppException ? e.message : e.toString();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error al subir imagen: $errorMessage')),
@@ -1674,7 +1980,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
   void _showTimePicker(BuildContext context) {
     final currentQ = currentQuestion;
     final List<int> timeOptions = [5, 10, 20, 30, 45, 60, 90, 120, 180, 240];
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1694,7 +2000,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
             itemBuilder: (context, index) {
               final time = timeOptions[index];
               final isSelected = currentQ.timeLimit == time;
-              
+
               return ElevatedButton(
                 onPressed: () {
                   setState(() {
@@ -1703,7 +2009,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isSelected ? Colors.purple[600] : Colors.grey[200],
+                  backgroundColor: isSelected
+                      ? Colors.purple[600]
+                      : Colors.grey[200],
                   foregroundColor: isSelected ? Colors.white : Colors.black87,
                   elevation: isSelected ? 4 : 0,
                   shape: RoundedRectangleBorder(
@@ -1713,7 +2021,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                 child: Text(
                   '$time s',
                   style: TextStyle(
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
                 ),
               );
@@ -1733,7 +2043,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
   void _duplicateQuestion() {
     final currentQ = currentQuestion;
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    
+
     // Duplicar todas las respuestas
     final duplicatedAnswers = currentQ.answers.map((answer) {
       return AnswerData(
@@ -1756,6 +2066,13 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     );
 
     setState(() {
+      // Copiar URL de imagen si existe
+      if (currentQ.mediaId != null &&
+          currentQ.mediaId!.isNotEmpty &&
+          questionImageUrls[currentQ.id] != null) {
+        questionImageUrls[duplicatedQuestion.id] =
+            questionImageUrls[currentQ.id];
+      }
       // Insertar después de la pregunta actual
       questions.insert(currentQuestionIndex + 1, duplicatedQuestion);
       // Cambiar al índice de la pregunta duplicada
@@ -1766,7 +2083,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
   void _showPointsPicker(BuildContext context) {
     final currentQ = currentQuestion;
     final List<int> pointsOptions = [0, 1000, 2000];
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1777,7 +2094,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
             mainAxisSize: MainAxisSize.min,
             children: pointsOptions.map((points) {
               final isSelected = currentQ.points == points;
-              
+
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: SizedBox(
@@ -1790,8 +2107,12 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isSelected ? Colors.purple[600] : Colors.grey[200],
-                      foregroundColor: isSelected ? Colors.white : Colors.black87,
+                      backgroundColor: isSelected
+                          ? Colors.purple[600]
+                          : Colors.grey[200],
+                      foregroundColor: isSelected
+                          ? Colors.white
+                          : Colors.black87,
                       elevation: isSelected ? 4 : 0,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
@@ -1801,7 +2122,9 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                     child: Text(
                       '$points puntos',
                       style: TextStyle(
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                   ),
