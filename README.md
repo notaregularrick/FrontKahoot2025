@@ -196,6 +196,11 @@ lib/
 * **Vistas (UI):** Widgets que reaccionan a los cambios de estado.
 * **ModelUI:** Objetos optimizados para ser consumidos por la vista.
 
+<div align="center">
+  <img src="./assets/ArquitecturaProyecto.png" width="700" alt="Imagen de la arquitectura" />
+</div>
+
+<br>
 ---
 
 ### 🔄 Flujo de Datos
