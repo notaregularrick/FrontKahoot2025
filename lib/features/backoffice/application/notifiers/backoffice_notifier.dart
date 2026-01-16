@@ -82,7 +82,6 @@ class BackofficeNotifier extends StateNotifier<BackofficeState> {
     try {
       await repository.deleteUser(userId);
       
-      // Actualización optimista: Lo sacamos de la lista local
       final updatedList = state.users.where((u) => u.id != userId).toList();
       state = state.copyWith(users: updatedList);
       

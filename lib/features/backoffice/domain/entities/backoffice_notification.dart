@@ -1,4 +1,4 @@
-import 'backoffice_user.dart'; // Importamos para reutilizar la entidad de paginación si se separó, o redefinimos
+import 'backoffice_user.dart';
 
 class BackofficeSenderEntity {
   final String id;

@@ -20,7 +20,7 @@ class BackofficeNotificationsNotifier extends StateNotifier<BackofficeNotificati
         page: page,
         limit: 20,
         orderBy: 'createdAt',
-        order: 'desc', // Lo más reciente primero suele ser mejor para logs
+        order: 'desc',
       );
 
       state = state.copyWith(
@@ -44,7 +44,6 @@ class BackofficeNotificationsNotifier extends StateNotifier<BackofficeNotificati
     required bool toAdmins,
     required bool toRegularUsers,
   }) async {
-    // Ponemos loading sin borrar la lista
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
@@ -55,7 +54,6 @@ class BackofficeNotificationsNotifier extends StateNotifier<BackofficeNotificati
         toRegularUsers: toRegularUsers,
       );
       
-      // Si tiene éxito, refrescamos la lista para mostrar la nueva
       await loadNotifications(page: 1); 
 
     } catch (e) {
@@ -63,7 +61,6 @@ class BackofficeNotificationsNotifier extends StateNotifier<BackofficeNotificati
         isLoading: false,
         errorMessage: e.toString(),
       );
-      // Re-lanzamos para que la UI pueda mostrar SnackBar si quiere
       rethrow;
     }
   }

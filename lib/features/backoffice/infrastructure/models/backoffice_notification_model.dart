@@ -1,5 +1,5 @@
 import '../../domain/entities/backoffice_notification.dart';
-import 'backoffice_response_model.dart'; // Para BackofficePaginationModel
+import 'backoffice_response_model.dart';
 
 class BackofficeSenderModel extends BackofficeSenderEntity {
   const BackofficeSenderModel({
@@ -11,7 +11,6 @@ class BackofficeSenderModel extends BackofficeSenderEntity {
 
   factory BackofficeSenderModel.fromJson(Map<String, dynamic> json) {
     return BackofficeSenderModel(
-      // Según tu JSON, las claves vienen con Mayúscula inicial
       id: json['Id'] ?? json['id'] ?? '', 
       name: json['name'] ?? 'Desconocido',
       email: json['email'] ?? '',
@@ -54,7 +53,6 @@ class BackofficeNotificationsResponseModel extends BackofficeNotificationsRespon
               ?.map((e) => BackofficeNotificationModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      // Reutilizamos el modelo de paginación que ya creamos para usuarios
       pagination: BackofficePaginationModel.fromJson(
         json['pagination'] as Map<String, dynamic>? ?? {},
       ),

@@ -101,7 +101,6 @@ class BackofficeDatasourceImpl implements BackofficeDatasource {
   @override
   Future<BackofficeUserModel> removeAdmin(String userId) async {
     try {
-      // PATCH /backoffice/removeAdmin/:userid
       final response = await dio.patch('/backoffice/removeAdmin/$userId');
       return BackofficeUserModel.fromJson(response.data);
     } catch (e) {
@@ -116,10 +115,8 @@ class BackofficeDatasourceImpl implements BackofficeDatasource {
   @override
   Future<void> deleteUser(String userId) async {
     try {
-      // DELETE /backoffice/user/:userid
       final response = await dio.delete('/backoffice/user/$userId');
       
-      // Esperamos 204 No Content (o 200 OK dependiendo del back)
       if (response.statusCode != 200 && response.statusCode != 204) {
          throw Exception('Error inesperado al eliminar.');
       }

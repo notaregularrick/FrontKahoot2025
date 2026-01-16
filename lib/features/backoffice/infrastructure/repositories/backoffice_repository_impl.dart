@@ -29,7 +29,6 @@ class BackofficeRepositoryImpl implements BackofficeRepository {
 
   @override
   Future<BackofficeUserEntity> blockUser(String userId) async {
-    // El modelo que retorna el datasource es compatible con la entidad
     return await datasource.blockUser(userId);
   }
 

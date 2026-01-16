@@ -11,9 +11,6 @@ class QuizDatasourceImpl implements QuizDatasource {
 
   @override
   Future<QuizModel> getQuizDetail(String id) async {
-    // El endpoint individual no existe en el backend.
-    // La aplicación confía en que los datos se pasan desde la pantalla /explore.
-    // Si se intenta cargar individualmente (ej. sin pasar el objeto 'extra'), fallará controladamente.
     throw Exception("El backend no soporta buscar quiz por ID ($id). Los datos deben venir de /explore.");
   }
 }

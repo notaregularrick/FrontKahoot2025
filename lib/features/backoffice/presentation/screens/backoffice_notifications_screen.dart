@@ -41,7 +41,6 @@ class _BackofficeNotificationsScreenState extends ConsumerState<BackofficeNotifi
       // BOTÓN FLOTANTE PARA CREAR NUEVA
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navegación directa para simplificar
           Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const SendNotificationScreen()),
           );

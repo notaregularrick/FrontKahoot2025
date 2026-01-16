@@ -7,9 +7,9 @@ class BackofficeState {
   final String? errorMessage;
 
   // Filtros y Ordenamiento activos
-  final String searchQuery; // Filtro por nombre ('name')
-  final String orderBy;     // 'createdAt', 'name', etc.
-  final String order;       // 'asc', 'desc'
+  final String searchQuery; 
+  final String orderBy;     
+  final String order;       
 
   const BackofficeState({
     this.isLoading = false,
@@ -43,9 +43,9 @@ class BackofficeState {
     );
   }
   
-  // Helper para saber si hay más páginas
+  
   bool get hasMoreData {
-    if (pagination == null) return true; // Asumimos sí al inicio
+    if (pagination == null) return true;
     return pagination!.page < pagination!.totalPages;
   }
 }

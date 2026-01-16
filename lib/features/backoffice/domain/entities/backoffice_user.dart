@@ -9,7 +9,7 @@ class BackofficeUserEntity {
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isAdmin;
-  final String status; // "Active" | "Blocked"
+  final String status;
 
   const BackofficeUserEntity({
     required this.id,

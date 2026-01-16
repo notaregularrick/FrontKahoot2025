@@ -55,18 +55,14 @@ class ExploreDatasourceImpl implements ExploreDatasource {
     try {
       final response = await dio.get('/explore/categories');
 
-      // CORRECCIÓN: Manejo flexible de la respuesta (Lista o Mapa)
       final dynamic data = response.data;
       List<dynamic> listData;
 
       if (data is List) {
-        // Caso A: El backend devuelve directamente [{}, {}]
         listData = data;
       } else if (data is Map && data.containsKey('data') && data['data'] is List) {
-        // Caso B: El backend devuelve { "data": [{}, {}] }
         listData = data['data'];
       } else if (data is Map && data.containsKey('categories') && data['categories'] is List) {
-        // CORRECCIÓN: Caso C: { "categories": [{}, {}] } -> Este es el que está llegando
         listData = data['categories'];
       } else {
         print("Formato de categorías desconocido: $data");

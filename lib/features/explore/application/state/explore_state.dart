@@ -3,9 +3,9 @@ import '../../domain/entities/category_entity.dart';
 
 class ExploreState {
   final bool isLoading;
-  final List<QuizEntity> quizzes; // Lista principal (Búsqueda/Scroll)
-  final List<QuizEntity> featuredQuizzes; //Lista de destacados (Horizontal)
-  final List<CategoryEntity> availableCategories; // Categorías disponibles
+  final List<QuizEntity> quizzes;
+  final List<QuizEntity> featuredQuizzes;
+  final List<CategoryEntity> availableCategories;
   final String? errorMessage;
   
   // Filtros

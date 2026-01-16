@@ -126,7 +126,7 @@ class ProfileCard extends ConsumerWidget {
 
           // --- BOTONES DE ACCIÓN ---
 
-          // 0. Panel de Admin (SOLO SI ES ADMIN)
+          // 0. Panel de Admin
           //if (isAdmin) ...[
             SizedBox(
               width: double.infinity,

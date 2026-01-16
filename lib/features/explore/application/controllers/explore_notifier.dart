@@ -5,7 +5,6 @@ import '../state/explore_state.dart';
 class ExploreNotifier extends StateNotifier<ExploreState> {
   final ExploreRepository repository;
   
-  // Bandera local para evitar múltiples llamadas de paginación simultáneas
   bool _isFetchingMore = false; 
 
   ExploreNotifier(this.repository) : super(ExploreState.initial()) {
@@ -42,9 +41,9 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
 
   Future<void> loadQuizzes({bool isLoadMore = false, bool setGlobalLoading = true}) async {
     // 1. Validaciones de bloqueo
-    if (setGlobalLoading && state.isLoading) return; // Ya está cargando inicio
-    if (isLoadMore && !state.hasMoreData) return;    // No hay más datos
-    if (isLoadMore && _isFetchingMore) return;       // CORRECCIÓN: Ya está paginando
+    if (setGlobalLoading && state.isLoading) return;
+    if (isLoadMore && !state.hasMoreData) return;
+    if (isLoadMore && _isFetchingMore) return;
 
     try {
       if (setGlobalLoading && !isLoadMore) {
@@ -52,7 +51,7 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
       }
       
       if (isLoadMore) {
-        _isFetchingMore = true; // Bloqueamos nuevas peticiones
+        _isFetchingMore = true;
       }
 
       final pageToLoad = isLoadMore ? state.currentPage + 1 : 1;
@@ -81,7 +80,7 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
         errorMessage: e.toString(),
       );
     } finally {
-      _isFetchingMore = false; // Desbloqueamos siempre al final
+      _isFetchingMore = false;
     }
   }
 
