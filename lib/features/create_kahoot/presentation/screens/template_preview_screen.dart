@@ -1,19 +1,16 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../domain/quiz_template.dart';
 import '../../data/predefined_templates.dart';
+import '../providers/quiz_preload_provider.dart';
 
 /// Pantalla de vista previa de una plantilla
 /// Muestra la información completa de la plantilla y permite personalizarla
 class TemplatePreviewScreen extends ConsumerWidget {
   final String templateId;
 
-  const TemplatePreviewScreen({
-    super.key,
-    required this.templateId,
-  });
+  const TemplatePreviewScreen({super.key, required this.templateId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,10 +32,7 @@ class TemplatePreviewScreen extends ConsumerWidget {
                 children: [
                   IconButton(
                     onPressed: () => context.pop(),
-                    icon: const Icon(
-                      Icons.arrow_back,
-                      color: Colors.black87,
-                    ),
+                    icon: const Icon(Icons.arrow_back, color: Colors.black87),
                   ),
                   const SizedBox(width: 8),
                   const Expanded(
@@ -89,10 +83,7 @@ class TemplatePreviewScreen extends ConsumerWidget {
 
                     Text(
                       template.description,
-                      style: TextStyle(
-                        color: Colors.grey[700],
-                        fontSize: 16,
-                      ),
+                      style: TextStyle(color: Colors.grey[700], fontSize: 16),
                     ),
 
                     const SizedBox(height: 16),
@@ -150,12 +141,9 @@ class TemplatePreviewScreen extends ConsumerWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: FloatingActionButton.extended(
-          onPressed: () => _navigateToEditor(context, template),
+          onPressed: () => _navigateToEditor(context, ref, template),
           backgroundColor: Colors.purple[600],
-          icon: const Icon(
-            Icons.edit,
-            color: Colors.white,
-          ),
+          icon: const Icon(Icons.edit, color: Colors.white),
           label: const Text(
             'Personalizar',
             style: TextStyle(
@@ -190,12 +178,7 @@ class TemplatePreviewScreen extends ConsumerWidget {
     final emoji = template.title.split(' ').first;
     return Container(
       color: Colors.grey[200],
-      child: Center(
-        child: Text(
-          emoji,
-          style: const TextStyle(fontSize: 80),
-        ),
-      ),
+      child: Center(child: Text(emoji, style: const TextStyle(fontSize: 80))),
     );
   }
 
@@ -210,38 +193,32 @@ class TemplatePreviewScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.grey[100],
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.grey[300]!,
-        ),
+        border: Border.all(color: Colors.grey[300]!),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: Colors.grey[700]),
           const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              color: Colors.grey[700],
-              fontSize: 14,
-            ),
-          ),
+          Text(text, style: TextStyle(color: Colors.grey[700], fontSize: 14)),
         ],
       ),
     );
   }
 
   /// Construye la vista previa de una pregunta
-  Widget _buildQuestionPreview(int index, TemplateQuestion question, QuizTemplate template) {
+  Widget _buildQuestionPreview(
+    int index,
+    TemplateQuestion question,
+    QuizTemplate template,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.grey[300]!,
-        ),
+        border: Border.all(color: Colors.grey[300]!),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,7 +227,10 @@ class TemplatePreviewScreen extends ConsumerWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.purple[600],
                   borderRadius: BorderRadius.circular(12),
@@ -266,38 +246,21 @@ class TemplatePreviewScreen extends ConsumerWidget {
               const SizedBox(width: 8),
               Text(
                 _getQuestionTypeLabel(question.type),
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
               ),
               const Spacer(),
-              Icon(
-                Icons.timer,
-                size: 14,
-                color: Colors.grey[600],
-              ),
+              Icon(Icons.timer, size: 14, color: Colors.grey[600]),
               const SizedBox(width: 4),
               Text(
                 '${question.timeLimit}s',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
               ),
               const SizedBox(width: 12),
-              Icon(
-                Icons.star,
-                size: 14,
-                color: Colors.grey[600],
-              ),
+              Icon(Icons.star, size: 14, color: Colors.grey[600]),
               const SizedBox(width: 4),
               Text(
                 '${question.points}',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
               ),
             ],
           ),
@@ -305,20 +268,13 @@ class TemplatePreviewScreen extends ConsumerWidget {
           // Texto de la pregunta
           Text(
             question.text,
-            style: const TextStyle(
-              color: Colors.black87,
-              fontSize: 16,
-            ),
+            style: const TextStyle(color: Colors.black87, fontSize: 16),
           ),
           if (question.imagePath != null) ...[
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(
-                  Icons.image,
-                  size: 14,
-                  color: Colors.grey[600],
-                ),
+                Icon(Icons.image, size: 14, color: Colors.grey[600]),
                 const SizedBox(width: 4),
                 Text(
                   'Con imagen',
@@ -351,34 +307,43 @@ class TemplatePreviewScreen extends ConsumerWidget {
   }
 
   /// Navega al editor con los datos de la plantilla precargados
-  void _navigateToEditor(BuildContext context, QuizTemplate template) {
+  void _navigateToEditor(
+    BuildContext context,
+    WidgetRef ref,
+    QuizTemplate template,
+  ) {
+    // Convertir QuizTemplate a QuizPreloadData
+    final preloadData = QuizPreloadData(
+      title: template.title,
+      description: template.description,
+      category: template.category,
+      visibility: 'private',
+      coverImageId: null, // Las plantillas usan assets, no mediaId
+      coverImageUrl: null,
+      questions: template.questions
+          .map(
+            (q) => PreloadedQuestion(
+              text: q.text,
+              type: q.type,
+              timeLimit: q.timeLimit,
+              points: q.points,
+              answers: q.answers
+                  .map(
+                    (a) =>
+                        PreloadedAnswer(text: a.text, isCorrect: a.isCorrect),
+                  )
+                  .toList(),
+            ),
+          )
+          .toList(),
+      templateId: template.id,
+      source: 'template',
+    );
 
-    final questionsParam = template.questions.map((q) {
-      final answersParam = q.answers.map((a) {
-        return '${a.text}~${a.isCorrect}';
-      }).join(';');
-      return '${q.text}|${q.type}|${q.timeLimit}|${q.points}|$answersParam';
-    }).join('|||');
+    // Guardar datos en el provider
+    ref.read(quizPreloadProvider.notifier).setPreloadData(preloadData);
 
-    // Codificar en base64
-    final questionsBase64 = base64Encode(utf8.encode(questionsParam));
-
-    // Construir URL con parámetros
-    final encodedTitle = Uri.encodeComponent(template.title);
-    final encodedDescription = Uri.encodeComponent(template.description);
-    final encodedCategory = Uri.encodeComponent(template.category);
-    final encodedQuestions = Uri.encodeComponent(questionsBase64);
-
-    final url = '/create-kahoot/from-scratch?'
-        'title=$encodedTitle&'
-        'description=$encodedDescription&'
-        'category=$encodedCategory&'
-        'visibility=private&'
-        'template=true&'
-        'template_id=${template.id}&'
-        'questions=$encodedQuestions';
-
-    context.go(url);
+    // Navegar sin parámetros
+    context.go('/create-kahoot/from-scratch');
   }
 }
-

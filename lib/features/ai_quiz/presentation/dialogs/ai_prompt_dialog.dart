@@ -59,9 +59,7 @@ class _AIPromptDialogState extends ConsumerState<AIPromptDialog> {
     final categoriesAsync = ref.watch(categoryNamesProvider);
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
         padding: const EdgeInsets.all(24),
@@ -73,19 +71,20 @@ class _AIPromptDialogState extends ConsumerState<AIPromptDialog> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.auto_awesome, color: Colors.purple[600]),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Generar Quiz con IA',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Icon(Icons.auto_awesome, color: Colors.purple[600]),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Generar Quiz con IA',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -100,9 +99,11 @@ class _AIPromptDialogState extends ConsumerState<AIPromptDialog> {
                         controller: _promptController,
                         decoration: const InputDecoration(
                           labelText: 'Tema del Quiz *',
-                          hintText: 'Ej: Historia de México, Matemáticas básicas, Cultura pop...',
+                          hintText:
+                              'Ej: Historia de México, Matemáticas básicas, Cultura pop...',
                           border: OutlineInputBorder(),
-                          helperText: 'Describe el tema sobre el cual quieres que la IA genere preguntas',
+                          helperText:
+                              'Describe el tema sobre el cual quieres que la IA genere preguntas',
                         ),
                         maxLines: 3,
                         validator: (value) {
@@ -144,7 +145,8 @@ class _AIPromptDialogState extends ConsumerState<AIPromptDialog> {
                       categoriesAsync.when(
                         data: (categories) {
                           // Si no hay categoría seleccionada, seleccionar la primera
-                          if (_selectedCategory == null && categories.isNotEmpty) {
+                          if (_selectedCategory == null &&
+                              categories.isNotEmpty) {
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               if (mounted) {
                                 setState(() {
@@ -194,14 +196,18 @@ class _AIPromptDialogState extends ConsumerState<AIPromptDialog> {
                           ),
                           child: Column(
                             children: [
-                              const Icon(Icons.error_outline, color: Colors.red),
+                              const Icon(
+                                Icons.error_outline,
+                                color: Colors.red,
+                              ),
                               const SizedBox(height: 8),
                               const Text(
                                 'Error al cargar categorías',
                                 style: TextStyle(color: Colors.red),
                               ),
                               TextButton(
-                                onPressed: () => ref.invalidate(categoryNamesProvider),
+                                onPressed: () =>
+                                    ref.invalidate(categoryNamesProvider),
                                 child: const Text('Reintentar'),
                               ),
                             ],
@@ -210,13 +216,13 @@ class _AIPromptDialogState extends ConsumerState<AIPromptDialog> {
                       ),
                       const SizedBox(height: 16),
                       // Número de preguntas
+                      const Text(
+                        'Número de preguntas: ',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(width: 8),
                       Row(
                         children: [
-                          const Text(
-                            'Número de preguntas: ',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          const SizedBox(width: 8),
                           Expanded(
                             child: Slider(
                               value: _numberOfQuestions.toDouble(),

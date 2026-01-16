@@ -12,6 +12,7 @@ import 'package:frontkahoot2526/features/media/presentation/providers/media_serv
 import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
 import 'package:frontkahoot2526/features/library/presentation/providers/library_notifier.dart';
 import 'package:frontkahoot2526/core/providers/backend_provider.dart';
+import 'package:frontkahoot2526/features/create_kahoot/presentation/providers/quiz_preload_provider.dart';
 
 // Modelos de datos para gestionar el estado de preguntas y respuestas
 class QuestionData {
@@ -208,80 +209,191 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       _isEditMode = true;
       _editingKahootId = kid;
       _loadExistingQuiz(kid);
+      return; // No procesar más si estamos en modo edición
     }
 
-    if (quizTitle.isEmpty && queryParams.isNotEmpty) {
-      print('Parámetros de URL recibidos:');
-      print(
-        '  - title: "${queryParams['title']}" (${queryParams['title']?.length ?? 0} caracteres)',
-      );
-      print(
-        '  - description: "${queryParams['description']}" (${queryParams['description']?.length ?? 0} caracteres)',
-      );
-      print(
-        '  - category: "${queryParams['category']}" (${queryParams['category']?.length ?? 0} caracteres)',
-      );
-      print('  - visibility: "${queryParams['visibility']}"');
-      print('  - ai_generated: "${queryParams['ai_generated']}"');
-      print('  - coverImageId: "${queryParams['coverImageId']}"');
-      print(
-        '  - questions: ${queryParams['questions']?.length ?? 0} caracteres',
-      );
-      if (queryParams['questions'] != null &&
-          queryParams['questions']!.length > 0) {
-        final questionsPreview = queryParams['questions']!.substring(
-          0,
-          queryParams['questions']!.length > 100
-              ? 100
-              : queryParams['questions']!.length,
-        );
-        print(
-          '  - questions (preview): $questionsPreview${queryParams['questions']!.length > 100 ? '...' : ''}',
-        );
+    // Primero verificar si hay datos precargados en el provider
+    // Usar postFrameCallback para evitar modificar provider durante el build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final preloadData = ref
+          .read(quizPreloadProvider.notifier)
+          .consumePreloadData();
+      if (preloadData != null) {
+        _loadPreloadedData(preloadData);
+        return; // No procesar searchParams si hay datos precargados
       }
-      print('URI completa: ${uri.toString()}');
 
-      setState(() {
-        quizTitle = Uri.decodeComponent(queryParams['title'] ?? '');
-        quizDescription = Uri.decodeComponent(queryParams['description'] ?? '');
-        quizCategory = Uri.decodeComponent(
-          queryParams['category'] ?? 'Estudio',
+      // Fallback a searchParams para compatibilidad con otras rutas
+      if (quizTitle.isEmpty && queryParams.isNotEmpty) {
+        _loadFromSearchParams(queryParams);
+      }
+    });
+  }
+
+  void _loadFromSearchParams(Map<String, String> queryParams) {
+    print('Parámetros de URL recibidos:');
+    print(
+      '  - title: "${queryParams['title']}" (${queryParams['title']?.length ?? 0} caracteres)',
+    );
+    print(
+      '  - description: "${queryParams['description']}" (${queryParams['description']?.length ?? 0} caracteres)',
+    );
+    print(
+      '  - category: "${queryParams['category']}" (${queryParams['category']?.length ?? 0} caracteres)',
+    );
+    print('  - visibility: "${queryParams['visibility']}"');
+    print('  - ai_generated: "${queryParams['ai_generated']}"');
+    print('  - coverImageId: "${queryParams['coverImageId']}"');
+    print('  - questions: ${queryParams['questions']?.length ?? 0} caracteres');
+    if (queryParams['questions'] != null &&
+        queryParams['questions']!.length > 0) {
+      final questionsPreview = queryParams['questions']!.substring(
+        0,
+        queryParams['questions']!.length > 100
+            ? 100
+            : queryParams['questions']!.length,
+      );
+      print(
+        '  - questions (preview): $questionsPreview${queryParams['questions']!.length > 100 ? '...' : ''}',
+      );
+    }
+
+    setState(() {
+      quizTitle = utf8.decode(
+        base64Decode(Uri.decodeComponent(queryParams['title'] ?? '')),
+      );
+      quizDescription = utf8.decode(
+        base64Decode(Uri.decodeComponent(queryParams['description'] ?? '')),
+      );
+      quizCategory = utf8.decode(
+        base64Decode(Uri.decodeComponent(queryParams['category'] ?? '')),
+      );
+      quizVisibility = queryParams['visibility'] ?? 'private';
+
+      // Cargar coverImageId y coverImageUrl si vienen en los parámetros
+      if (queryParams['coverImageId'] != null &&
+          queryParams['coverImageId']!.isNotEmpty) {
+        quizCoverImageId = utf8.decode(
+          base64Decode(Uri.decodeComponent(queryParams['coverImageId']!)),
         );
-        quizVisibility = queryParams['visibility'] ?? 'private';
+        // Si también viene la URL, usarla directamente
+        if (queryParams['coverImageUrl'] != null &&
+            queryParams['coverImageUrl']!.isNotEmpty) {
+          quizCoverImageUrl = utf8.decode(
+            base64Decode(Uri.decodeComponent(queryParams['coverImageUrl']!)),
+          );
+        } else {
+          // Si no viene la URL, intentar construirla desde el ID
+          _loadCoverImageUrl(quizCoverImageId!);
+        }
+      }
 
-        // Cargar coverImageId y coverImageUrl si vienen en los parámetros
-        if (queryParams['coverImageId'] != null &&
-            queryParams['coverImageId']!.isNotEmpty) {
-          quizCoverImageId = Uri.decodeComponent(queryParams['coverImageId']!);
-          // Si también viene la URL, usarla directamente
-          if (queryParams['coverImageUrl'] != null &&
-              queryParams['coverImageUrl']!.isNotEmpty) {
-            quizCoverImageUrl = Uri.decodeComponent(
-              queryParams['coverImageUrl']!,
+      print('Parámetros decodificados:');
+      print('  - title decodificado: "$quizTitle"');
+      print('  - description decodificada: "$quizDescription"');
+      print('  - category decodificada: "$quizCategory"');
+      print('  - visibility: "$quizVisibility"');
+      print('  - coverImageId: "$quizCoverImageId"');
+
+      // Si viene de IA o de plantilla, cargar las preguntas precargadas
+      if ((queryParams['ai_generated'] == 'true' ||
+              queryParams['template'] == 'true') &&
+          queryParams['questions'] != null) {
+        final source = queryParams['template'] == 'true' ? 'plantilla' : 'IA';
+        print('Detectado quiz de $source - Cargando preguntas...');
+        _loadAIGeneratedQuestions(queryParams['questions']!);
+      }
+    });
+  }
+
+  /// Carga datos precargados desde el provider
+  void _loadPreloadedData(QuizPreloadData data) {
+    setState(() {
+      quizTitle = data.title;
+      quizDescription = data.description;
+      quizCategory = data.category;
+      quizVisibility = data.visibility;
+
+      // Cargar coverImageId y coverImageUrl si existen
+      if (data.coverImageId != null && data.coverImageId!.isNotEmpty) {
+        quizCoverImageId = data.coverImageId;
+        if (data.coverImageUrl != null && data.coverImageUrl!.isNotEmpty) {
+          quizCoverImageUrl = data.coverImageUrl;
+        } else {
+          // Intentar construir URL desde el ID
+          _loadCoverImageUrl(data.coverImageId!);
+        }
+      }
+
+      // Cargar preguntas
+      questions.clear();
+      for (int i = 0; i < data.questions.length; i++) {
+        final preloadedQ = data.questions[i];
+        final answers = <AnswerData>[];
+
+        // Convertir respuestas precargadas a AnswerData
+        for (int j = 0; j < preloadedQ.answers.length; j++) {
+          final preloadedA = preloadedQ.answers[j];
+          answers.add(
+            AnswerData(
+              id: 'answer_${i}_$j',
+              text: preloadedA.text,
+              isCorrect: preloadedA.isCorrect,
+              mediaId: null,
+            ),
+          );
+        }
+
+        // Validar y completar respuestas según el tipo de pregunta
+        final requiredAnswers = preloadedQ.type == 'true_false' ? 2 : 4;
+        final minRequiredAnswers = preloadedQ.type == 'true_false' ? 2 : 2;
+
+        // Completar respuestas faltantes
+        while (answers.length < requiredAnswers) {
+          if (preloadedQ.type == 'true_false') {
+            answers.add(
+              AnswerData(
+                id: 'answer_${i}_${answers.length}',
+                text: answers.length == 0 ? 'Verdadero' : 'Falso',
+                isCorrect: false,
+                mediaId: null,
+              ),
             );
           } else {
-            // Si no viene la URL, intentar construirla desde el ID
-            _loadCoverImageUrl(quizCoverImageId!);
+            answers.add(
+              AnswerData(
+                id: 'answer_${i}_${answers.length}',
+                text: null,
+                isCorrect: false,
+                mediaId: null,
+              ),
+            );
           }
         }
 
-        print('Parámetros decodificados:');
-        print('  - title decodificado: "$quizTitle"');
-        print('  - description decodificada: "$quizDescription"');
-        print('  - category decodificada: "$quizCategory"');
-        print('  - visibility: "$quizVisibility"');
-        print('  - coverImageId: "$quizCoverImageId"');
-
-        // Si viene de IA o de plantilla, cargar las preguntas precargadas
-        if ((queryParams['ai_generated'] == 'true' ||
-                queryParams['template'] == 'true') &&
-            queryParams['questions'] != null) {
-          final source = queryParams['template'] == 'true' ? 'plantilla' : 'IA';
-          print('Detectado quiz de $source - Cargando preguntas...');
-          _loadAIGeneratedQuestions(queryParams['questions']!);
+        // Solo agregar la pregunta si tiene al menos el mínimo requerido
+        if (answers.length >= minRequiredAnswers) {
+          questions.add(
+            QuestionData(
+              id: 'question_$i',
+              text: preloadedQ.text,
+              type: preloadedQ.type,
+              timeLimit: preloadedQ.timeLimit,
+              points: preloadedQ.points,
+              mediaId: null,
+              answers: answers,
+            ),
+          );
         }
-      });
-    }
+      }
+
+      if (questions.isNotEmpty) {
+        currentQuestionIndex = 0;
+      } else {
+        _addNewQuestion();
+      }
+    });
   }
 
   void _loadAIGeneratedQuestions(String questionsParam) {
