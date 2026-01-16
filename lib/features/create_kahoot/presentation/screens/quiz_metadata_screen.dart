@@ -6,6 +6,7 @@ import 'package:frontkahoot2526/features/categories/presentation/providers/categ
 import 'package:image_picker/image_picker.dart';
 import 'package:frontkahoot2526/features/media/presentation/providers/media_service_provider.dart';
 import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
+import 'package:frontkahoot2526/features/create_kahoot/presentation/providers/quiz_preload_provider.dart';
 
 class QuizMetadataScreen extends ConsumerStatefulWidget {
   const QuizMetadataScreen({super.key});
@@ -45,9 +46,7 @@ class _QuizMetadataScreenState extends ConsumerState<QuizMetadataScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
       try {
@@ -56,18 +55,26 @@ class _QuizMetadataScreenState extends ConsumerState<QuizMetadataScreen> {
         final media = await mediaService.uploadMedia(file);
 
         if (mounted) {
-          Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
+          Navigator.of(
+            context,
+            rootNavigator: true,
+          ).pop(); // Cerrar indicador de carga
           setState(() {
             quizCoverImageId = media.assetId; // ID para backend
             quizCoverImageUrl = media.url; // URL para preview
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Imagen de portada subida exitosamente')),
+            const SnackBar(
+              content: Text('Imagen de portada subida exitosamente'),
+            ),
           );
         }
       } catch (e) {
         if (mounted) {
-          Navigator.of(context, rootNavigator: true).pop(); // Cerrar indicador de carga
+          Navigator.of(
+            context,
+            rootNavigator: true,
+          ).pop(); // Cerrar indicador de carga
           final errorMessage = e is AppException ? e.message : e.toString();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error al subir imagen: $errorMessage')),
@@ -86,18 +93,24 @@ class _QuizMetadataScreenState extends ConsumerState<QuizMetadataScreen> {
 
   void _navigateToFromScratch() {
     if (_formKey.currentState!.validate() && _selectedCategory != null) {
-      // Construir URL con coverImageId y coverImageUrl si existe
-      String url = '/create-kahoot/from-scratch?title=${Uri.encodeComponent(_titleController.text)}&description=${Uri.encodeComponent(_descriptionController.text)}&category=${Uri.encodeComponent(_selectedCategory!)}&visibility=$_selectedVisibility';
-      
-      if (quizCoverImageId != null && quizCoverImageId!.isNotEmpty) {
-        url += '&coverImageId=${Uri.encodeComponent(quizCoverImageId!)}';
-        if (quizCoverImageUrl != null && quizCoverImageUrl!.isNotEmpty) {
-          url += '&coverImageUrl=${Uri.encodeComponent(quizCoverImageUrl!)}';
-        }
-      }
-      
-      // Pasar metadata a la pantalla from-scratch mediante parámetros de consulta
-      context.go(url);
+      // Crear QuizPreloadData con los metadatos (sin preguntas, lista vacía)
+      final preloadData = QuizPreloadData(
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        category: _selectedCategory!,
+        visibility: _selectedVisibility,
+        coverImageId: quizCoverImageId,
+        coverImageUrl: quizCoverImageUrl,
+        questions: const [], // Lista vacía para metadatos sin preguntas
+        templateId: null,
+        source: 'metadata',
+      );
+
+      // Guardar datos en el provider
+      ref.read(quizPreloadProvider.notifier).setPreloadData(preloadData);
+
+      // Navegar sin query params
+      context.go('/create-kahoot/from-scratch');
     }
   }
 
@@ -124,19 +137,25 @@ class _QuizMetadataScreenState extends ConsumerState<QuizMetadataScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: _selectedCategory != null ? _navigateToFromScratch : null,
+            onPressed: _selectedCategory != null
+                ? _navigateToFromScratch
+                : null,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: _selectedCategory != null ? Colors.black87 : Colors.grey,
+                  color: _selectedCategory != null
+                      ? Colors.black87
+                      : Colors.grey,
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 'Continuar',
                 style: TextStyle(
-                  color: _selectedCategory != null ? Colors.black87 : Colors.grey,
+                  color: _selectedCategory != null
+                      ? Colors.black87
+                      : Colors.grey,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -170,13 +189,11 @@ class _QuizMetadataScreenState extends ConsumerState<QuizMetadataScreen> {
                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.grey[300]!,
-                      width: 2,
-                    ),
+                    border: Border.all(color: Colors.grey[300]!, width: 2),
                     color: Colors.grey[50],
                   ),
-                  child: quizCoverImageUrl != null && quizCoverImageUrl!.isNotEmpty
+                  child:
+                      quizCoverImageUrl != null && quizCoverImageUrl!.isNotEmpty
                       ? Stack(
                           children: [
                             ClipRRect(
@@ -186,20 +203,26 @@ class _QuizMetadataScreenState extends ConsumerState<QuizMetadataScreen> {
                                 fit: BoxFit.cover,
                                 width: double.infinity,
                                 height: double.infinity,
-                                loadingBuilder: (context, child, loadingProgress) {
-                                  if (loadingProgress == null) return child;
-                                  return Container(
-                                    color: Colors.grey[200],
-                                    child: Center(
-                                      child: CircularProgressIndicator(
-                                        value: loadingProgress.expectedTotalBytes != null
-                                            ? loadingProgress.cumulativeBytesLoaded /
-                                                loadingProgress.expectedTotalBytes!
-                                            : null,
-                                      ),
-                                    ),
-                                  );
-                                },
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Container(
+                                        color: Colors.grey[200],
+                                        child: Center(
+                                          child: CircularProgressIndicator(
+                                            value:
+                                                loadingProgress
+                                                        .expectedTotalBytes !=
+                                                    null
+                                                ? loadingProgress
+                                                          .cumulativeBytesLoaded /
+                                                      loadingProgress
+                                                          .expectedTotalBytes!
+                                                : null,
+                                          ),
+                                        ),
+                                      );
+                                    },
                                 errorBuilder: (context, error, stackTrace) {
                                   return Container(
                                     color: Colors.grey[200],
@@ -282,12 +305,18 @@ class _QuizMetadataScreenState extends ConsumerState<QuizMetadataScreen> {
                 controller: _descriptionController,
                 decoration: const InputDecoration(
                   labelText: 'Descripción',
-                  hintText: 'Describe tu quiz (opcional)',
+                  hintText: 'Describe tu quiz',
                   border: OutlineInputBorder(),
                   filled: true,
                   fillColor: Colors.white,
                 ),
                 maxLines: 3,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'La descripción es requerida';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 24),
               // Categoría
@@ -371,14 +400,8 @@ class _QuizMetadataScreenState extends ConsumerState<QuizMetadataScreen> {
                   fillColor: Colors.white,
                 ),
                 items: const [
-                  DropdownMenuItem(
-                    value: 'private',
-                    child: Text('Privado'),
-                  ),
-                  DropdownMenuItem(
-                    value: 'public',
-                    child: Text('Público'),
-                  ),
+                  DropdownMenuItem(value: 'private', child: Text('Privado')),
+                  DropdownMenuItem(value: 'public', child: Text('Público')),
                 ],
                 onChanged: (value) {
                   if (value != null) {

@@ -9,11 +9,12 @@ final List<QuizTemplate> predefinedTemplates = [
   QuizTemplate(
     id: 'halloween',
     title: '🎃 Halloween Trivia',
-    description: '¿Cuánto sabes sobre la noche más terrorífica del año? Pon a prueba tus conocimientos sobre Halloween.',
+    description:
+        '¿Cuánto sabes sobre la noche más terrorífica del año? Pon a prueba tus conocimientos sobre Halloween.',
     category: 'De temporada',
     coverImagePath: 'assets/templates/halloween/cover.png',
-    backgroundColor: const Color(0xFF1A1A2E),  
-    buttonColor: const Color(0xFFFF6B00),       
+    backgroundColor: const Color(0xFF1A1A2E),
+    buttonColor: const Color(0xFFFF6B00),
     textColor: Colors.white,
     questions: [
       TemplateQuestion(
@@ -29,7 +30,8 @@ final List<QuizTemplate> predefinedTemplates = [
         ],
       ),
       TemplateQuestion(
-        text: '¿Qué vegetal se usaba originalmente para hacer linternas antes de las calabazas?',
+        text:
+            '¿Qué vegetal se usaba originalmente para hacer linternas antes de las calabazas?',
         imagePath: 'assets/templates/halloween/q2.png',
         timeLimit: 20,
         points: 1000,
@@ -43,8 +45,8 @@ final List<QuizTemplate> predefinedTemplates = [
       TemplateQuestion(
         text: '¿Cómo se llama la fobia al Halloween?',
         imagePath: 'assets/templates/halloween/q3.png',
-        timeLimit: 25,
-        points: 1500,
+        timeLimit: 20,
+        points: 1000,
         answers: [
           TemplateAnswer(text: 'Samhainofobia', isCorrect: true),
           TemplateAnswer(text: 'Aracnofobia', isCorrect: false),
@@ -54,8 +56,8 @@ final List<QuizTemplate> predefinedTemplates = [
       ),
       TemplateQuestion(
         text: '¿En qué fecha se celebra Halloween?',
-        timeLimit: 15,
-        points: 500,
+        timeLimit: 20,
+        points: 1000,
         answers: [
           TemplateAnswer(text: '31 de octubre', isCorrect: true),
           TemplateAnswer(text: '1 de noviembre', isCorrect: false),
@@ -84,11 +86,12 @@ final List<QuizTemplate> predefinedTemplates = [
   QuizTemplate(
     id: 'disney',
     title: '✨ Disney Magic Quiz',
-    description: 'Un viaje mágico por el mundo de Disney. ¿Cuánto sabes sobre las películas más icónicas?',
+    description:
+        'Un viaje mágico por el mundo de Disney. ¿Cuánto sabes sobre las películas más icónicas?',
     category: 'Trivia',
     coverImagePath: 'assets/templates/disney/cover.png',
-    backgroundColor: const Color(0xFF1E3A5F),  
-    buttonColor: const Color(0xFFFFD700),       
+    backgroundColor: const Color(0xFF1E3A5F),
+    buttonColor: const Color(0xFFFFD700),
     textColor: Colors.white,
     questions: [
       TemplateQuestion(
@@ -97,7 +100,10 @@ final List<QuizTemplate> predefinedTemplates = [
         timeLimit: 20,
         points: 1000,
         answers: [
-          TemplateAnswer(text: 'Blancanieves y los Siete Enanitos', isCorrect: true),
+          TemplateAnswer(
+            text: 'Blancanieves y los Siete Enanitos',
+            isCorrect: true,
+          ),
           TemplateAnswer(text: 'Pinocho', isCorrect: false),
           TemplateAnswer(text: 'Fantasía', isCorrect: false),
           TemplateAnswer(text: 'Dumbo', isCorrect: false),
@@ -106,8 +112,8 @@ final List<QuizTemplate> predefinedTemplates = [
       TemplateQuestion(
         text: '¿Cómo se llama el pez payaso protagonista de "Buscando a Nemo"?',
         imagePath: 'assets/templates/disney/q2.png',
-        timeLimit: 15,
-        points: 500,
+        timeLimit: 20,
+        points: 1000,
         answers: [
           TemplateAnswer(text: 'Marlin', isCorrect: true),
           TemplateAnswer(text: 'Nemo', isCorrect: false),
@@ -118,8 +124,8 @@ final List<QuizTemplate> predefinedTemplates = [
       TemplateQuestion(
         text: '¿En qué año se inauguró Disneyland en California?',
         imagePath: 'assets/templates/disney/q3.png',
-        timeLimit: 25,
-        points: 1500,
+        timeLimit: 20,
+        points: 1000,
         answers: [
           TemplateAnswer(text: '1955', isCorrect: true),
           TemplateAnswer(text: '1960', isCorrect: false),
@@ -129,8 +135,8 @@ final List<QuizTemplate> predefinedTemplates = [
       ),
       TemplateQuestion(
         text: '¿Cuántos enanitos tiene Blancanieves?',
-        timeLimit: 15,
-        points: 500,
+        timeLimit: 20,
+        points: 1000,
         answers: [
           TemplateAnswer(text: '7', isCorrect: true),
           TemplateAnswer(text: '6', isCorrect: false),
@@ -159,11 +165,12 @@ final List<QuizTemplate> predefinedTemplates = [
   QuizTemplate(
     id: 'naturaleza',
     title: '🌿 Naturaleza y Animales',
-    description: 'Explora el fascinante mundo natural. Descubre datos increíbles sobre animales y ecosistemas.',
+    description:
+        'Explora el fascinante mundo natural. Descubre datos increíbles sobre animales y ecosistemas.',
     category: 'Estudio',
     coverImagePath: 'assets/templates/naturaleza/cover.png',
-    backgroundColor: const Color(0xFF2D5A27), 
-    buttonColor: const Color(0xFF8BC34A),       
+    backgroundColor: const Color(0xFF2D5A27),
+    buttonColor: const Color(0xFF8BC34A),
     textColor: Colors.white,
     questions: [
       TemplateQuestion(
@@ -204,8 +211,8 @@ final List<QuizTemplate> predefinedTemplates = [
       ),
       TemplateQuestion(
         text: '¿Cuál es el río más largo del mundo?',
-        timeLimit: 25,
-        points: 1500,
+        timeLimit: 20,
+        points: 1000,
         answers: [
           TemplateAnswer(text: 'Nilo', isCorrect: true),
           TemplateAnswer(text: 'Amazonas', isCorrect: false),
@@ -234,11 +241,12 @@ final List<QuizTemplate> predefinedTemplates = [
   QuizTemplate(
     id: 'tecnologia',
     title: '💻 Tech Trivia',
-    description: '¿Eres un verdadero geek de la tecnología? Demuestra cuánto sabes sobre el mundo tech.',
+    description:
+        '¿Eres un verdadero geek de la tecnología? Demuestra cuánto sabes sobre el mundo tech.',
     category: 'Trivia',
     coverImagePath: 'assets/templates/tecnologia/cover.png',
-    backgroundColor: const Color(0xFF0D1117),  
-    buttonColor: const Color(0xFF00D4FF),       
+    backgroundColor: const Color(0xFF0D1117),
+    buttonColor: const Color(0xFF00D4FF),
     textColor: Colors.white,
     questions: [
       TemplateQuestion(
@@ -267,8 +275,8 @@ final List<QuizTemplate> predefinedTemplates = [
       ),
       TemplateQuestion(
         text: '¿Qué significa "HTML"?',
-        timeLimit: 25,
-        points: 1500,
+        timeLimit: 20,
+        points: 1000,
         answers: [
           TemplateAnswer(text: 'HyperText Markup Language', isCorrect: true),
           TemplateAnswer(text: 'High Tech Modern Language', isCorrect: false),
@@ -309,11 +317,12 @@ final List<QuizTemplate> predefinedTemplates = [
   QuizTemplate(
     id: 'ghibli',
     title: '🏰 Studio Ghibli',
-    description: 'Un viaje mágico por las películas de Hayao Miyazaki y Studio Ghibli. ¿Cuánto sabes?',
+    description:
+        'Un viaje mágico por las películas de Hayao Miyazaki y Studio Ghibli. ¿Cuánto sabes?',
     category: 'Trivia',
     coverImagePath: 'assets/templates/ghibli/cover.png',
-    backgroundColor: const Color(0xFF87CEEB),  
-    buttonColor: const Color(0xFFE8846B),       
+    backgroundColor: const Color(0xFF87CEEB),
+    buttonColor: const Color(0xFFE8846B),
     textColor: const Color(0xFF2C3E50),
     questions: [
       TemplateQuestion(
@@ -331,8 +340,8 @@ final List<QuizTemplate> predefinedTemplates = [
       TemplateQuestion(
         text: '¿Cómo se llama el gato de "Kiki entregas a domicilio"?',
         imagePath: 'assets/templates/ghibli/q2.png',
-        timeLimit: 15,
-        points: 500,
+        timeLimit: 20,
+        points: 1000,
         answers: [
           TemplateAnswer(text: 'Chihiro', isCorrect: true),
           TemplateAnswer(text: 'Sophie', isCorrect: false),
@@ -343,17 +352,24 @@ final List<QuizTemplate> predefinedTemplates = [
       TemplateQuestion(
         text: '¿Porco Rosso es un...?',
         imagePath: 'assets/templates/ghibli/q3.png',
-        timeLimit: 25,
-        points: 1500,
+        timeLimit: 20,
+        points: 1000,
         answers: [
           TemplateAnswer(text: 'Piloto fascista italiano', isCorrect: false),
-          TemplateAnswer(text: 'Cerdo que habla y pilota aviones', isCorrect: true),
+          TemplateAnswer(
+            text: 'Cerdo que habla y pilota aviones',
+            isCorrect: true,
+          ),
           TemplateAnswer(text: 'Pirata del aire', isCorrect: false),
-          TemplateAnswer(text: 'Militar de la Primera Guerra Mundial', isCorrect: false),
+          TemplateAnswer(
+            text: 'Militar de la Primera Guerra Mundial',
+            isCorrect: false,
+          ),
         ],
       ),
       TemplateQuestion(
-        text: '¿Qué película de Ghibli ganó el Oscar a Mejor Película Animada en 2024?',
+        text:
+            '¿Qué película de Ghibli ganó el Oscar a Mejor Película Animada en 2024?',
         imagePath: 'assets/templates/ghibli/q4.png',
         timeLimit: 20,
         points: 1000,
@@ -379,4 +395,3 @@ final List<QuizTemplate> predefinedTemplates = [
     ],
   ),
 ];
-

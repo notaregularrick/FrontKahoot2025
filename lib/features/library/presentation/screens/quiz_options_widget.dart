@@ -109,6 +109,7 @@ class QuizOptionsSheet extends ConsumerWidget {
               if (quiz.status != 'Borrador') ...[
                 createPlayMultiplayerButton(context),
                 createPlaySoloButton(context, ref),
+                createAddFavoriteButton(context, ref, quiz.id),
               ],
             ],
 
