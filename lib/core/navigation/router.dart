@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:frontkahoot2526/core/navigation/navbar.dart';
 import 'package:frontkahoot2526/core/presentation/change_backend_screen.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/host/host_screen.dart';
+import '../../features/backoffice/presentation/screens/backoffice_screen.dart';
 import '../../features/explore/presentation/screens/quiz_detail_screen.dart';
 import 'inicio.dart';
 
@@ -249,6 +250,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               : GameType.singleplayer;
           return PersonalResultsScreen(gameId: gameId, gameType: gameType);
         },
+      ),
+      GoRoute(
+        path: '/backoffice/users',
+        builder: (context, state) => const BackofficeScreen(),
       ),
     ],
     
