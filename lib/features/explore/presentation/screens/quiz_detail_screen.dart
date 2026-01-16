@@ -222,7 +222,7 @@ class QuizDetailScreen extends ConsumerWidget {
                     height: 50,
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        context.push('/game'); 
+                        context.push('/hostGame/$quizId'); 
                       },
                       icon: const Icon(Icons.groups),
                       label: const Text('Crear Sala Multijugador'),
