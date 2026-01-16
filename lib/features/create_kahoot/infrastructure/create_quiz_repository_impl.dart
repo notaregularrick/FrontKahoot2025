@@ -35,10 +35,7 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
 
       // Realizar POST request
       //llamada al backend con dio
-      final response = await _dio.post(
-        '/kahoots',
-        data: jsonData,
-      );
+      final response = await _dio.post('/kahoots', data: jsonData);
 
       // Validar respuesta
       if (response.statusCode == 201) {
@@ -52,15 +49,17 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
     } on DioException catch (e) {
       if (e.response != null) {
         final statusCode = e.response!.statusCode;
-        
+
         String message = 'Datos del quiz inválidos';
-        
+
+        print('Error: ${e.response?.data?.toString()}');
+
         if (statusCode == 401) {
           message = 'No autorizado';
         } else if (statusCode == 404) {
           message = 'El recurso no existe o no es accesible';
         }
-        
+
         throw AppException(
           message: message,
           statusCode: statusCode,
@@ -74,7 +73,6 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
         );
       }
     } catch (e) {
-      
       if (e is AppException) {
         rethrow;
       }
@@ -118,10 +116,7 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
     try {
       final jsonData = _quizToJson(quiz);
 
-      final response = await _dio.put(
-        '/kahoots/$quizId',
-        data: jsonData,
-      );
+      final response = await _dio.put('/kahoots/$quizId', data: jsonData);
 
       if (response.statusCode == 200) {
         return _quizFromJson(response.data);
@@ -159,7 +154,7 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
     }
   }
 
-  /// Convierte entidad Quiz a JSON camelCase 
+  /// Convierte entidad Quiz a JSON camelCase
   Map<String, dynamic> _quizToJson(Quiz quiz) {
     // Helper para pasar ID o null si está vacío
     String? _idOrNull(String? id) {
@@ -217,27 +212,31 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
         if (question.answers.isEmpty) {
           answersJson = null; // Array opcional puede ser null
         } else {
-          answersJson = question.answers.map((answer) {
-            final answerJson = <String, dynamic>{};
-            
-            // Si tiene mediaId (URL), text debe ser null
-            if (answer.mediaId != null && answer.mediaId!.isNotEmpty) {
-              answerJson['mediaId'] = _idOrNull(answer.mediaId);
-              answerJson['text'] = null;
-            } else if (answer.text != null && answer.text!.isNotEmpty) {
-              answerJson['text'] = answer.text;
-              answerJson['mediaId'] = null;
-            } else {
-              // Si no tiene ni text ni mediaId, no incluir isCorrect
-              return null; // Skip esta respuesta
-            }
-            
-            // isCorrect solo existe si hay text O mediaId
-            answerJson['isCorrect'] = answer.isCorrect;
-            
-            return answerJson;
-          }).where((a) => a != null).cast<Map<String, dynamic>>().toList();
-          
+          answersJson = question.answers
+              .map((answer) {
+                final answerJson = <String, dynamic>{};
+
+                // Si tiene mediaId (URL), text debe ser null
+                if (answer.mediaId != null && answer.mediaId!.isNotEmpty) {
+                  answerJson['mediaId'] = _idOrNull(answer.mediaId);
+                  answerJson['text'] = null;
+                } else if (answer.text != null && answer.text!.isNotEmpty) {
+                  answerJson['text'] = answer.text;
+                  answerJson['mediaId'] = null;
+                } else {
+                  // Si no tiene ni text ni mediaId, no incluir isCorrect
+                  return null; // Skip esta respuesta
+                }
+
+                // isCorrect solo existe si hay text O mediaId
+                answerJson['isCorrect'] = answer.isCorrect;
+
+                return answerJson;
+              })
+              .where((a) => a != null)
+              .cast<Map<String, dynamic>>()
+              .toList();
+
           // Si después de filtrar no hay respuestas, poner null
           if (answersJson.isEmpty) {
             answersJson = null;
@@ -252,7 +251,8 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
         // Campos opcionales: null si están vacíos o no existen
         questionJson['text'] = (question.text.isEmpty) ? null : question.text;
         questionJson['mediaId'] = _idOrNull(question.mediaId);
-        questionJson['points'] = question.points; // Puede ser null según especificación
+        questionJson['points'] =
+            question.points; // Puede ser null según especificación
         questionJson['answers'] = answersJson;
 
         return questionJson;
@@ -267,12 +267,20 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
     };
 
     // Campos opcionales: null si están vacíos
+    print('Title: ${quiz.title}');
+    print('Description: ${quiz.description}');
+    print('CoverImageId: ${quiz.coverImageId}');
+    print('Category: ${quiz.category}');
+    print('Questions: ${quiz.questions}');
+    print('Visibility: ${quiz.visibility}');
+    print('ThemeId: ${quiz.themeId}');
+    print('Status: ${quiz.status}');
     json['title'] = (quiz.title.isEmpty) ? null : quiz.title;
     json['description'] = (quiz.description.isEmpty) ? null : quiz.description;
-    
+
     // coverImageId: URL completa o null (se pasa directamente)
     json['coverImageId'] = _idOrNull(quiz.coverImageId);
-    
+
     json['category'] = (quiz.category.isEmpty) ? null : quiz.category;
     json['questions'] = questionsJson;
 
@@ -354,18 +362,19 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
       coverImageId: json['coverImageId']?.toString(),
-      visibility: _mapVisibilityFromApi(json['visibility']?.toString() ?? 'private'),
+      visibility: _mapVisibilityFromApi(
+        json['visibility']?.toString() ?? 'private',
+      ),
       status: _mapStatusFromApi(json['status']?.toString() ?? 'draft'),
       category: json['category']?.toString() ?? '',
       themeId: json['themeId']?.toString() ?? '',
       authorId: json['authorId']?.toString() ?? '',
       authorName: json['authorName']?.toString() ?? '',
       questions: questions,
-      createdAt: json['createdAt'] != null 
+      createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'].toString())
           : DateTime.now(),
       playCount: json['playCount'] ?? 0,
     );
   }
 }
-
