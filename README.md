@@ -221,7 +221,7 @@ El flujo de información sigue un ciclo estricto desde la interacción del usuar
 
 | <img src="https://avatars.githubusercontent.com/u/169938669?v=4" width="100"/> | <img src="https://avatars.githubusercontent.com/u/138076587?v=4" width="100"/> | <img src="https://avatars.githubusercontent.com/u/94936491?v=4" width="100"/> | <img src="https://avatars.githubusercontent.com/u/117862951?v=4" width="100"/> |
 |:---:|:---:|:---:|:---:|
-| **Diego Sperandío** | **Iker Navas** | **Melissa Nessi** | **Ricardo Mejías** |
+| **Diego Sperandío** | **Iker Rivas** | **Melissa Nessi** | **Ricardo Mejías** |
 
 </div>
 
