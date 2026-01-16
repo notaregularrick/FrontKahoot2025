@@ -284,7 +284,7 @@ class PersonalResultsScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "Pregunta ${q.questionIndex + 1}",
+                      "Pregunta ${index + 1}",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: statusColor,
