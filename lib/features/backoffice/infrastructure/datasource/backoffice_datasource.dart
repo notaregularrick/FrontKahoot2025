@@ -21,6 +21,13 @@ abstract class BackofficeDatasource {
 
   Future<void> deleteUser(String userId);
 
+  Future<BackofficeNotificationModel> sendMassNotification({
+    required String title,
+    required String message,
+    required bool toAdmins,
+    required bool toRegularUsers,
+  });
+
   Future<BackofficeNotificationsResponseModel> getMassNotifications({
     String? userId,
     int page = 1,

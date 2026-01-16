@@ -127,7 +127,7 @@ class ProfileCard extends ConsumerWidget {
           // --- BOTONES DE ACCIÓN ---
 
           // 0. Panel de Admin (SOLO SI ES ADMIN)
-          if (isAdmin) ...[
+          //if (isAdmin) ...[
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -146,7 +146,7 @@ class ProfileCard extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
-          ],
+          //],
 
           // 1. Editar Perfil
           ElevatedButton.icon(

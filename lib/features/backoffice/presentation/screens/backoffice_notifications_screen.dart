@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/backoffice_providers.dart';
+import 'send_notifications_screen.dart';
 
 class BackofficeNotificationsScreen extends ConsumerStatefulWidget {
   const BackofficeNotificationsScreen({super.key});
@@ -36,6 +37,17 @@ class _BackofficeNotificationsScreenState extends ConsumerState<BackofficeNotifi
     return Scaffold(
       appBar: AppBar(
         title: const Text('Registro de Notificaciones'),
+      ),
+      // BOTÓN FLOTANTE PARA CREAR NUEVA
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Navegación directa para simplificar
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SendNotificationScreen()),
+          );
+        },
+        backgroundColor: Colors.orange,
+        child: const Icon(Icons.add),
       ),
       body: state.isLoading && state.notifications.isEmpty
           ? const Center(child: CircularProgressIndicator())

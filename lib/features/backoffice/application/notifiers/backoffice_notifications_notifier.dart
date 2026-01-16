@@ -38,6 +38,36 @@ class BackofficeNotificationsNotifier extends StateNotifier<BackofficeNotificati
     }
   }
 
+  Future<void> sendNotification({
+    required String title,
+    required String message,
+    required bool toAdmins,
+    required bool toRegularUsers,
+  }) async {
+    // Ponemos loading sin borrar la lista
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
+    try {
+      await repository.sendMassNotification(
+        title: title,
+        message: message,
+        toAdmins: toAdmins,
+        toRegularUsers: toRegularUsers,
+      );
+      
+      // Si tiene éxito, refrescamos la lista para mostrar la nueva
+      await loadNotifications(page: 1); 
+
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString(),
+      );
+      // Re-lanzamos para que la UI pueda mostrar SnackBar si quiere
+      rethrow;
+    }
+  }
+
   Future<void> refresh() async {
     await loadNotifications(page: 1);
   }

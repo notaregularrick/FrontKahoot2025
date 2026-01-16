@@ -54,6 +54,21 @@ class BackofficeRepositoryImpl implements BackofficeRepository {
   }
 
   @override
+  Future<BackofficeNotificationEntity> sendMassNotification({
+    required String title,
+    required String message,
+    required bool toAdmins,
+    required bool toRegularUsers,
+  }) async {
+    return await datasource.sendMassNotification(
+      title: title,
+      message: message,
+      toAdmins: toAdmins,
+      toRegularUsers: toRegularUsers,
+    );
+  }
+
+  @override
   Future<BackofficeNotificationsResponseEntity> getMassNotifications({
     String? userId,
     int page = 1,

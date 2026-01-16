@@ -133,6 +133,40 @@ class BackofficeDatasourceImpl implements BackofficeDatasource {
   }
 
   @override
+  Future<BackofficeNotificationModel> sendMassNotification({
+    required String title,
+    required String message,
+    required bool toAdmins,
+    required bool toRegularUsers,
+  }) async {
+    try {
+      final response = await dio.post(
+        '/backoffice/massNotification',
+        data: {
+          'title': title,
+          'message': message,
+          'filters': {
+            'toAdmins': toAdmins,
+            'toRegularUsers': toRegularUsers,
+          },
+        },
+      );
+
+      return BackofficeNotificationModel.fromJson(response.data);
+    } catch (e) {
+      if (e is DioException) {
+        if (e.response?.statusCode == 400) {
+          throw Exception('Faltan datos o no hay destinatarios seleccionados.');
+        }
+        if (e.response?.statusCode == 401) {
+          throw Exception('No autorizado.');
+        }
+      }
+      throw Exception('Error al enviar notificación: $e');
+    }
+  }
+
+  @override
   Future<BackofficeNotificationsResponseModel> getMassNotifications({
     String? userId,
     int page = 1,

@@ -21,6 +21,13 @@ abstract class BackofficeRepository {
 
   Future<void> deleteUser(String userId);
 
+  Future<BackofficeNotificationEntity> sendMassNotification({
+    required String title,
+    required String message,
+    required bool toAdmins,
+    required bool toRegularUsers,
+  });
+
   Future<BackofficeNotificationsResponseEntity> getMassNotifications({
     String? userId,
     int page = 1,
