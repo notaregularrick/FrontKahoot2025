@@ -73,15 +73,12 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # Assets para plantillas predefinidas
-  # NOTA: Descomentar cuando agregues imágenes a las carpetas de templates
-  # Cada carpeta debe tener al menos: cover.png (portada) y q1.png, q2.png... (preguntas)
-  # assets:
-  #   - assets/templates/halloween/
-  #   - assets/templates/disney/
-  #   - assets/templates/naturaleza/
-  #   - assets/templates/tecnologia/
-  #   - assets/templates/ghibli/
+  assets:
+    - assets/templates/halloween/
+    - assets/templates/disney/
+    - assets/templates/naturaleza/
+    - assets/templates/tecnologia/
+    - assets/templates/ghibli/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
