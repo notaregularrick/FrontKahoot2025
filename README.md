@@ -58,6 +58,7 @@ git add README.md<div align="center">
 | 🖼️ Gestión Multimedia | ✅ Completado |
 | 🎮 Modo Multijugador | ✅ Completado |
 | 👤 Perfil de Usuario | ✅ Completado |
+| 🔔 Notificaciones | ✅ Completado |
 
 </div>
 
