@@ -248,6 +248,59 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
     }
   }
 
+  Future<void> _showQuizLeaderboardDialog(
+      BuildContext context, dynamic q) async {
+    try {
+      final rows = await ref
+          .read(groupDetailProvider(widget.groupId).notifier)
+          .loadQuizLeaderboard(q.quizId ?? q.id);
+      if (!mounted) return;
+
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('Ranking de "${q.title}"'),
+          content: ConstrainedBox(
+            constraints:
+                const BoxConstraints(maxHeight: 420, minWidth: 320),
+            child: rows.isEmpty
+                ? const Text('Aún no hay resultados para este quiz')
+                : SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (final r in rows)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                  child: Text('${r.position == 0 ? rows.indexOf(r) + 1 : r.position}')),
+                              title: Text(r.userName.isEmpty
+                                  ? 'Jugador'
+                                  : r.userName),
+                              subtitle: Text(
+                                  'Completados: ${r.completedCount}'),
+                              trailing:
+                                  Text('${r.totalScore} pts'),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (mounted) _showSnack(context, 'Error cargando ranking: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final detailAsync = ref.watch(groupDetailProvider(widget.groupId));
@@ -461,43 +514,49 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
                         subtitle: Text(q.description ?? ''),
                         trailing: Text(q.status),
                         onTap: () async {
-                          // Show per-quiz internal ranking
-                          try {
-                            final rows = await ref.read(groupDetailProvider(widget.groupId).notifier).loadQuizLeaderboard(q.quizId ?? q.id);
-                            if (!mounted) return;
-                            // Present as a dialog
-                            // ignore: use_build_context_synchronously
-                            await showDialog<void>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: Text('Ranking de "${q.title}"'),
-                                content: ConstrainedBox(
-                                  constraints: const BoxConstraints(maxHeight: 420, minWidth: 320),
-                                  child: rows.isEmpty
-                                      ? const Text('Aún no hay resultados para este quiz')
-                                      : ListView.separated(
-                                          shrinkWrap: true,
-                                          itemCount: rows.length,
-                                          separatorBuilder: (_, __) => const SizedBox(height: 8),
-                                          itemBuilder: (ctx2, i) {
-                                            final r = rows[i];
-                                            return ListTile(
-                                              leading: CircleAvatar(child: Text('${r.position}')),
-                                              title: Text(r.userName),
-                                              subtitle: Text('Completados: ${r.completedCount}'),
-                                              trailing: Text('${r.totalScore} pts'),
-                                            );
-                                          },
-                                        ),
-                                ),
-                                actions: [
-                                  TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cerrar')),
+                          final kahootId = q.quizId ?? q.id;
+                          if (kahootId == null ||
+                              (kahootId is String && kahootId.isEmpty)) {
+                            _showSnack(context,
+                                'No se pudo obtener el ID del quiz');
+                            return;
+                          }
+
+                          await showModalBottomSheet<void>(
+                            context: context,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(16)),
+                            ),
+                            builder: (sheetCtx) => SafeArea(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ListTile(
+                                    leading:
+                                        const Icon(Icons.leaderboard_outlined),
+                                    title:
+                                        const Text('Ver leaderboard del quiz'),
+                                    onTap: () async {
+                                      Navigator.of(sheetCtx).pop();
+                                      await _showQuizLeaderboardDialog(
+                                          context, q);
+                                    },
+                                  ),
+                                  ListTile(
+                                    leading:
+                                        const Icon(Icons.play_arrow_outlined),
+                                    title: const Text('Jugar en singleplayer'),
+                                    onTap: () {
+                                      Navigator.of(sheetCtx).pop();
+                                      context.push(
+                                          '/library/singleplayer/$kahootId');
+                                    },
+                                  ),
                                 ],
                               ),
-                            );
-                          } catch (e) {
-                            if (mounted) _showSnack(context, 'Error cargando ranking: $e');
-                          }
+                            ),
+                          );
                         },
                       );
                     }

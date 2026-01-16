@@ -351,12 +351,19 @@ class GroupsApiRepository implements GroupsRepository {
 
   RankingEntry _mapRankingEntry(dynamic raw) {
     final map = Map<String, dynamic>.from(raw as Map);
+    // Soportar distintas formas de leaderboard tanto global como por quiz.
+    final userName = (map['userName'] ?? map['name'] ?? map['playerName'])
+        ?.toString() ?? '';
+    final totalScore = map['totalScore'] ?? map['totalPoints'] ?? map['score'];
+    final completedCount =
+      map['completedCount'] ?? map['completedQuizzes'] ?? map['plays'];
+    final position = map['position'] ?? map['rank'] ?? map['place'];
     return RankingEntry(
       userId: map['userId']?.toString() ?? '',
-      userName: map['userName']?.toString() ?? '',
-      completedCount: _toInt(map['completedCount']),
-      totalScore: _toInt(map['totalScore']),
-      position: _toInt(map['position']),
+      userName: userName,
+      completedCount: _toInt(completedCount),
+      totalScore: _toInt(totalScore),
+      position: _toInt(position),
     );
   }
 
