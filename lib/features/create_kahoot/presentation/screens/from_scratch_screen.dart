@@ -68,6 +68,8 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
   String? quizCoverImageUrl; // URL para mostrar preview
   Map<String, String?> questionImageUrls =
       {}; // Map<questionId, imageUrl> para preview de imágenes de preguntas
+  Map<String, String?> answerImageUrls =
+      {}; // Map<answerId, imageUrl> para preview de imágenes de respuestas
   String? _defaultThemeId;
   bool _isEditMode = false;
   String? _editingKahootId;
@@ -952,79 +954,6 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                 ],
               ],
             ),
-            // Mostrar imagen de portada si existe
-            if (quizCoverImageUrl != null && quizCoverImageUrl!.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Stack(
-                children: [
-                  Container(
-                    height: 200,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        quizCoverImageUrl!,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            color: Colors.grey[200],
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                value:
-                                    loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!
-                                    : null,
-                              ),
-                            ),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[200],
-                            child: const Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.error_outline, color: Colors.grey),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    'Error al cargar imagen',
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.black54,
-                        padding: const EdgeInsets.all(8),
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          quizCoverImageId = null;
-                          quizCoverImageUrl = null;
-                        });
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ],
             const SizedBox(height: 24),
             // Campo de pregunta
             GestureDetector(
@@ -1483,7 +1412,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                   borderRadius: BorderRadius.circular(12),
                   child: hasImage && currentQ.type != 'true_false'
                       ? Image.network(
-                          answer.mediaId!,
+                          answerImageUrls[answer.id] ?? '',
                           fit: BoxFit.cover,
                           width: double.infinity,
                           height: double.infinity,
@@ -1669,6 +1598,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     );
     bool isCorrect = answer.isCorrect;
     currentMediaId = answer.mediaId;
+    currentMediaUrl = answerImageUrls[answer.id] ?? null;
 
     showDialog(
       context: context,
@@ -1712,10 +1642,12 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                         currentMediaId = null;
                         currentMediaUrl = null;
                         answer.mediaId = null;
+                        answerImageUrls[answer.id] = null;
                       });
                       // Actualizar estado del widget principal
                       setState(() {
                         answer.mediaId = null;
+                        answerImageUrls[answer.id] = null;
                       });
                     },
                     icon: const Icon(Icons.delete, size: 18),
@@ -1769,7 +1701,7 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: () =>
-                          _uploadAnswerImage(index, setDialogState),
+                          _uploadAnswerImage(index, setDialogState, answer),
                       icon: const Icon(Icons.image),
                       label: const Text('Subir imagen'),
                       style: ElevatedButton.styleFrom(
@@ -1852,7 +1784,11 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     );
   }
 
-  Future<void> _uploadAnswerImage(int index, StateSetter setDialogState) async {
+  Future<void> _uploadAnswerImage(
+    int index,
+    StateSetter setDialogState,
+    AnswerData currentAnswer,
+  ) async {
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
@@ -1884,11 +1820,13 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
           setDialogState(() {
             currentMediaId = media.assetId; // ID para backend
             currentMediaUrl = media.url; // URL para preview
+            answerImageUrls[currentAnswer.id] = media.url; // URL para preview
           });
           // Actualizar estado del widget principal para forzar reconstrucción
           setState(() {
             currentMediaId = media.assetId; // ID para backend
             currentMediaUrl = media.url; // URL para preview
+            answerImageUrls[currentAnswer.id] = media.url; // URL para preview
           });
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Imagen subida exitosamente')),
