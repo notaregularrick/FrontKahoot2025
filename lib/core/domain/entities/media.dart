@@ -16,8 +16,10 @@ class Media {
   });
 
   factory Media.fromJson(Map<String, dynamic> json) {
+    var id = json['id'] as String?;
+    id ??= json['assetId'] as String;
     return Media(
-      assetId: json['assetId'] as String,
+      assetId: id,
       url: json['url'] as String,
       mimeType: json['mimeType'] as String,
       size: json['size'] as int,

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:frontkahoot2526/core/domain/entities/media.dart';
 import 'package:frontkahoot2526/core/domain/entities/media_theme.dart';
 import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
@@ -13,20 +14,23 @@ class FakeMediaRepositoryImpl implements IMediaRepository {
 
       // Validar que el archivo existe
       if (!await file.exists()) {
-        throw AppException(
-          message: 'El archivo no existe',
-          statusCode: 400,
-        );
+        throw AppException(message: 'El archivo no existe', statusCode: 400);
       }
 
       // Validar extensión del archivo
-      final fileName = file.path.split(Platform.pathSeparator).last.toLowerCase();
+      final fileName = file.path
+          .split(Platform.pathSeparator)
+          .last
+          .toLowerCase();
       final validExtensions = ['.gif', '.webp', '.png', '.jpg', '.jpeg'];
-      final hasValidExtension = validExtensions.any((ext) => fileName.endsWith(ext));
+      final hasValidExtension = validExtensions.any(
+        (ext) => fileName.endsWith(ext),
+      );
 
       if (!hasValidExtension) {
         throw AppException(
-          message: 'Formato de archivo no válido. Solo se permiten: gif, webp, png, jpg',
+          message:
+              'Formato de archivo no válido. Solo se permiten: gif, webp, png, jpg',
           statusCode: 400,
         );
       }
@@ -53,7 +57,8 @@ class FakeMediaRepositoryImpl implements IMediaRepository {
       }
 
       // Generar ID único para el media
-      final String generatedId = 'asset_${DateTime.now().millisecondsSinceEpoch}';
+      final String generatedId =
+          'asset_${DateTime.now().millisecondsSinceEpoch}';
 
       // Crear entidad Media con datos simulados según la estructura de la API
       final media = Media(
@@ -76,6 +81,21 @@ class FakeMediaRepositoryImpl implements IMediaRepository {
         error: e.toString(),
       );
     }
+  }
+
+  @override
+  Future<Media> uploadMediaFromBytes(Uint8List bytes) async {
+    // Simular delay de red
+    await Future.delayed(const Duration(milliseconds: 500));
+    return Media(
+      assetId: 'asset_${DateTime.now().millisecondsSinceEpoch}',
+      url:
+          'https://example.com/media/${DateTime.now().millisecondsSinceEpoch}.jpg',
+      mimeType: 'image/jpeg',
+      size: bytes.length,
+      format: 'jpg',
+      category: 'image',
+    );
   }
 
   @override
