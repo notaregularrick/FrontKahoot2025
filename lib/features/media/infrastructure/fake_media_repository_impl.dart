@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:frontkahoot2526/core/domain/entities/media.dart';
+import 'package:frontkahoot2526/core/domain/entities/media_theme.dart';
 import 'package:frontkahoot2526/core/exceptions/app_exception.dart';
 import 'package:frontkahoot2526/features/media/domain/media_repository.dart';
 
@@ -12,20 +14,23 @@ class FakeMediaRepositoryImpl implements IMediaRepository {
 
       // Validar que el archivo existe
       if (!await file.exists()) {
-        throw AppException(
-          message: 'El archivo no existe',
-          statusCode: 400,
-        );
+        throw AppException(message: 'El archivo no existe', statusCode: 400);
       }
 
       // Validar extensión del archivo
-      final fileName = file.path.split(Platform.pathSeparator).last.toLowerCase();
+      final fileName = file.path
+          .split(Platform.pathSeparator)
+          .last
+          .toLowerCase();
       final validExtensions = ['.gif', '.webp', '.png', '.jpg', '.jpeg'];
-      final hasValidExtension = validExtensions.any((ext) => fileName.endsWith(ext));
+      final hasValidExtension = validExtensions.any(
+        (ext) => fileName.endsWith(ext),
+      );
 
       if (!hasValidExtension) {
         throw AppException(
-          message: 'Formato de archivo no válido. Solo se permiten: gif, webp, png, jpg',
+          message:
+              'Formato de archivo no válido. Solo se permiten: gif, webp, png, jpg',
           statusCode: 400,
         );
       }
@@ -34,38 +39,36 @@ class FakeMediaRepositoryImpl implements IMediaRepository {
       final fileStat = await file.stat();
       final fileSize = fileStat.size;
 
-      // Determinar mimeType basado en la extensión
+      // Determinar mimeType y format basado en la extensión
       String mimeType = 'image/jpeg';
+      String format = 'jpg';
       if (fileName.endsWith('.png')) {
         mimeType = 'image/png';
+        format = 'png';
       } else if (fileName.endsWith('.gif')) {
         mimeType = 'image/gif';
+        format = 'gif';
       } else if (fileName.endsWith('.webp')) {
         mimeType = 'image/webp';
+        format = 'webp';
       } else if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) {
         mimeType = 'image/jpeg';
+        format = 'jpg';
       }
 
       // Generar ID único para el media
-      final String generatedId = 'media_${DateTime.now().millisecondsSinceEpoch}';
+      final String generatedId =
+          'asset_${DateTime.now().millisecondsSinceEpoch}';
 
-      // Crear entidad Media con datos simulados
+      // Crear entidad Media con datos simulados según la estructura de la API
       final media = Media(
-        id: generatedId,
+        assetId: generatedId,
+        url: 'https://example.com/media/$generatedId.$format',
         mimeType: mimeType,
         size: fileSize,
-        originalName: fileName,
-        createdAt: DateTime.now(),
+        format: format,
+        category: 'image',
       );
-
-      // Reemplazar por llamada a la API real
-      // ej
-      // final dio = Dio();
-      // final formData = FormData.fromMap({
-      //   'file': await MultipartFile.fromFile(file.path),
-      // });
-      // final response = await dio.post('/media/upload', data: formData);
-      // return Media.fromJson(response.data);
 
       return media;
     } catch (e) {
@@ -81,9 +84,54 @@ class FakeMediaRepositoryImpl implements IMediaRepository {
   }
 
   @override
-  String getMediaUrl(String mediaId) {
-    // Retornar URL mock (en producción sería la URL real del backend)
-    return 'https://placehold.co/400/gif?text=Media+$mediaId';
+  Future<Media> uploadMediaFromBytes(Uint8List bytes) async {
+    // Simular delay de red
+    await Future.delayed(const Duration(milliseconds: 500));
+    return Media(
+      assetId: 'asset_${DateTime.now().millisecondsSinceEpoch}',
+      url:
+          'https://example.com/media/${DateTime.now().millisecondsSinceEpoch}.jpg',
+      mimeType: 'image/jpeg',
+      size: bytes.length,
+      format: 'jpg',
+      category: 'image',
+    );
+  }
+
+  @override
+  Future<List<MediaTheme>> getThemes() async {
+    // Simular delay de red
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    // Retornar datos simulados de temas
+    return [
+      const MediaTheme(
+        assetId: 'theme_001',
+        url: 'https://example.com/themes/tema1.webp',
+        name: 'Tema 1',
+        category: 'image',
+        format: 'webp',
+        size: 102400,
+        mimeType: 'image/webp',
+      ),
+      const MediaTheme(
+        assetId: 'theme_002',
+        url: 'https://example.com/themes/tema2.webp',
+        name: 'Tema 2',
+        category: 'image',
+        format: 'webp',
+        size: 98765,
+        mimeType: 'image/webp',
+      ),
+      const MediaTheme(
+        assetId: 'theme_003',
+        url: 'https://example.com/themes/tema3.webp',
+        name: 'Tema 3',
+        category: 'image',
+        format: 'webp',
+        size: 115200,
+        mimeType: 'image/webp',
+      ),
+    ];
   }
 }
-

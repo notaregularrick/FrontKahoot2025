@@ -1,39 +1,41 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
-
-import '../../../../core/providers/secure_storage_provider.dart';
 import '../../../../core/services/api_service.dart';
+//import '../../../../core/services/secure_storage_service.dart';
+import '../../../../core/providers/secure_storage_provider.dart';
 import '../../domain/repositories/auth_repository.dart';
-import '../../infraestructure/datasource/auth_datasource_impl.dart';
-import '../../infraestructure/repositories/auth_repository_impl.dart';
-import '../controllers/auth_notifier.dart';
+import '../../application/controllers/auth_notifier.dart';
 import '../../application/state/auth_state.dart';
+import '../../infrastructure/datasource/auth_datasource.dart';
+import '../../infrastructure/datasource/auth_datasource_impl.dart';
+import '../../infrastructure/repositories/auth_repository_impl.dart';
+import '../../../notifications/presentation/providers/notifications_providers.dart';
 
-// Dio Provider
-final dioProvider = Provider<Dio>((ref) {
-  return Dio(BaseOptions(baseUrl: "http://localhost:3000")); // Ajusta tu IP real
+// 1. Provider del Datasource
+final authDatasourceProvider = Provider<AuthDatasource>((ref) {
+  final apiService = ref.watch(apiServiceProvider);
+  return AuthDatasourceImpl(apiService.dio);
 });
 
-// Datasource Provider
-final authDatasourceProvider = Provider((ref) {
-  final dio = ref.watch(dioProvider);
-  return AuthDatasourceImpl(dio);
-});
-
-// Repository Provider
+// 2. Provider del Repositorio
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final datasource = ref.read(authDatasourceProvider);
-  final apiService = ref.read(apiServiceProvider);
-  final storage = ref.read(secureStorageProvider);
+  final datasource = ref.watch(authDatasourceProvider);
+  final storage = ref.watch(secureStorageProvider);
+  final apiService = ref.watch(apiServiceProvider);
 
-  return AuthRepositoryImpl(datasource,apiService,storage);
+  return AuthRepositoryImpl(datasource, apiService, storage);
 });
 
-// Controller Provider
-final authNotifierProvider =
-    StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  final repo = ref.watch(authRepositoryProvider);
-  final storage = ref.read(secureStorageProvider);
-
-  return AuthNotifier(repo, storage);
+// 3. Provider del Notifier (Estado)
+final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  final repository = ref.watch(authRepositoryProvider); 
+  final storage = ref.watch(secureStorageProvider);
+  final notificationsRepository = ref.watch(notificationsRepositoryProvider);
+  final fcmService = ref.watch(fcmServiceProvider);
+  
+  return AuthNotifier(
+    repository,
+    storage,
+    notificationsRepository: notificationsRepository,
+    fcmService: fcmService,
+  );
 });

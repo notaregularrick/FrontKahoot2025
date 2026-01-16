@@ -1,0 +1,65 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../domain/repositories/profile_repository.dart';
+import '../state/profile_state.dart';
+
+class ProfileNotifier extends StateNotifier<ProfileState> {
+
+  final ProfileRepository repository;
+
+  
+  ProfileNotifier(this.repository) : super(ProfileState.initial()) {
+    // OPCIONAL: Si quieres que cargue apenas se crea el provider, descomenta esto:
+    // getUserProfile(); 
+  }
+
+  Future<void> getUserProfile() async {
+    if (state.isLoading) return;
+
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
+    try {
+      final profile = await repository.getUserProfile();
+
+      state = state.copyWith(
+        isLoading: false,
+        profile: profile, 
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+
+  Future<void> updateProfile(Map<String, dynamic> fields) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
+    try {
+      final updated = await repository.updateProfile(fields);
+      
+      state = state.copyWith(profile: updated, isLoading: false);
+
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+
+  Future<void> changePassword(String currentPassword, String newPassword) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
+    try {
+      await repository.changePassword(currentPassword, newPassword);
+      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+}

@@ -17,14 +17,25 @@ class QuizCard extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           return Container(
-            height: 130,
+            height: 170,
             decoration: BoxDecoration(
-              color: AppColors.orangeAccent.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: const Color.fromARGB(255, 86, 81, 81).withOpacity(0.3),
-                width: 1,
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.softPink,
+                  AppColors.cardSurface,
+                ],
               ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.cardBorder, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primaryRed.withOpacity(0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
             child: Row(
               children: [
@@ -62,40 +73,61 @@ class QuizCard extends StatelessWidget {
                                 },
                             errorBuilder: (context, error, stackTrace) {
                               return Container(
-                                color: Colors.grey[300],
-                                child: const Icon(
-                                  Icons.image_not_supported,
-                                  color: Colors.grey,
+                                color: AppColors.softPink,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: const [
+                                    Icon(Icons.photo_library_outlined,
+                                        color: Colors.grey, size: 28),
+                                    SizedBox(height: 6),
+                                    Text(
+                                      'Sin portada',
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               );
                             },
                           ),
                         ),
                       ),
-                      //  Aquí iba el total de preguntas del quiz
-                      // Positioned(
-                      //   bottom: 4,
-                      //   right: 4,
-                      //   child: Container(
-                      //     padding: const EdgeInsets.symmetric(
-                      //       horizontal: 8,
-                      //       vertical: 4,
-                      //     ),
-                      //     decoration: BoxDecoration(
-                      //       //color: theme.colorScheme.primary,
-                      //       color: Colors.yellow[700],
-                      //       borderRadius: BorderRadius.circular(8),
-                      //     ),
-                      //     child: Text(
-                      //       quiz.questionCount,
-                      //       style: const TextStyle(
-                      //         color: Colors.black,
-                      //         fontSize: 10,
-                      //         fontWeight: FontWeight.bold,
-                      //       ),
-                      //     ),
-                      //   ),
-                      // ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.85),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                quiz.visibilityIcon ?? Icons.auto_awesome,
+                                size: 14,
+                                color: AppColors.primaryRed,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                quiz.status,
+                                style: TextStyle(
+                                  color: AppColors.darkBlueText,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -123,32 +155,88 @@ class QuizCard extends StatelessWidget {
                           ),
                           //style: theme.textTheme.titleMedium,
                         ),
-                        Text(
-                          "Categoría: ${quiz.category}",
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: AppColors.darkBlueText.withOpacity(0.9),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          //style: theme.textTheme.titleMedium,
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.category_outlined,
+                              size: 16,
+                              color: AppColors.primaryRed,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                quiz.category,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: AppColors.darkBlueText.withOpacity(
+                                    0.9,
+                                  ),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
 
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Fila 1: Fecha • Jugadas
-                            Text(
-                              // Usamos un caracter "bullet" (•) para separar
-                              "${quiz.dateInfo} • ${quiz.playCount}",
-                              style: TextStyle(
-                                color: AppColors.darkBlueText.withOpacity(0.9),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.event_note,
+                                  size: 15,
+                                  color: AppColors.darkBlueText.withOpacity(
+                                    0.8,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    quiz.dateInfo,
+                                    style: TextStyle(
+                                      color:
+                                          AppColors.darkBlueText.withOpacity(
+                                        0.9,
+                                      ),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.play_circle_outline,
+                                  size: 15,
+                                  color: AppColors.darkBlueText.withOpacity(
+                                    0.8,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    quiz.playCount,
+                                    style: TextStyle(
+                                      color:
+                                          AppColors.darkBlueText.withOpacity(
+                                        0.9,
+                                      ),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
 
                             // const SizedBox(
@@ -169,10 +257,10 @@ class QuizCard extends StatelessWidget {
                                     child: Text(
                                       "Autor: ${quiz.authorName!}",
                                       style: TextStyle(
-                                        color: AppColors.darkBlueText.withOpacity(0.9),
+                                        color: AppColors.darkBlueText
+                                            .withOpacity(0.9),
                                         fontSize: 13,
-                                        fontWeight:
-                                            FontWeight.w600,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -186,13 +274,15 @@ class QuizCard extends StatelessWidget {
                                   Icon(
                                     quiz.visibilityIcon,
                                     size: 13,
-                                    color: AppColors.darkBlueText.withOpacity(0.9),
+                                    color: AppColors.primaryRed,
                                   ),
-                                  SizedBox(width: 4),
+                                  const SizedBox(width: 4),
                                   Text(
                                     "${quiz.visibilityText!} • ${quiz.status}",
                                     style: TextStyle(
-                                      color: AppColors.darkBlueText.withOpacity(0.9),
+                                      color: AppColors.darkBlueText.withOpacity(
+                                        0.9,
+                                      ),
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -213,147 +303,3 @@ class QuizCard extends StatelessWidget {
     );
   }
 }
-
-// class QuizCard extends StatelessWidget {
-//   final QuizCardUiModel quiz;
-
-//   const QuizCard({super.key, required this.quiz});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     //final theme = Theme.of(context);
-
-//     return Container(
-//       height: 100,
-//       decoration: BoxDecoration(
-//         color: const Color.fromARGB(255, 114, 224, 223),
-//         //color: theme.colorScheme.surface,
-//         borderRadius: BorderRadius.circular(16),
-//       ),
-//       child: Row(
-//         children: [
-//           // --- 1. IMAGEN (Izquierda) ---
-//           Container(
-//             width: 100,
-//             margin: const EdgeInsets.all(8),
-//             child: Stack(
-//               children: [
-//                 Positioned.fill(
-//                   child: ClipRRect(
-//                     borderRadius: BorderRadius.circular(12),
-//                     child: Container(
-//                       color: Colors.grey[200],
-//                     ), // Tu imagen iría aquí
-//                   ),
-//                 ),
-//                 Positioned(
-//                   bottom: 4,
-//                   right: 4,
-//                   child: Container(
-//                     padding: const EdgeInsets.symmetric(
-//                       horizontal: 8,
-//                       vertical: 4,
-//                     ),
-//                     decoration: BoxDecoration(
-//                       //color: theme.colorScheme.primary,
-//                       color: Colors.yellow[700],
-//                       borderRadius: BorderRadius.circular(8),
-//                     ),
-//                     child: Text(
-//                       quiz.questionCount,
-//                       style: const TextStyle(
-//                         color: Colors.black,
-//                         fontSize: 10,
-//                         fontWeight: FontWeight.bold,
-//                       ),
-//                     ),
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-
-//           // --- 2. INFO (Derecha) ---
-//           Expanded(
-//             //Expanded para que ocupe todo el espacio sobrante
-//             child: Padding(
-//               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-//               child: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                 children: [
-//                   Text(
-//                     quiz.title,
-//                     maxLines: 2,
-//                     overflow: TextOverflow.ellipsis,
-//                     //style: theme.textTheme.titleMedium,
-//                   ),
-
-//                   Column(
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: [
-//                       // Fila 1: Fecha • Jugadas
-//                       Text(
-//                         // Usamos un caracter "bullet" (•) para separar
-//                         "${quiz.dateInfo} • ${quiz.playCount}",
-//                         style: TextStyle(color: Colors.grey[600], fontSize: 12),
-//                         maxLines: 1,
-//                         overflow: TextOverflow.ellipsis,
-//                       ),
-
-//                       const SizedBox(height: 6), // Pequeña separación vertical
-//                       // Fila 2: Autor O Visibilidad (Dependiendo del caso)
-//                       if (quiz.authorName != null)
-//                         // Caso Favoritos: Muestra Avatar + Nombre
-//                         Row(
-//                           children: [
-//                             // Avatar circular pequeño (Estilo Kahoot)
-//                             // CircleAvatar(
-//                             //   radius: 8,
-//                             //   backgroundColor: Colors.grey[300], // Fondo placeholder
-//                             //   child: const Icon(Icons.person, size: 12, color: Colors.grey),
-//                             // ),
-//                             const SizedBox(width: 6),
-//                             Expanded(
-//                               child: Text(
-//                                 "Autor: ${quiz.authorName!}",
-//                                 style: TextStyle(
-//                                   color: Colors.grey[800],
-//                                   fontSize: 12,
-//                                   fontWeight: FontWeight.w600, // Semi-bold
-//                                 ),
-//                                 maxLines: 1,
-//                                 overflow: TextOverflow.ellipsis,
-//                               ),
-//                             ),
-//                           ],
-//                         ),
-//                       if (quiz.visibilityText != null)
-//                         Row(
-//                           children: [
-//                             Icon(
-//                               quiz.visibilityIcon,
-//                               size: 16,
-//                               color: Colors.grey[600],
-//                             ),
-//                             SizedBox(width: 4),
-//                             Text(
-//                               quiz.visibilityText!,
-//                               style: TextStyle(
-//                                 color: Colors.grey[600],
-//                                 fontSize: 12,
-//                               ),
-//                             ),
-//                           ],
-//                         ),
-//                     ],
-//                   ),
-//                 ],
-//               ),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }

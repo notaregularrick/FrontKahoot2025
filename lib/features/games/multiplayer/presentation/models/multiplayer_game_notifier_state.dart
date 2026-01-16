@@ -1,17 +1,15 @@
-
-import 'package:frontkahoot2526/features/games/multiplayer/domain/game_session.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_enums.dart';
+import 'package:frontkahoot2526/features/games/multiplayer/domain/multiplayer_game_session.dart';
 
 class GameNotifierState {
-  //DATOS DEL SERVIDOR
-  final GameSession session;
+  final MultiplayerGameSession session;
+  final String quizTitle;
+  final String quizImageUrl;
 
-  //CONTEXTO LOCAL
-  final GameRole role;             
-  final String? myPlayerId;  
+  final GameRole role;
+  final String? myPlayerId; 
 
-  //ESTADO DE UI
-  final bool hasAnsweredCurrentQuestion; //Bloquear botones
+  final bool hasAnsweredCurrentQuestion;
   final bool isLoading;
   final String? errorMessage;
 
@@ -22,17 +20,36 @@ class GameNotifierState {
     this.hasAnsweredCurrentQuestion = false,
     this.isLoading = false,
     this.errorMessage,
+    this.quizTitle = "",
+    this.quizImageUrl = "",
   });
 
   bool get isHost => role == GameRole.host;
 
-  int get myScore{
-    if (myPlayerId == null) return 0;
-    return session.getPlayerScoreById(  myPlayerId!);
+  int get myScore {
+    if(role != GameRole.player) {
+      return 0;
+    }
+    if (session.playerGameEnd != null) {
+      return session.playerGameEnd!.totalScore;
+    }
+    if (session.playerResults != null) {
+      return session.playerResults!.totalScore;
+    }
+    return 0; 
   }
-  int get myRank{
-    if (myPlayerId == null) return 0;
-    return session.getPlayerRankById(  myPlayerId!);
+
+  int get myRank {
+    if(role != GameRole.player) {
+      return 0;
+    }
+    if (session.playerGameEnd != null) {
+      return session.playerGameEnd!.rank;
+    }
+    if (session.playerResults != null) {
+      return session.playerResults!.rank;
+    }
+    return 0;
   }
 
   bool get isLobby => session.isLobby;
@@ -40,9 +57,11 @@ class GameNotifierState {
   bool get isResults => session.isResults;
   bool get isGameEnd => session.isGameEnd;
 
-  //COPY WITH
+  // COPY WITH
   GameNotifierState copyWith({
-    GameSession? session,
+    MultiplayerGameSession? session,
+    String? quizTitle,
+    String? quizImageUrl,
     GameRole? role,
     String? myPlayerId,
     bool? hasAnsweredCurrentQuestion,
@@ -51,9 +70,12 @@ class GameNotifierState {
   }) {
     return GameNotifierState(
       session: session ?? this.session,
+      quizTitle: quizTitle ?? this.quizTitle,
+      quizImageUrl: quizImageUrl ?? this.quizImageUrl,
       role: role ?? this.role,
       myPlayerId: myPlayerId ?? this.myPlayerId,
-      hasAnsweredCurrentQuestion: hasAnsweredCurrentQuestion ?? this.hasAnsweredCurrentQuestion,
+      hasAnsweredCurrentQuestion:
+          hasAnsweredCurrentQuestion ?? this.hasAnsweredCurrentQuestion,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
     );

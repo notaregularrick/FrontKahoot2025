@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "586500701726",
+    "project_id": "backend-comun-kahoot",
+    "storage_bucket": "backend-comun-kahoot.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:586500701726:android:f1fa8c65292de8612c380f",
+        "android_client_info": {
+          "package_name": "com.example.frontkahoot2526"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDkSTTGDNFkF5zR1prf1SZZ1T1_l4xLEhU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

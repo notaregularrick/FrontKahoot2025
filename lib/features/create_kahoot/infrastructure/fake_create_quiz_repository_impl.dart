@@ -46,5 +46,35 @@ class FakeCreateQuizRepository implements ICreateQuizRepository {
       );
     }
   }
+
+  @override
+  Future<Quiz> getQuiz(String quizId) async {
+    // Fake no soporta obtener por ID en este momento
+    throw AppException(
+      message: 'FakeCreateQuizRepository.getQuiz no implementado',
+      statusCode: 501,
+    );
+  }
+
+  @override
+  Future<Quiz> updateQuiz(String quizId, Quiz quiz) async {
+    // Retornar el mismo quiz simulando actualización
+    await Future.delayed(const Duration(milliseconds: 300));
+    return Quiz(
+      id: quizId,
+      title: quiz.title,
+      description: quiz.description,
+      coverImageId: quiz.coverImageId,
+      visibility: quiz.visibility,
+      status: quiz.status,
+      category: quiz.category,
+      themeId: quiz.themeId,
+      authorId: quiz.authorId,
+      authorName: quiz.authorName,
+      questions: quiz.questions,
+      createdAt: DateTime.now(),
+      playCount: quiz.playCount,
+    );
+  }
 }
 

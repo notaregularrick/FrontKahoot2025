@@ -15,8 +15,8 @@ class FakeLibraryRepository implements ILibraryRepository {
       'orderBy': params.orderBy,
       'order': params.order,
     };
-    if (params.search != null && params.search!.isNotEmpty) {
-      query['search'] = params.search;
+    if (params.q != null && params.q!.isNotEmpty) {
+      query['search'] = params.q;
     }
     return query;
   }
@@ -334,7 +334,7 @@ class FakeLibraryRepository implements ILibraryRepository {
     try {
       final Dio dio = Dio();
       await dio.post(
-        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/favorites/:$quizId',
+        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/favorites/$quizId',
       );
     } on DioException catch (e) {
       print(e);
@@ -362,7 +362,7 @@ class FakeLibraryRepository implements ILibraryRepository {
     try {
       final Dio dio = Dio();
       await dio.delete(
-        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/favorites/:$quizId',
+        'https://51939ed4-750b-431f-86da-d8cfde985ab8.mock.pstmn.io/library/favorites/$quizId',
       );
     } on DioException catch (e) {
       if (e.response != null) {

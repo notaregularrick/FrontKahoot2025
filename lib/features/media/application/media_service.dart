@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:frontkahoot2526/core/domain/entities/media.dart';
+import 'package:frontkahoot2526/core/domain/entities/media_theme.dart';
 import 'package:frontkahoot2526/features/media/domain/media_repository.dart';
 
 class MediaService {
@@ -8,13 +10,18 @@ class MediaService {
   MediaService(this.repository);
 
   /// Sube un archivo multimedia y retorna la entidad Media con metadatos
+  /// Endpoint: POST /media/upload
   Future<Media> uploadMedia(File file) {
     return repository.uploadMedia(file);
   }
 
-  /// Obtiene la URL para acceder a un archivo multimedia por su ID
-  String getMediaUrl(String mediaId) {
-    return repository.getMediaUrl(mediaId);
+  Future<Media> uploadMediaFromBytes(Uint8List bytes) {
+    return repository.uploadMediaFromBytes(bytes);
+  }
+
+  /// Obtiene la lista de temas multimedia disponibles
+  /// Endpoint: GET /media/themes
+  Future<List<MediaTheme>> getThemes() {
+    return repository.getThemes();
   }
 }
-
