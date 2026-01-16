@@ -57,7 +57,7 @@ class FromScratchScreen extends ConsumerStatefulWidget {
 }
 
 class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
-  String selectedQuizType = 'Quiz';
+  String selectedQuizType = 'Selección Simple';
   List<QuestionData> questions = [];
   int currentQuestionIndex = 0;
 
@@ -133,6 +133,12 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
           _addNewQuestion();
         }
         currentQuestionIndex = 0;
+        // Inicializar selectedQuizType con el tipo de la primera pregunta
+        if (questions.isNotEmpty) {
+          selectedQuizType = _mapQuestionTypeToQuizType(
+            questions[currentQuestionIndex].type,
+          );
+        }
       });
     } catch (e) {
       ScaffoldMessenger.of(
@@ -305,6 +311,10 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
 
       if (questions.isNotEmpty) {
         currentQuestionIndex = 0;
+        // Sincronizar selectedQuizType con el tipo de la primera pregunta
+        selectedQuizType = _mapQuestionTypeToQuizType(
+          questions[currentQuestionIndex].type,
+        );
       } else {
         _addNewQuestion();
       }
@@ -357,8 +367,22 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         return 'true_false';
       case 'Selección Múltiple':
         return 'multiple';
+      case 'Selección Simple':
+        return 'quiz';
       default:
         return 'quiz';
+    }
+  }
+
+  String _mapQuestionTypeToQuizType(String questionType) {
+    switch (questionType) {
+      case 'true_false':
+        return 'Verdadero/Falso';
+      case 'multiple':
+        return 'Selección Múltiple';
+      case 'quiz':
+      default:
+        return 'Selección Simple';
     }
   }
 
@@ -374,6 +398,14 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       );
       // Intentar cargar el theme de nuevo
       await _loadDefaultTheme();
+      return;
+    }
+
+    // Validar que la descripción no esté vacía
+    if (quizDescription.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La descripción del quiz es obligatoria')),
+      );
       return;
     }
 
@@ -431,6 +463,37 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
             const SnackBar(
               content: Text(
                 'Las preguntas de selección múltiple deben tener al menos 2 respuestas correctas',
+              ),
+            ),
+          );
+          return;
+        }
+      }
+
+      // Validar puntajes según tipo de pregunta
+      if (question.type == 'quiz' || question.type == 'true_false') {
+        // Selección simple y verdadero/falso: solo pueden tener 0, 1000, o 2000
+        if (question.points != 0 &&
+            question.points != 1000 &&
+            question.points != 2000) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Las preguntas de selección simple y verdadero/falso solo pueden tener 0, 1000 o 2000 puntos',
+              ),
+            ),
+          );
+          return;
+        }
+      } else if (question.type == 'multiple') {
+        // Selección múltiple: solo pueden tener 0, 500, o 1000
+        if (question.points != 0 &&
+            question.points != 500 &&
+            question.points != 1000) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Las preguntas de selección múltiple solo pueden tener 0, 500 o 1000 puntos',
               ),
             ),
           );
@@ -573,8 +636,48 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
           onSelected: (value) {
             setState(() {
               selectedQuizType = value;
+              final oldType = currentQ.type;
               final newType = _mapQuizTypeToQuestionType(value);
               currentQ.type = newType;
+
+              // Si se cambia de "Selección múltiple" a otro tipo, y hay múltiples respuestas correctas,
+              // mantener solo una al azar
+              if (oldType == 'multiple' &&
+                  (newType == 'quiz' || newType == 'true_false')) {
+                final correctAnswers = currentQ.answers
+                    .where((a) => a.isCorrect)
+                    .toList();
+                if (correctAnswers.length > 1) {
+                  // Desmarcar todas las respuestas correctas
+                  for (var answer in currentQ.answers) {
+                    answer.isCorrect = false;
+                  }
+                  // Seleccionar una al azar de las que estaban marcadas como correctas
+                  final random =
+                      correctAnswers[DateTime.now().millisecondsSinceEpoch %
+                          correctAnswers.length];
+                  random.isCorrect = true;
+                }
+              }
+
+              // Ajustar puntos si el tipo cambió y los puntos actuales no son válidos para el nuevo tipo
+              if (newType == 'multiple') {
+                // Selección múltiple: solo puede tener 0, 500, o 1000
+                if (currentQ.points != 0 &&
+                    currentQ.points != 500 &&
+                    currentQ.points != 1000) {
+                  // Si viene de quiz/true_false y tenía 2000, cambiar a 1000
+                  currentQ.points = 1000;
+                }
+              } else {
+                // Selección simple y verdadero/falso: solo puede tener 0, 1000, o 2000
+                if (currentQ.points != 0 &&
+                    currentQ.points != 1000 &&
+                    currentQ.points != 2000) {
+                  // Si viene de multiple y tenía 500, cambiar a 1000
+                  currentQ.points = 1000;
+                }
+              }
 
               // Si se cambia a modo Verdadero/Falso, establecer textos y limpiar imágenes
               if (newType == 'true_false') {
@@ -588,7 +691,10 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
             });
           },
           itemBuilder: (context) => [
-            const PopupMenuItem(value: 'Quiz', child: Text('Quiz')),
+            const PopupMenuItem(
+              value: 'Selección Simple',
+              child: Text('Selección Simple'),
+            ),
             const PopupMenuItem(
               value: 'Selección Múltiple',
               child: Text('Selección Múltiple'),
@@ -611,6 +717,12 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                   questions.removeAt(currentQuestionIndex);
                   if (currentQuestionIndex >= questions.length) {
                     currentQuestionIndex = questions.length - 1;
+                  }
+                  // Sincronizar selectedQuizType con el tipo de la nueva pregunta actual
+                  if (questions.isNotEmpty) {
+                    selectedQuizType = _mapQuestionTypeToQuizType(
+                      questions[currentQuestionIndex].type,
+                    );
                   }
                 });
               },
@@ -958,6 +1070,10 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                       ? () {
                           setState(() {
                             currentQuestionIndex--;
+                            // Sincronizar selectedQuizType con el tipo de la nueva pregunta actual
+                            selectedQuizType = _mapQuestionTypeToQuizType(
+                              questions[currentQuestionIndex].type,
+                            );
                           });
                         }
                       : null,
@@ -971,6 +1087,10 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                       ? () {
                           setState(() {
                             currentQuestionIndex++;
+                            // Sincronizar selectedQuizType con el tipo de la nueva pregunta actual
+                            selectedQuizType = _mapQuestionTypeToQuizType(
+                              questions[currentQuestionIndex].type,
+                            );
                           });
                         }
                       : null,
@@ -1006,6 +1126,14 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
     if (_editingKahootId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error: ID de kahoot no válido')),
+      );
+      return;
+    }
+
+    // Validar que la descripción no esté vacía
+    if (quizDescription.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La descripción del quiz es obligatoria')),
       );
       return;
     }
@@ -1058,6 +1186,37 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
             const SnackBar(
               content: Text(
                 'Las preguntas de selección múltiple deben tener al menos 2 respuestas correctas',
+              ),
+            ),
+          );
+          return;
+        }
+      }
+
+      // Validar puntajes según tipo de pregunta
+      if (question.type == 'quiz' || question.type == 'true_false') {
+        // Selección simple y verdadero/falso: solo pueden tener 0, 1000, o 2000
+        if (question.points != 0 &&
+            question.points != 1000 &&
+            question.points != 2000) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Las preguntas de selección simple y verdadero/falso solo pueden tener 0, 1000 o 2000 puntos',
+              ),
+            ),
+          );
+          return;
+        }
+      } else if (question.type == 'multiple') {
+        // Selección múltiple: solo pueden tener 0, 500, o 1000
+        if (question.points != 0 &&
+            question.points != 500 &&
+            question.points != 1000) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Las preguntas de selección múltiple solo pueden tener 0, 500 o 1000 puntos',
               ),
             ),
           );
@@ -1800,12 +1959,24 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
       questions.insert(currentQuestionIndex + 1, duplicatedQuestion);
       // Cambiar al índice de la pregunta duplicada
       currentQuestionIndex = currentQuestionIndex + 1;
+      // Sincronizar selectedQuizType con el tipo de la pregunta duplicada
+      selectedQuizType = _mapQuestionTypeToQuizType(
+        questions[currentQuestionIndex].type,
+      );
     });
   }
 
   void _showPointsPicker(BuildContext context) {
     final currentQ = currentQuestion;
-    final List<int> pointsOptions = [0, 1000, 2000];
+    // Determinar opciones de puntos según el tipo de pregunta
+    final List<int> pointsOptions;
+    if (currentQ.type == 'multiple') {
+      // Selección múltiple: 0, 500, 1000
+      pointsOptions = [0, 500, 1000];
+    } else {
+      // Selección simple (quiz) y verdadero/falso: 0, 1000, 2000
+      pointsOptions = [0, 1000, 2000];
+    }
 
     showDialog(
       context: context,
@@ -2094,12 +2265,18 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                       controller: _descriptionController,
                       decoration: const InputDecoration(
                         labelText: 'Descripción',
-                        hintText: 'Describe tu quiz (opcional)',
+                        hintText: 'Describe tu quiz',
                         border: OutlineInputBorder(),
                         filled: true,
                         fillColor: Colors.white,
                       ),
                       maxLines: 3,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'La descripción es requerida';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 24),
                     // Categoría

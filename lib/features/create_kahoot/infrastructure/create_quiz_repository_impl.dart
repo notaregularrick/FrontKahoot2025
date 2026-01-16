@@ -266,15 +266,6 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
       'status': _mapStatusToApi(quiz.status),
     };
 
-    // Campos opcionales: null si están vacíos
-    print('Title: ${quiz.title}');
-    print('Description: ${quiz.description}');
-    print('CoverImageId: ${quiz.coverImageId}');
-    print('Category: ${quiz.category}');
-    print('Questions: ${quiz.questions}');
-    print('Visibility: ${quiz.visibility}');
-    print('ThemeId: ${quiz.themeId}');
-    print('Status: ${quiz.status}');
     json['title'] = (quiz.title.isEmpty) ? null : quiz.title;
     json['description'] = (quiz.description.isEmpty) ? null : quiz.description;
 
