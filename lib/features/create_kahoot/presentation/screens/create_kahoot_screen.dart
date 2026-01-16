@@ -22,13 +22,11 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
   bool _isGenerating = false;
 
   Future<void> _showAIPromptDialog() async {
-    print('Inició generación con IA');
     try {
       // Esperar a que se cargue la API key usando .future para obtener el Future real
       final apiKey = await ref.read(aiApiKeyProvider.future);
 
       if (apiKey == null || apiKey.isEmpty) {
-        print('API Key no configurada. Mostrando diálogo de configuración');
         // Mostrar diálogo para configurar API key
         if (mounted) {
           _showApiKeyDialog();
@@ -36,7 +34,6 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
         return;
       }
 
-      print('API Key configurada. Mostrando diálogo de prompt');
       // Continuar con el diálogo de prompt
       if (mounted) {
         final result = await showDialog<Map<String, dynamic>>(
@@ -46,13 +43,9 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
 
         if (result != null && mounted) {
           await _generateQuizWithAI(result);
-        } else {
-          print('Canceló el diálogo de prompt');
         }
       }
     } catch (error, stack) {
-      print('ERROR al verificar API Key: ${error.toString()}');
-      print('Stack trace: $stack');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -162,28 +155,22 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
   }
 
   Future<void> _generateQuizWithAI(Map<String, dynamic> data) async {
-    print('Iniciando generación de quiz con IA');
-
     setState(() {
       _isGenerating = true;
     });
 
     try {
       // Verificar que el repositorio esté disponible
-      print('Verificando repositorio');
       final repository = ref.read(aiQuizRepositoryProvider);
       if (repository == null) {
-        print('ERROR Repositorio no disponible o API key no configurada');
         throw AppException(
           message:
               'API key no configurada. Por favor configura tu API key de Gemini.',
           statusCode: 401,
         );
       }
-      print('Repositorio disponible');
 
       final aiService = AIQuizService(repository);
-      print('Servicio creado, llamando a generateQuiz');
 
       final quiz = await aiService.generateQuiz(
         prompt: data['prompt'] as String,
@@ -192,8 +179,6 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
         category: data['category'] as String,
         numberOfQuestions: data['numberOfQuestions'] as int,
       );
-
-      print('Quiz generado exitosamente');
 
       if (mounted) {
         // Convertir Quiz a QuizPreloadData
@@ -233,11 +218,6 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
         context.go('/create-kahoot/from-scratch');
       }
     } on AppException catch (e) {
-      print('ERROR: ${e.message}');
-      print('Status Code: ${e.statusCode}');
-      if (e.error != null) {
-        print('Detalles: ${e.error}');
-      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -248,9 +228,6 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
         );
       }
     } catch (e, stackTrace) {
-      print('ERROR INESPERADO: ${e.toString()}');
-      print('Tipo de error: ${e.runtimeType}');
-      print('Stack trace: $stackTrace');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -265,7 +242,6 @@ class _CreateKahootScreenState extends ConsumerState<CreateKahootScreen> {
         setState(() {
           _isGenerating = false;
         });
-        print('Proceso de generación finalizado');
       }
     }
   }

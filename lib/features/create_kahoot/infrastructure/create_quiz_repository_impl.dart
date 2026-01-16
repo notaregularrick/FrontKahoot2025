@@ -30,21 +30,8 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
   @override
   Future<Quiz> createQuiz(Quiz quiz) async {
     try {
-      print('╔══════════════════════════════════════════════════════════════');
-      print('║ [CREATE QUIZ] Iniciando creación de quiz...');
-      print('╠══════════════════════════════════════════════════════════════');
-      
       // Convertir entidad Quiz a JSON camelCase
       final jsonData = _quizToJson(quiz);
-
-      // Imprimir JSON completo formateado
-      final jsonPretty = const JsonEncoder.withIndent('  ').convert(jsonData);
-      print('║ [CREATE QUIZ] JSON a enviar:');
-      print('║ $jsonPretty');
-      print('╠══════════════════════════════════════════════════════════════');
-      print('║ [CREATE QUIZ] URL base: ${_dio.options.baseUrl}');
-      print('║ [CREATE QUIZ] Endpoint: POST /kahoots');
-      print('╠══════════════════════════════════════════════════════════════');
 
       // Realizar POST request
       //llamada al backend con dio
@@ -52,10 +39,6 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
         '/kahoots',
         data: jsonData,
       );
-
-      print('║ [CREATE QUIZ] Respuesta recibida - Status: ${response.statusCode}');
-      print('║ [CREATE QUIZ] Response data: ${response.data}');
-      print('╚══════════════════════════════════════════════════════════════');
 
       // Validar respuesta
       if (response.statusCode == 201) {
@@ -67,17 +50,8 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
         );
       }
     } on DioException catch (e) {
-      print('║ [CREATE QUIZ] ❌ DioException capturada');
-      print('║ [CREATE QUIZ] Tipo: ${e.type}');
-      print('║ [CREATE QUIZ] Mensaje: ${e.message}');
-      
       if (e.response != null) {
         final statusCode = e.response!.statusCode;
-        final responseData = e.response?.data;
-        
-        print('║ [CREATE QUIZ] Status code: $statusCode');
-        print('║ [CREATE QUIZ] Response data: $responseData');
-        print('╚══════════════════════════════════════════════════════════════');
         
         String message = 'Datos del quiz inválidos';
         
@@ -93,9 +67,6 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
           error: e.response?.data?.toString(),
         );
       } else {
-        print('║ [CREATE QUIZ] Sin respuesta del servidor');
-        print('╚══════════════════════════════════════════════════════════════');
-        
         throw AppException(
           message: 'Error de conexión al crear el quiz',
           statusCode: 500,
@@ -103,9 +74,6 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
         );
       }
     } catch (e) {
-      print('║ [CREATE QUIZ] ❌ Excepción no manejada: ${e.runtimeType}');
-      print('║ [CREATE QUIZ] Mensaje: $e');
-      print('╚══════════════════════════════════════════════════════════════');
       
       if (e is AppException) {
         rethrow;
@@ -121,8 +89,6 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
   @override
   Future<Quiz> getQuiz(String quizId) async {
     try {
-      print('║ [GET QUIZ] URL base: ${_dio.options.baseUrl}');
-      print('║ [GET QUIZ] Endpoint: GET /kahoots/$quizId');
       final response = await _dio.get('/kahoots/$quizId');
       if (response.statusCode == 200) {
         return _quizFromJson(response.data);
@@ -150,26 +116,12 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
   @override
   Future<Quiz> updateQuiz(String quizId, Quiz quiz) async {
     try {
-      print('╔══════════════════════════════════════════════════════════════');
-      print('║ [UPDATE QUIZ] Iniciando actualización de quiz...');
-      print('╠══════════════════════════════════════════════════════════════');
       final jsonData = _quizToJson(quiz);
-      final jsonPretty = const JsonEncoder.withIndent('  ').convert(jsonData);
-      print('║ [UPDATE QUIZ] JSON a enviar:');
-      print('║ $jsonPretty');
-      print('╠══════════════════════════════════════════════════════════════');
-      print('║ [UPDATE QUIZ] URL base: ${_dio.options.baseUrl}');
-      print('║ [UPDATE QUIZ] Endpoint: PUT /kahoots/$quizId');
-      print('╠══════════════════════════════════════════════════════════════');
 
       final response = await _dio.put(
         '/kahoots/$quizId',
         data: jsonData,
       );
-
-      print('║ [UPDATE QUIZ] Respuesta recibida - Status: ${response.statusCode}');
-      print('║ [UPDATE QUIZ] Response data: ${response.data}');
-      print('╚══════════════════════════════════════════════════════════════');
 
       if (response.statusCode == 200) {
         return _quizFromJson(response.data);
@@ -180,15 +132,8 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
         );
       }
     } on DioException catch (e) {
-      print('║ [UPDATE QUIZ] ❌ DioException capturada');
-      print('║ [UPDATE QUIZ] Tipo: ${e.type}');
-      print('║ [UPDATE QUIZ] Mensaje: ${e.message}');
       if (e.response != null) {
         final statusCode = e.response!.statusCode;
-        final responseData = e.response?.data;
-        print('║ [UPDATE QUIZ] Status code: $statusCode');
-        print('║ [UPDATE QUIZ] Response data: $responseData');
-        print('╚══════════════════════════════════════════════════════════════');
         String message = 'Datos del quiz inválidos';
         if (statusCode == 401) message = 'No autorizado';
         if (statusCode == 404) message = 'El quiz no existe';
