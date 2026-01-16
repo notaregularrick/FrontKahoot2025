@@ -353,6 +353,22 @@ class _HostAnswerCard extends StatelessWidget {
                   fit: BoxFit.cover,
                   color: Colors.black26,
                   colorBlendMode: BlendMode.darken,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return SizedBox(
+                      height: 120,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                              : null,
+                        ),
+                      ),
+                    );
+                  },
+                  errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.error, color: Colors.white)),
                 ),
               )
             else

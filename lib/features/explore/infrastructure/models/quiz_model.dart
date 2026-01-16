@@ -19,16 +19,17 @@ class QuizModel extends QuizEntity {
     final authorJson = json['author'] as Map<String, dynamic>?;
 
     return QuizModel(
-      id: json['id'] ?? '',
+      id: json['id']?.toString() ?? '',
       title: json['title'] ?? 'Sin título',
       description: json['description'] ?? '',
-      themeId: json['themeId'] ?? '',
+      themeId: json['themeId']?.toString() ?? '',
       categoryName: json['category'] ?? 'General',
       coverImageUrl: json['coverImageId'] ?? 'https://via.placeholder.com/150',
-      playCount: (json['playCount'] as num?)?.toInt() ?? 0,
       
+      // Parseo robusto para playCount
+      playCount: _parseInt(json['playCount']) ?? 0,
       
-      authorId: authorJson?['id'] ?? '',
+      authorId: authorJson?['id']?.toString() ?? '',
       authorName: authorJson?['name'] ?? 'Desconocido',
       
       createdAt: json['createdAt'] != null 
@@ -36,5 +37,13 @@ class QuizModel extends QuizEntity {
           : DateTime.now(),
       status: json['Status'] ?? 'draft',
     );
+  }
+
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
   }
 }

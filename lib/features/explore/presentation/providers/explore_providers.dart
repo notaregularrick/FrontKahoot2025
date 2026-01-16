@@ -15,12 +15,12 @@ final exploreDatasourceProvider = Provider<ExploreDatasource>((ref) {
 
 // 2. Provider del Repositorio
 final exploreRepositoryProvider = Provider<ExploreRepository>((ref) {
-  final datasource = ref.read(exploreDatasourceProvider);
+  final datasource = ref.watch(exploreDatasourceProvider);
   return ExploreRepositoryImpl(datasource);
 });
 
 // 3. Provider del Notifier (Estado)
 final exploreNotifierProvider = StateNotifierProvider<ExploreNotifier, ExploreState>((ref) {
-  final repository = ref.read(exploreRepositoryProvider);
+  final repository = ref.watch(exploreRepositoryProvider);
   return ExploreNotifier(repository);
 });

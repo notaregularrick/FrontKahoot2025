@@ -20,10 +20,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(exploreNotifierProvider.notifier).loadInitialData(); //Carga en paralelo
-    });
-    _scrollController.addListener(_onScroll); //Paginacion Infinita
+    _scrollController.addListener(_onScroll);
   }
 
   @override
@@ -95,7 +92,6 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
           ),
 
           // 2. FILTROS DE CATEGORÍAS (Horizontal Chips)
-          // Solo mostramos si hay categorías cargadas
           if (state.availableCategories.isNotEmpty)
             SizedBox(
               height: 50,
@@ -173,7 +169,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                                         child: QuizCard(
                                           quiz: quiz,
                                           isFeatured: true,
-                                          onTap: () => context.push('/quiz/${quiz.id}'),
+                                          onTap: () => context.push('/quiz/${quiz.id}', extra: quiz),
                                         ),
                                       ),
                                     );
@@ -209,7 +205,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                                   child: QuizCard(
                                     quiz: quiz,
-                                    onTap: () => context.push('/quiz/${quiz.id}'),
+                                    onTap: () => context.push('/quiz/${quiz.id}', extra: quiz),
                                   ),
                                 );
                               }),

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:frontkahoot2526/core/domain/entities/media.dart';
 import 'package:frontkahoot2526/core/domain/entities/media_theme.dart';
 import 'package:frontkahoot2526/features/media/domain/media_repository.dart';
@@ -12,6 +13,10 @@ class MediaService {
   /// Endpoint: POST /media/upload
   Future<Media> uploadMedia(File file) {
     return repository.uploadMedia(file);
+  }
+
+  Future<Media> uploadMediaFromBytes(Uint8List bytes) {
+    return repository.uploadMediaFromBytes(bytes);
   }
 
   /// Obtiene la lista de temas multimedia disponibles

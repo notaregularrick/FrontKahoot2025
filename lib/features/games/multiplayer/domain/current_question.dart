@@ -76,11 +76,19 @@ class CurrentQuestion {
   static QuestionType _mapStringToQuestionType(String? typeStr) {
     switch (typeStr?.toUpperCase()) {
       case 'SINGLE':
+      case 'single':
+      case 'Single':
         return QuestionType.single;
       case 'MULTI':
       case 'MULTIPLE':
+      case 'Multi':
+      case 'Multiple':
+      case 'multi':
+      case 'multiple':
         return QuestionType.multipleChoice;
       case 'TRUE_FALSE':
+      case 'True_False':
+      case 'true_false':
         return QuestionType.trueFalse;
       default:
         return QuestionType.single; // Valor por defecto para evitar errores
