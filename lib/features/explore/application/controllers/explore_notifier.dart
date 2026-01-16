@@ -8,7 +8,9 @@ class ExploreNotifier extends StateNotifier<ExploreState> {
   // Bandera local para evitar múltiples llamadas de paginación simultáneas
   bool _isFetchingMore = false; 
 
-  ExploreNotifier(this.repository) : super(ExploreState.initial());
+  ExploreNotifier(this.repository) : super(ExploreState.initial()) {
+  loadInitialData();
+}
 
   Future<void> loadInitialData() async {
     state = state.copyWith(isLoading: true, errorMessage: null);

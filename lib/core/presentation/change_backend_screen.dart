@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontkahoot2526/core/providers/backend_provider.dart';
 import 'package:go_router/go_router.dart';
+import '../providers/backend_provider.dart';
+import '../../features/auth/presentation/providers/auth_providers.dart';
 
 class ChangeBackendScreen extends ConsumerStatefulWidget {
   const ChangeBackendScreen({super.key});
@@ -22,16 +23,78 @@ class _ChangeBackendScreenState extends ConsumerState<ChangeBackendScreen> {
     _initialBackend = _pendingBackend;
   }
 
-  void _saveChanges() {
-    ref.read(backendProvider.notifier).changeBackend(_pendingBackend);
+  Future<void> _saveChanges() async {
+    // 1. Capturamos el notificador del backend para usarlo después de navegar
+    final backendNotifier = ref.read(backendProvider.notifier);
+    
+    // 2. Hacemos Logout para limpiar credenciales viejas
+    await ref.read(authNotifierProvider.notifier).logout();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Backend cambiado a ${_pendingBackend.name}", style: TextStyle(fontSize: 17),),
-        backgroundColor: Colors.green,
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Conectado a ${_pendingBackend.name}. Inicia sesión nuevamente.",
+            style: const TextStyle(fontSize: 16),
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      
+      // 3. Navegamos PRIMERO a una ruta pública (Inicio/Login)
+      // Esto desmonta las pantallas protegidas (como ProfilePage) que podrían 
+      // intentar recargar datos automáticamente y causar errores 401.
+      context.go('/inicio');
+      
+      // 4. Cambiamos el backend después de un breve delay
+      // para dar tiempo a que la navegación complete y limpie el árbol de widgets.
+      Future.delayed(const Duration(milliseconds: 100), () {
+        backendNotifier.changeBackend(_pendingBackend);
+      });
+    }
+  }
+
+  // Helper para construir los RadioListTile personalizados
+  Widget _buildRadioOption(BackendType type) {
+    final isSelected = _pendingBackend == type;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.blue.withValues(alpha: 0.1) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelected ? Colors.blue : Colors.grey.shade300,
+          width: isSelected ? 2 : 1,
+        ),
+      ),
+      child: RadioListTile<BackendType>(
+        title: Text(
+          type.name,
+          style: TextStyle(
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected ? Colors.blue[800] : Colors.black87,
+          ),
+        ),
+        subtitle: Text(
+          type.url,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey.shade600,
+          ),
+        ),
+        value: type,
+        groupValue: _pendingBackend,
+        activeColor: Colors.blue[800],
+        onChanged: (BackendType? value) {
+          if (value != null) {
+            setState(() {
+              _pendingBackend = value;
+            });
+          }
+        },
       ),
     );
-    context.pop();
   }
 
   @override
@@ -41,7 +104,7 @@ class _ChangeBackendScreenState extends ConsumerState<ChangeBackendScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Tarjeta informativa (Muestra lo que tienes SELECCIONADO actualmente en la lista)
+          // Tarjeta informativa
           Container(
             padding: const EdgeInsets.all(20),
             width: double.infinity,
@@ -66,7 +129,7 @@ class _ChangeBackendScreenState extends ConsumerState<ChangeBackendScreen> {
                 ),
                 Text(
                   _initialBackend.url,
-                  style: TextStyle(color: Colors.grey.shade700, fontSize: 17),
+                  style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
                 ),
               ],
             ),
@@ -80,27 +143,15 @@ class _ChangeBackendScreenState extends ConsumerState<ChangeBackendScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
+          const SizedBox(height: 10),
 
           // Lista de Opciones
           Expanded(
-            child: RadioGroup<BackendType>(
-              groupValue: _pendingBackend,
-              onChanged: (BackendType? value) {
-                if (value != null) {
-                  setState(() {
-                    _pendingBackend = value;
-                  });
-                }
-              },
-              child: ListView(
-                children: BackendType.values.map((type) {
-                  return RadioListTile<BackendType>(
-                    title: Text(type.name),
-                    subtitle: Text(type.url),
-                    value: type, 
-                  );
-                }).toList(),
-              ),
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: BackendType.values.map((type) {
+                return _buildRadioOption(type);
+              }).toList(),
             ),
           ),
 
@@ -112,7 +163,7 @@ class _ChangeBackendScreenState extends ConsumerState<ChangeBackendScreen> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
                 ),

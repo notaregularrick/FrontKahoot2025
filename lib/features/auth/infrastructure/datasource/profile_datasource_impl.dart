@@ -10,12 +10,17 @@ class ProfileDatasourceImpl implements ProfileDatasource  {
   @override
   Future<ProfileModel> getUserProfile() async {
     try {
-      final response = await dio.get('/user/profile/');
+      final response = await dio.get('/user/profile');
+
+      final userData = response.data['user'] ?? response.data;
       
       return ProfileModel.fromJson(response.data);
     } catch (e) {
       if (e is DioException && e.response?.statusCode == 401) {
         throw Exception('Sesión expirada');
+      }
+      if (e is DioException && e.response?.statusCode == 404) {
+        throw Exception('Perfil no encontrado en este servidor');
       }
       throw Exception('Error al cargar el perfil: $e');
     }
