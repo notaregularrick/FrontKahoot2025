@@ -12,12 +12,32 @@ class CategoriesRepositoryImpl implements ICategoriesRepository {
   Future<List<Category>> getCategories() async {
     try {
       print('[CATEGORIES] Obteniendo categorías desde /explore/categories');
-      
+
       final response = await _dio.get('/explore/categories');
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data as List<dynamic>;
-        final categories = data
+        final dynamic data = response.data;
+        List<dynamic> listData;
+
+        if (data is List) {
+          // Caso A: El backend devuelve directamente [{}, {}]
+          listData = data;
+        } else if (data is Map &&
+            data.containsKey('data') &&
+            data['data'] is List) {
+          // Caso B: El backend devuelve { "data": [{}, {}] }
+          listData = data['data'];
+        } else if (data is Map &&
+            data.containsKey('categories') &&
+            data['categories'] is List) {
+          // CORRECCIÓN: Caso C: { "categories": [{}, {}] } -> Este es el que está llegando
+          listData = data['categories'];
+        } else {
+          print("Formato de categorías desconocido: $data");
+          return [];
+        }
+
+        final categories = listData
             .map((json) => Category.fromJson(json as Map<String, dynamic>))
             .toList();
         print('[CATEGORIES] ${categories.length} categorías obtenidas');
@@ -31,11 +51,11 @@ class CategoriesRepositoryImpl implements ICategoriesRepository {
       }
     } on DioException catch (e) {
       print('[CATEGORIES] DioException: ${e.type} - ${e.message}');
-      
+
       if (e.response != null) {
         final statusCode = e.response!.statusCode;
         final serverData = e.response?.data?.toString() ?? 'Sin datos';
-        
+
         String message;
         if (statusCode == 404) {
           message = 'Endpoint /explore/categories no encontrado';
@@ -46,7 +66,7 @@ class CategoriesRepositoryImpl implements ICategoriesRepository {
         } else {
           message = 'Error del servidor (código: $statusCode)';
         }
-        
+
         throw AppException(
           message: message,
           statusCode: statusCode,
@@ -72,4 +92,3 @@ class CategoriesRepositoryImpl implements ICategoriesRepository {
     }
   }
 }
-
