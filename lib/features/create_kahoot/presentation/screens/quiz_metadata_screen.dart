@@ -305,12 +305,18 @@ class _QuizMetadataScreenState extends ConsumerState<QuizMetadataScreen> {
                 controller: _descriptionController,
                 decoration: const InputDecoration(
                   labelText: 'Descripción',
-                  hintText: 'Describe tu quiz (opcional)',
+                  hintText: 'Describe tu quiz',
                   border: OutlineInputBorder(),
                   filled: true,
                   fillColor: Colors.white,
                 ),
                 maxLines: 3,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'La descripción es requerida';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 24),
               // Categoría
