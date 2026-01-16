@@ -90,7 +90,12 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                         description: g.description ?? '',
                         memberCount: g.memberCount,
                         role: g.role,
-                        onTap: () => context.go('/groups/${g.id}'),
+                        onTap: () {
+                          // Siempre recargar datos del grupo (miembros, quices, ranking)
+                          // cada vez que se entra al detalle.
+                          ref.invalidate(groupDetailProvider(g.id));
+                          context.go('/groups/${g.id}');
+                        },
                       );
                     },
                   ),
