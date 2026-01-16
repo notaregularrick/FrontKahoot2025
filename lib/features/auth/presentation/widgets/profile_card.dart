@@ -27,6 +27,8 @@ class ProfileCard extends ConsumerWidget {
       offset: const Offset(0, 10),
     );
 
+    final isAdmin = displayUserType.toUpperCase() == 'ADMIN';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -123,6 +125,28 @@ class ProfileCard extends ConsumerWidget {
           const SizedBox(height: 32),
 
           // --- BOTONES DE ACCIÓN ---
+
+          // 0. PANEL DE ADMIN (SOLO SI ES ADMIN)
+          if (isAdmin) ...[
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => context.push('/backoffice'),
+                icon: const Icon(Icons.admin_panel_settings, size: 20),
+                label: const Text('Panel de Administración'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
 
           // 1. Editar Perfil
           ElevatedButton.icon(

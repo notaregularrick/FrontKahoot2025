@@ -8,8 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:frontkahoot2526/core/navigation/navbar.dart';
 import 'package:frontkahoot2526/core/presentation/change_backend_screen.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/host/host_screen.dart';
-import '../../features/backoffice/presentation/screens/backoffice_screen.dart';
-import '../../features/explore/presentation/screens/quiz_detail_screen.dart';
 import 'inicio.dart';
 
 // Auth
@@ -38,10 +36,15 @@ import 'package:frontkahoot2526/features/library/reports/presentation/screens/se
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/game_orchestrator.dart';
 import 'package:frontkahoot2526/features/games/multiplayer/presentation/screens/join_game.dart';
 import 'package:frontkahoot2526/features/explore/presentation/screens/explore_screen.dart';
+import 'package:frontkahoot2526/features/backoffice/presentation/screens/backoffice_menu_screen.dart';
+import 'package:frontkahoot2526/features/backoffice/presentation/screens/backoffice_screen.dart';
+import 'package:frontkahoot2526/features/backoffice/presentation/screens/backoffice_notifications_screen.dart';
+import '../../features/explore/domain/entities/quiz_entity.dart';
+import '../../features/explore/presentation/screens/quiz_detail_screen.dart';
 
 // Quiz
 //import '../../quiz/presentation/screens/quiz_detail_screen.dart';
-import '../../features/explore/domain/entities/quiz_entity.dart';
+
 
 // --- UTILIDAD PARA ESCUCHAR RIVERPOD EN GOROUTER ---
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -251,9 +254,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return PersonalResultsScreen(gameId: gameId, gameType: gameType);
         },
       ),
+      // --- RUTAS DE BACKOFFICE ---
       GoRoute(
-        path: '/backoffice/users',
-        builder: (context, state) => const BackofficeScreen(),
+        path: '/backoffice',
+        builder: (context, state) => const BackofficeMenuScreen(),
+        routes: [
+          GoRoute(
+            path: 'users', // /backoffice/users
+            builder: (context, state) => const BackofficeScreen(),
+          ),
+          GoRoute(
+            path: 'notifications', // /backoffice/notifications
+            builder: (context, state) => const BackofficeNotificationsScreen(),
+          ),
+        ],
       ),
     ],
     

@@ -1,3 +1,4 @@
+import '../entities/backoffice_notification.dart';
 import '../entities/backoffice_user.dart';
 
 abstract class BackofficeRepository {
@@ -19,4 +20,12 @@ abstract class BackofficeRepository {
   Future<BackofficeUserEntity> removeAdmin(String userId);
 
   Future<void> deleteUser(String userId);
+
+  Future<BackofficeNotificationsResponseEntity> getMassNotifications({
+    String? userId,
+    int page = 1,
+    int limit = 20,
+    String orderBy = 'createdAt',
+    String order = 'asc',
+  });
 }

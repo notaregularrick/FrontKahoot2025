@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../models/backoffice_notification_model.dart';
 import 'backoffice_datasource.dart';
 import '../models/backoffice_response_model.dart';
 
@@ -128,6 +129,40 @@ class BackofficeDatasourceImpl implements BackofficeDatasource {
         if (e.response?.statusCode == 401) throw Exception('No autorizado.');
       }
       throw Exception('Error al eliminar usuario: $e');
+    }
+  }
+
+  @override
+  Future<BackofficeNotificationsResponseModel> getMassNotifications({
+    String? userId,
+    int page = 1,
+    int limit = 20,
+    String orderBy = 'createdAt',
+    String order = 'asc',
+  }) async {
+    try {
+      final Map<String, dynamic> queryParams = {
+        'page': page,
+        'limit': limit,
+        'orderBy': orderBy,
+        'order': order,
+      };
+
+      if (userId != null && userId.isNotEmpty) queryParams['userId'] = userId;
+
+      final response = await dio.get(
+        '/backoffice/massNotifications',
+        queryParameters: queryParams,
+      );
+
+      return BackofficeNotificationsResponseModel.fromJson(response.data);
+    } catch (e) {
+      if (e is DioException) {
+        if (e.response?.statusCode == 401) {
+          throw Exception('No autorizado: Se requieren permisos de administrador.');
+        }
+      }
+      throw Exception('Error al cargar notificaciones: $e');
     }
   }
 }

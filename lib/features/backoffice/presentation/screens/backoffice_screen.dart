@@ -17,7 +17,6 @@ class _BackofficeScreenState extends ConsumerState<BackofficeScreen> {
   @override
   void initState() {
     super.initState();
-    // Listener para paginación infinita
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >= 
           _scrollController.position.maxScrollExtent - 200) {
@@ -38,10 +37,8 @@ class _BackofficeScreenState extends ConsumerState<BackofficeScreen> {
     final state = ref.watch(backofficeNotifierProvider);
     final notifier = ref.read(backofficeNotifierProvider.notifier);
 
-    // 1. ESCUCHA DE ERRORES (SnackBar)
     ref.listen(backofficeNotifierProvider, (previous, next) {
       if (next.errorMessage != null && !next.isLoading) {
-        // Evitamos spam si es el mismo error
         if (previous?.errorMessage != next.errorMessage) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -65,7 +62,6 @@ class _BackofficeScreenState extends ConsumerState<BackofficeScreen> {
       appBar: AppBar(
         title: const Text('Gestión de Usuarios'),
         actions: [
-          // Menú de Ordenamiento
           PopupMenuButton<String>(
             icon: const Icon(Icons.sort),
             tooltip: "Ordenar por...",
@@ -84,7 +80,6 @@ class _BackofficeScreenState extends ConsumerState<BackofficeScreen> {
       ),
       body: Column(
         children: [
-          // --- BARRA DE BÚSQUEDA ---
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
@@ -111,7 +106,6 @@ class _BackofficeScreenState extends ConsumerState<BackofficeScreen> {
             ),
           ),
 
-          // --- LISTA DE USUARIOS ---
           Expanded(
             child: state.isLoading && state.users.isEmpty
                 ? const Center(child: CircularProgressIndicator())
@@ -124,7 +118,6 @@ class _BackofficeScreenState extends ConsumerState<BackofficeScreen> {
                             itemCount: state.users.length + (state.hasMoreData ? 1 : 0),
                             separatorBuilder: (_, __) => const Divider(height: 1),
                             itemBuilder: (context, index) {
-                              // Loader al final de la lista si hay más páginas
                               if (index == state.users.length) {
                                 return const Padding(
                                   padding: EdgeInsets.all(16.0),
@@ -179,7 +172,6 @@ class _UserListTile extends ConsumerWidget {
           const SizedBox(height: 4),
           Row(
             children: [
-              // Chip de Rol
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
@@ -192,8 +184,6 @@ class _UserListTile extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              
-              // Indicador de Admin
               if (isAdmin) ...[
                 const Icon(Icons.verified_user, size: 14, color: Colors.purple),
                 const SizedBox(width: 4),
@@ -203,8 +193,6 @@ class _UserListTile extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
               ],
-
-              // Indicador de Bloqueado
               if (!isActive)
                 const Text(
                   'BLOQUEADO',
@@ -214,19 +202,17 @@ class _UserListTile extends ConsumerWidget {
           )
         ],
       ),
-      
       // BOTONES DE ACCIÓN
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 1. Botón DAR ADMIN (Solo si NO es admin y está activo)
+          // 1. DAR Admin
           if (!isAdmin && isActive)
             IconButton(
               icon: const Icon(Icons.security, color: Colors.blueAccent),
               tooltip: "Hacer Administrador",
               onPressed: () async {
                 await ref.read(backofficeNotifierProvider.notifier).giveAdmin(user.id);
-                // Feedback local
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Permisos de admin otorgados a ${user.username}')),
@@ -235,7 +221,7 @@ class _UserListTile extends ConsumerWidget {
               },
             ),
 
-            // 2. QUITAR Admin (Solo si es admin)
+          // 2. QUITAR Admin
           if (isAdmin && isActive)
             IconButton(
               icon: const Icon(Icons.remove_moderator, color: Colors.orange),
@@ -250,7 +236,7 @@ class _UserListTile extends ConsumerWidget {
               },
             ),
 
-          // 3. Botón BLOQUEAR (Solo si está activo)
+          // 3. BLOQUEAR
           if (isActive)
             IconButton(
               icon: const Icon(Icons.block, color: Colors.red),
@@ -260,7 +246,7 @@ class _UserListTile extends ConsumerWidget {
               },
             ),
           
-          // 4. Botón DESBLOQUEAR (Solo si está bloqueado)
+          // 4. DESBLOQUEAR
           if (!isActive)
              IconButton(
               icon: const Icon(Icons.check_circle_outline, color: Colors.green),
@@ -270,7 +256,7 @@ class _UserListTile extends ConsumerWidget {
               },
             ),
 
-            // 5. ELIMINAR (NUEVO)
+          // 5. ELIMINAR
           IconButton(
             icon: const Icon(Icons.delete_forever, color: Colors.deepOrange),
             tooltip: "Eliminar permanentemente",
@@ -299,8 +285,6 @@ class _UserListTile extends ConsumerWidget {
           ),
         ],
       ),
-      
-      // Al tocar la tarjeta (para ver detalle completo si lo implementas luego)
       onTap: () {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('ID Usuario: ${user.id}')),
