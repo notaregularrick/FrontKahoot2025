@@ -759,59 +759,101 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Fila de multimedia y estado (sin scroll horizontal)
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _uploadQuizCoverImage(),
-                    icon: const Icon(Icons.add_photo_alternate, color: Colors.black87),
-                    label: const Text(
-                      'Añadir multimedia',
-                      style: TextStyle(color: Colors.black87),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[200],
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
+            // Fila de visibilidad y estado (sin scroll horizontal)
+            if (_isEditMode) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
                         borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            quizVisibility == 'public' ? Icons.public : Icons.lock,
+                            color: Colors.black87,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            quizVisibility == 'public' ? 'Público' : 'Privado',
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Switch(
+                            value: quizVisibility == 'public',
+                            activeColor: Colors.green,
+                            onChanged: (value) {
+                              setState(() {
+                                quizVisibility = value ? 'public' : 'private';
+                              });
+                            },
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
-                if (_isEditMode) ...[
                   const SizedBox(width: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.flag, color: Colors.black87, size: 18),
-                        const SizedBox(width: 8),
-                        Text(
-                          quizStatus == 'published' ? 'Publicado' : 'Borrador',
-                          style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(width: 8),
-                        Switch(
-                          value: quizStatus == 'published',
-                          activeColor: Colors.green,
-                          onChanged: (value) {
-                            setState(() {
-                              quizStatus = value ? 'published' : 'draft';
-                            });
-                          },
-                        ),
-                      ],
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.flag, color: Colors.black87, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            quizStatus == 'published' ? 'Publicado' : 'Borrador',
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Switch(
+                            value: quizStatus == 'published',
+                            activeColor: Colors.green,
+                            onChanged: (value) {
+                              setState(() {
+                                quizStatus = value ? 'published' : 'draft';
+                              });
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
-              ],
+              ),
+              const SizedBox(height: 12),
+            ],
+            // Botón de multimedia debajo de los toggles
+            ElevatedButton.icon(
+              onPressed: () => _uploadQuizCoverImage(),
+              icon: const Icon(Icons.add_photo_alternate, color: Colors.black87),
+              label: const Text(
+                'Añadir multimedia',
+                style: TextStyle(color: Colors.black87),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[200],
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
             // Mostrar imagen de portada si existe
             if (quizCoverImageUrl != null && quizCoverImageUrl!.isNotEmpty) ...[

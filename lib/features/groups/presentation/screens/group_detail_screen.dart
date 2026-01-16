@@ -59,27 +59,49 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> with Sing
   }
 
   Future<void> _showInviteDialog(BuildContext context) async {
-    final expiresCtrl = TextEditingController(text: '7d');
     final notifier = ref.read(groupDetailProvider(widget.groupId).notifier);
+    int days = 7;
 
     await showDialog<bool>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx2, setState) => AlertDialog(
           title: const Text('Generar link de invitación'),
-          content: Column(mainAxisSize: MainAxisSize.min, children: [
-            TextField(
-              controller: expiresCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Expira en',
-                hintText: 'Ej: 7d, 24h',
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Selecciona en cuántos días expirará el enlace:',
+                style: TextStyle(fontSize: 14),
               ),
-            ),
-          ]),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('1 día'),
+                  Text('$days días'),
+                  const Text('30 días'),
+                ],
+              ),
+              Slider(
+                value: days.toDouble(),
+                min: 1,
+                max: 30,
+                divisions: 29,
+                label: '$days',
+                onChanged: (value) {
+                  setState(() {
+                    days = value.round();
+                  });
+                },
+              ),
+            ],
+          ),
           actions: [
             TextButton(onPressed: () => Navigator.of(ctx2).pop(false), child: const Text('Cerrar')),
             ElevatedButton(onPressed: () async {
-              final expiresIn = expiresCtrl.text.trim().isEmpty ? '7d' : expiresCtrl.text.trim();
+              final expiresIn = '${days}d';
               try {
                 final link = await notifier.generateInviteLink(expiresIn: expiresIn);
                 await Clipboard.setData(ClipboardData(text: link));

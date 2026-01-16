@@ -237,13 +237,13 @@ class CreateQuizRepositoryImpl implements ICreateQuizRepository {
       }
     }
 
-    // Mapear visibility: "private" -> "Private", "public" -> "Public"
+    // Mapear visibility: "private" -> "PRIVATE", "public" -> "PUBLIC"
     String _mapVisibilityToApi(String visibility) {
       switch (visibility.toLowerCase()) {
         case 'private':
-          return 'Private';
+          return 'PRIVATE';
         case 'public':
-          return 'Public';
+          return 'PUBLIC';
         default:
           return visibility; // Mantener si ya está capitalizado
       }
