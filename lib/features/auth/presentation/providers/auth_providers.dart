@@ -8,6 +8,7 @@ import '../../application/state/auth_state.dart';
 import '../../infrastructure/datasource/auth_datasource.dart';
 import '../../infrastructure/datasource/auth_datasource_impl.dart';
 import '../../infrastructure/repositories/auth_repository_impl.dart';
+import '../../../notifications/presentation/providers/notifications_providers.dart';
 
 // 1. Provider del Datasource
 final authDatasourceProvider = Provider<AuthDatasource>((ref) {
@@ -28,6 +29,13 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repository = ref.watch(authRepositoryProvider); 
   final storage = ref.watch(secureStorageProvider);
+  final notificationsRepository = ref.watch(notificationsRepositoryProvider);
+  final fcmService = ref.watch(fcmServiceProvider);
   
-  return AuthNotifier(repository, storage);
+  return AuthNotifier(
+    repository,
+    storage,
+    notificationsRepository: notificationsRepository,
+    fcmService: fcmService,
+  );
 });
