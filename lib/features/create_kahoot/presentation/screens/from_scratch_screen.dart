@@ -2160,8 +2160,6 @@ class _FromScratchScreenState extends ConsumerState<FromScratchScreen> {
                                     child: Image.network(
                                       _dialogCoverImageUrl!,
                                       fit: BoxFit.cover,
-                                      width: double.infinity,
-                                      height: double.infinity,
                                       loadingBuilder: (context, child, loadingProgress) {
                                         if (loadingProgress == null)
                                           return child;

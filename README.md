@@ -220,6 +220,7 @@ El flujo de información sigue un ciclo estricto desde la interacción del usuar
 
 </div>
 
+Link del trello: https://trello.com/b/VkAJiYah/proyecto-de-desarrollo-equipo-rojo
 ---
 
 
